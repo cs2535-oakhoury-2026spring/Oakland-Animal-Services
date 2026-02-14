@@ -3,7 +3,13 @@ import { distance } from "fastest-levenshtein";
 function levenshteinDistance(str1, str2) {
     return distance(str1, str2);
 }
-const AUXILIARY_VERBS = new Set([
+const TOKENS_TO_EXCLUDE = new Set([
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
     "be",
     "am",
     "is",
@@ -53,7 +59,7 @@ export function extractKeywords(text, nameToExclude) {
         const token = term.text();
         if (nameToExclude && token === nameToExclude.toLowerCase())
             return;
-        if (AUXILIARY_VERBS.has(token))
+        if (TOKENS_TO_EXCLUDE.has(token))
             return;
         if (term.has("#Determiner") ||
             term.has("#Preposition") ||
@@ -66,7 +72,7 @@ export function extractKeywords(text, nameToExclude) {
     doc.verbs().forEach((verb) => {
         const infinitive = verb.toInfinitive().text();
         console.log(`Verb: "${verb.text()}" -> Infinitive: "${infinitive}"`);
-        if (AUXILIARY_VERBS.has(infinitive)) {
+        if (TOKENS_TO_EXCLUDE.has(infinitive)) {
             return;
         }
         addKeyword(infinitive);

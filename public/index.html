@@ -39,6 +39,11 @@
       background-color: #f0f0f0;
     }
 
+    button.recording {
+      background-color: #ffcccc;
+      border-color: #ff0000;
+    }
+
     #results {
       margin-top: 30px;
       border-top: 1px solid black;
@@ -79,6 +84,7 @@
   <div>
     <button onclick="upload()">Upload</button>
     <button onclick="clearEntry()">Clear</button>
+    <button id="voiceBtn" onclick="toggleVoiceRecording()">Record Voice</button>
   </div>
 
 
@@ -215,6 +221,88 @@
     function clearEntry() {
       document.getElementById('noteInput').value = '';
       displayAllNotes(allNotes);
+    }
+
+    let recognition = null;
+    let isRecording = false;
+
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          const textarea = document.getElementById('noteInput');
+          const currentValue = textarea.value;
+          textarea.value = currentValue + (currentValue ? ' ' : '') + finalTranscript;
+          performSearch();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech') {
+          console.log('No speech detected');
+        }
+        stopRecording();
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          recognition.start();
+        }
+      };
+    }
+
+    function toggleVoiceRecording() {
+      if (!recognition) {
+        alert('Speech recognition is not supported in your browser.');
+        return;
+      }
+
+      if (isRecording) {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    function startRecording() {
+      try {
+        recognition.start();
+        isRecording = true;
+        const btn = document.getElementById('voiceBtn');
+        btn.classList.add('recording');
+        btn.textContent = 'Stop Recording';
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+      }
+    }
+
+    function stopRecording() {
+      if (recognition && isRecording) {
+        recognition.stop();
+        isRecording = false;
+        const btn = document.getElementById('voiceBtn');
+        btn.classList.remove('recording');
+        btn.textContent = 'Record Voice';
+      }
     }
 
    

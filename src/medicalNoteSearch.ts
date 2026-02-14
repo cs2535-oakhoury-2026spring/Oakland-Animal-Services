@@ -5,7 +5,13 @@ function levenshteinDistance(str1: string, str2: string): number {
   return distance(str1, str2);
 }
 
-const AUXILIARY_VERBS = new Set([
+const TOKENS_TO_EXCLUDE = new Set([
+  "the",
+  "a",
+  "an",
+  "and",
+  "or",
+  "but",
   "be",
   "am",
   "is",
@@ -79,7 +85,7 @@ export function extractKeywords(
 
     if (nameToExclude && token === nameToExclude.toLowerCase()) return;
 
-    if (AUXILIARY_VERBS.has(token)) return;
+    if (TOKENS_TO_EXCLUDE.has(token)) return;
 
     if (
       term.has("#Determiner") ||
@@ -96,7 +102,7 @@ export function extractKeywords(
   doc.verbs().forEach((verb: any) => {
     const infinitive = verb.toInfinitive().text();
     console.log(`Verb: "${verb.text()}" -> Infinitive: "${infinitive}"`);
-    if (AUXILIARY_VERBS.has(infinitive)) {
+    if (TOKENS_TO_EXCLUDE.has(infinitive)) {
       return;
     }
     addKeyword(infinitive);
