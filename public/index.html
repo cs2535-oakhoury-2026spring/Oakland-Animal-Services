@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Medical Note Search</title>
+  <title>Observer Note Search</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -77,9 +77,9 @@
   </style>
 </head>
 <body>
-  <h1>Medical Note For some dog/animal</h1>
+  <h1>Observer Notes for animals</h1>
 
-  <textarea id="noteInput" placeholder="Enter medical note..."></textarea>
+  <textarea id="noteInput" placeholder="Enter observer note..."></textarea>
 
   <div>
     <button onclick="upload()">Upload</button>
@@ -99,10 +99,10 @@
 
     async function loadAllNotes() {
       try {
-        const response = await fetch('/api/notes');
+        const response = await fetch('/api/observer-notes');
         const data = await response.json();
         if (data.success) {
-          allNotes = data.notes;
+          allNotes = data.observerNotes;
           displayAllNotes(allNotes);
         }
       } catch (error) {
@@ -150,7 +150,7 @@
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            note: note,
+            observerNote: note,
             maxResults: 10, // Implement a page system or scroll system in the future.
           }),
         });
@@ -206,11 +206,11 @@
           const data = await response.json();
 
           if (data.success) {
-            alert("Medical note uploaded successfully");
+            alert("Observer note uploaded successfully");
             document.getElementById('noteInput').value = '';
             loadAllNotes();
           } else {
-            alert("Failed to upload medical note");
+            alert("Failed to upload observer note");
           }
         } catch (error) {
           console.warn('Upload error:', error);

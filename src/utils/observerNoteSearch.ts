@@ -1,5 +1,6 @@
 import nlp from "compromise";
 import { distance } from "fastest-levenshtein";
+import { ObserverNote, SimilarNoteResult } from "../services/observerNoteService.js";
 
 function levenshteinDistance(str1: string, str2: string): number {
   return distance(str1, str2);
@@ -48,20 +49,10 @@ const NORMALIZATION_EXCLUSIONS = new Set([
   "fore",
 ]);
 
-export type MedicalNote = {
-  timestamp: Date;
-  content: string;
-  author: string;
-};
-
-export type SimilarNoteResult = {
-  note: MedicalNote;
-  matchCount: number;
-  matchedKeywords: Array<{
-    keyword: string;
-    positions: Array<{ start: number; end: number }>;
-  }>;
-  highlightedContent: string;
+export type NoteData = {
+  tokens: Array<{ text: string; lower: string }>;
+  normalizations: Map<string, string>;
+  lowerContent: string;
 };
 
 export function extractKeywords(
@@ -205,15 +196,9 @@ function highlightMatches(
   return result;
 }
 
-export type NoteData = {
-  tokens: Array<{ text: string; lower: string }>;
-  normalizations: Map<string, string>;
-  lowerContent: string;
-};
-
 export function findSimilarNotes(
   searchNote: string,
-  allNotes: MedicalNote[],
+  allNotes: ObserverNote[],
   options: {
     nameToExclude?: string;
     maxResults?: number;
@@ -298,7 +283,7 @@ export function findSimilarNotes(
   const noteMatches = new Map<
     string,
     {
-      note: MedicalNote;
+      note: ObserverNote;
       matchCount: number;
       matchedKeywords: Map<
         string,
@@ -378,7 +363,7 @@ export function findSimilarNotes(
         match.matchedIndices,
       );
       return {
-        note: match.note,
+        observerNote: match.note,
         matchCount: uniqueKeywords.length,
         matchedKeywords: uniqueKeywords.map((kw) => ({
           keyword: kw.keyword,
@@ -391,8 +376,8 @@ export function findSimilarNotes(
       const matchDiff = b.matchCount - a.matchCount;
 
       if (Math.abs(matchDiff) <= 2) {
-        const dateA = a.note.timestamp.getTime();
-        const dateB = b.note.timestamp.getTime();
+        const dateA = a.observerNote.timestamp.getTime();
+        const dateB = b.observerNote.timestamp.getTime();
         return dateB - dateA;
       }
 

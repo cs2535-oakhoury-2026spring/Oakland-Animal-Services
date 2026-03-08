@@ -1,6 +1,11 @@
-import { MedicalNote, findSimilarNotes } from "./medicalNoteSearch.js";
+import {
+  ObserverNote,
+  seedNotes,
+  searchNotes,
+} from "./services/observerNoteService.js";
 
-let medicalNotes: MedicalNote[] = [
+// sample notes used for manual testing — copied into service store below
+const sampleNotes: ObserverNote[] = [
   {
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content: "blah balh balh dog ate homework",
@@ -17,46 +22,12 @@ let medicalNotes: MedicalNote[] = [
       "Cody has a red bump and limp on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
     author: "Dr. John Hones",
   },
-  {
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "Cody has a red bump and limping on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Hones",
-  },
-  {
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "[TYPO] Cody been has a red bump and limpiing on his left hind legacy. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Hones",
-  },
-  {
-    timestamp: new Date("2025-06-01T10:00:00Z"),
-    content:
-      "ct scaned cody saw bone fracture in left hind leg. Cody has a red bump and limping on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Honesv2",
-  },
-  {
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "[TYPO] yesterda YEstrday Cody been has a red bump and limpiing on his left hind legacy. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Hones",
-  },
-
-  {
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "[TYPO] Cody been has a red bump and limpiing on his left hind legacy. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Honess",
-  },
-  {
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "[TYPO] Cody been has a red bump and limpiing on his left hind legacy. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Honeaas",
-  },
 ];
 
-// medicalNotes = [
+seedNotes(sampleNotes);
+
+
+// observerNotes = [
 //   {
 //     timestamp: new Date("2024-06-01T10:00:00Z"),
 //     content: "ct scaned cody saw bone fracture in left hind feet. Cody has a red bump and limping on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
@@ -66,7 +37,7 @@ let medicalNotes: MedicalNote[] = [
 const searchNote = "left";
 let start = performance.now();
 const cache = new Map();
-const first = findSimilarNotes(searchNote, medicalNotes, {
+const first = searchNotes(searchNote, {
   nameToExclude: "Cody",
   maxResults: 5,
   noteDataCache: cache,
@@ -78,7 +49,7 @@ console.log(
 
 start = performance.now();
 
-const similarNotes = findSimilarNotes(searchNote, medicalNotes, {
+const similarNotes = searchNotes(searchNote, {
   nameToExclude: "Cody",
   maxResults: 5,
   noteDataCache: cache,
@@ -91,9 +62,9 @@ console.log(
 console.log("=== Similar Notes Found ===\n");
 similarNotes.forEach((result, index) => {
   console.log(
-    `${index + 1}. Note by ${result.note.author} | ${result.note.timestamp.toISOString()}`,
+    `${index + 1}. Observer note by ${result.observerNote.author} | ${result.observerNote.timestamp.toISOString()}`,
   );
-  console.log(`   Content: ${result.note.content}`);
+  console.log(`   Content: ${result.observerNote.content}`);
   console.log(`   Marked:  ${result.highlightedContent}`);
   console.log(`   Matches: ${result.matchCount}`);
   console.log(`   Keywords:`);
