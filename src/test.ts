@@ -1,8 +1,8 @@
 import {
   ObserverNote,
-  seedNotes,
-  searchNotes,
+  findSimilarObserverNotes,
 } from "./services/observerNoteService.js";
+import { seedObserverNotes } from "./db/observerNotes.js";
 
 // sample notes used for manual testing — copied into service store below
 const sampleNotes: ObserverNote[] = [
@@ -10,22 +10,24 @@ const sampleNotes: ObserverNote[] = [
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content: "blah balh balh dog ate homework",
     author: "Dr. A",
+    petId: 1,
   },
   {
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content: "Cody has a limp on his left hind leg.",
     author: "Dr. Smith",
+    petId: 1,
   },
   {
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content:
       "Cody has a red bump and limp on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
     author: "Dr. John Hones",
+    petId: 1,
   },
 ];
 
-seedNotes(sampleNotes);
-
+seedObserverNotes(sampleNotes);
 
 // observerNotes = [
 //   {
@@ -37,7 +39,7 @@ seedNotes(sampleNotes);
 const searchNote = "left";
 let start = performance.now();
 const cache = new Map();
-const first = searchNotes(searchNote, {
+const first = findSimilarObserverNotes(searchNote, {
   nameToExclude: "Cody",
   maxResults: 5,
   noteDataCache: cache,
@@ -49,7 +51,7 @@ console.log(
 
 start = performance.now();
 
-const similarNotes = searchNotes(searchNote, {
+const similarNotes = findSimilarObserverNotes(searchNote, {
   nameToExclude: "Cody",
   maxResults: 5,
   noteDataCache: cache,

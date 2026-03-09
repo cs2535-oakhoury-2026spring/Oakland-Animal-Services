@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
-import { searchNotes, SimilarNoteResult } from "../services/observerNoteService.js";
+import {
+  findSimilarObserverNotes,
+  SimilarNoteResult,
+} from "../services/observerNoteService.js";
 
 export function search(req: Request, res: Response) {
   const { note: observerNoteContent, nameToExclude, maxResults } = req.body;
@@ -8,12 +11,25 @@ export function search(req: Request, res: Response) {
   }
 
   try {
-    const results: SimilarNoteResult[] = searchNotes(observerNoteContent, {
-      nameToExclude,
-      maxResults: maxResults || 5,
+    const results: SimilarNoteResult[] = findSimilarObserverNotes(
+      observerNoteContent,
+      {
+        nameToExclude,
+        maxResults: maxResults || 5,
+      },
+    );
+    res.json({
+      success: true,
+      query: observerNoteContent,
+      results,
+      resultCount: results.length,
     });
-    res.json({ success: true, query: observerNoteContent, results, resultCount: results.length });
   } catch (error) {
-    res.status(500).json({ success: false, error: error instanceof Error ? error.message : "Unknown error" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
   }
 }

@@ -3,7 +3,11 @@ import {
   ObserverNoteSchema,
   type ObserverNote,
 } from "../models/ObserverNote.schema.js";
-import { getAllNotes as _getAllNotes, addNote as _addNote, seedNotes as _seedNotes } from "../db/notes.js";
+import {
+  getAllObserverNotes as _getAllObserverNotes,
+  addObserverNote as _addObserverNote,
+  getObserverNotesByPetId as _getObserverNotesByPetId,
+} from "../db/observerNotes.js";
 
 export type { ObserverNote };
 
@@ -17,15 +21,19 @@ export type SimilarNoteResult = {
   highlightedContent: string;
 };
 
-export function getAllNotes(): ObserverNote[] {
-  return _getAllNotes();
+export function getAllObserverNotes(): ObserverNote[] {
+  return _getAllObserverNotes();
 }
 
-export function addNote(note: ObserverNote): void {
-  _addNote(note);
+export function getObserverNotesByPetId(petId: number): ObserverNote[] {
+  return _getObserverNotesByPetId(petId);
 }
 
-export function searchNotes(
+export function addObserverNote(note: ObserverNote): void {
+  _addObserverNote(note);
+}
+
+export function findSimilarObserverNotes(
   query: string,
   options: {
     nameToExclude?: string;
@@ -33,9 +41,5 @@ export function searchNotes(
     noteDataCache?: Map<string, NoteData>;
   } = {},
 ): SimilarNoteResult[] {
-  return findSimilarNotes(query, _getAllNotes(), options);
-}
-
-export function seedNotes(initial: ObserverNote[]) {
-  _seedNotes(initial);
+  return findSimilarNotes(query, getAllObserverNotes(), options);
 }
