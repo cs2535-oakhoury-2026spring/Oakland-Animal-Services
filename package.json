@@ -18,6 +18,7 @@
     "zod": "^4.3.6"
   },
   "scripts": {
+    "build": "tsc",
     "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js"
   }
