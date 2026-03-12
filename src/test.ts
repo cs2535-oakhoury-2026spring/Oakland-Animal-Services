@@ -1,10 +1,19 @@
+
 import {
   ObserverNote,
   findSimilarObserverNotes,
 } from "./services/observerNoteService.js";
 import { seedObserverNotes } from "./db/observerNotes.js";
 
-// sample notes used for manual testing — copied into service store below
+import { getPetById } from "./db/pets.js";
+
+getPetById(182).then((pet) => {
+  console.log("=== Pet from DB ===");
+  console.log(pet);
+  console.log();
+});
+
+
 const sampleNotes: ObserverNote[] = [
   {
     timestamp: new Date("2024-06-01T10:00:00Z"),
@@ -78,3 +87,4 @@ similarNotes.forEach((result, index) => {
   });
   console.log();
 });
+;
