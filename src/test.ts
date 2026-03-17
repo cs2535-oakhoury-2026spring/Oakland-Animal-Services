@@ -1,18 +1,22 @@
-
 import {
   ObserverNote,
   findSimilarObserverNotes,
 } from "./services/observerNoteService.js";
 import { seedObserverNotes } from "./db/observerNotes.js";
 
-import { getPetById } from "./db/pets.js";
+import { getDogIdFromLocation, getPetById } from "./db/pets.js";
 
-getPetById(182).then((pet) => {
-  console.log("=== Pet from DB ===");
-  console.log(pet);
+// getPetById(22254130).then((pet) => {
+//   console.log("=== Pet from DB ===");
+//   console.log(pet);
+//   console.log();
+// });
+
+getDogIdFromLocation("e:1").then((petId) => {
+  console.log("=== Dog ID by Location ===");
+  console.log(petId);
   console.log();
 });
-
 
 const sampleNotes: ObserverNote[] = [
   {
@@ -87,4 +91,3 @@ similarNotes.forEach((result, index) => {
   });
   console.log();
 });
-;

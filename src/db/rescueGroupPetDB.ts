@@ -34,6 +34,7 @@ const FIELDS = [
   "animalThumbnailUrl",
   "animalRescueID",
   "animalSpecialneedsDescription",
+  "animalUpdatedDate",
 ];
 
 function extractPictures(record: any): string[] | undefined {
@@ -68,11 +69,72 @@ function computeAge(record: any): number {
   return 0;
 }
 
+function parseLocationFromSummary(summary?: string | null): string | null {
+  if (!summary) return null;
+
+  const trimmed = summary.trim();
+
+  const lower = trimmed.toLowerCase();
+  if (lower.includes("foster")) {
+    return "In Foster";
+  }
+
+  let loc = trimmed.replace("I am at Oakland Animal Services in kennel ", "");
+
+  loc = loc.trim().replace(/\s+/g, "-");
+  return loc;
+}
+
+
+function parsePet(record: any): Pet | undefined {
+  if (!record) return undefined;
+
+  const pet: Pet = {
+    id: parseInt(record.animalID, 10),
+    name: record.animalName,
+    species: record.animalSpecies,
+    sex: record.animalSex,
+    description: record.animalDescription || undefined,
+    summary: record.animalSummary || record.animalDescription || "",
+    breed: record.animalPrimaryBreed || record.animalBreed || undefined,
+    status: record.animalStatus,
+    rescueId: record.animalRescueID,
+    availableDate: record.animalAvailableDate,
+    otherNames: record.animalOthernames,
+    distinguishingMarks: record.animalDistinguishingMarks,
+    generalAge: record.animalGeneralAge,
+    generalSize: record.animalGeneralSizePotential,
+    colorDetails: record.animalColorDetails,
+    specialNeeds: record.animalSpecialneedsDescription,
+    birthdate: record.animalBirthdate,
+
+    pictures: extractPictures(record),
+    image:
+      record.animalThumbnailUrl ||
+      record.urlSecureThumbnail ||
+      record.image ||
+      undefined,
+    age: computeAge(record),
+  } as any;
+
+  try {
+    return PetSchema.parse(pet);
+  } catch (parseErr) {
+    console.error(
+      "RG repo parsePet - schema validation failed",
+      parseErr,
+      "raw pet:",
+      pet,
+    );
+    return undefined;
+  }
+}
+
 export class RescueGroupPetRepository implements PetRepository {
   async getById(id: number): Promise<Pet | undefined> {
     const payload = {
       objectType: "animals",
-      objectAction: "publicView",
+      objectAction: "view",
       values: [{ animalID: String(id) }],
       fields: FIELDS,
     };
@@ -80,52 +142,77 @@ export class RescueGroupPetRepository implements PetRepository {
     try {
       const response = await rescueGroupsClient.post("", payload);
       const record = response.data?.animals?.[0] || response.data?.data?.[0];
-      if (!record) {
-        return undefined;
-      }
-
-      const pet: Pet = {
-        id: parseInt(record.animalID, 10),
-        name: record.animalName,
-        species: record.animalSpecies,
-        sex: record.animalSex,
-        description: record.animalDescription || undefined,
-        summary: record.animalSummary || record.animalDescription || "",
-        breed: record.animalPrimaryBreed || record.animalBreed || undefined,
-        status: record.animalStatus,
-        rescueId: record.animalRescueID,
-        availableDate: record.animalAvailableDate,
-        otherNames: record.animalOthernames,
-        distinguishingMarks: record.animalDistinguishingMarks,
-        generalAge: record.animalGeneralAge,
-        generalSize: record.animalGeneralSizePotential,
-        colorDetails: record.animalColorDetails,
-        specialNeeds: record.animalSpecialneedsDescription,
-        birthdate: record.animalBirthdate,
-
-        pictures: extractPictures(record),
-        image:
-          record.animalThumbnailUrl ||
-          record.urlSecureThumbnail ||
-          record.image ||
-          undefined,
-        age: computeAge(record),
-      } as any;
-
-      try {
-        return PetSchema.parse(pet);
-      } catch (parseErr) {
-        console.error(
-          "RG repo getById - schema validation failed",
-          parseErr,
-          "raw pet:",
-          pet,
-        );
-        return undefined;
-      }
+      return parsePet(record);
     } catch (err) {
       console.error("RG repo getById failed", err);
       return undefined;
     }
+  }
+
+  private async searchByLocation(
+    species: string,
+    location: string,
+  ): Promise<number | undefined> {
+    const payload = {
+      objectType: "animals",
+      objectAction: "search",
+      search: {
+        resultStart: 0,
+        resultLimit: 10,
+        resultSort: "animalUpdatedDate",
+        resultOrder: "desc",
+        filters: [
+          {
+            fieldName: "animalSpecies",
+            operation: "equals",
+            criteria: species,
+          },
+          {
+            fieldName: "animalSummary",
+            operation: "contains",
+            criteria: location,
+          },
+        ],
+        fields: FIELDS,
+      },
+    };
+
+    try {
+      const response = await rescueGroupsClient.post("", payload);
+      const pets: Record<string, any> = response?.data?.data || {};
+
+      
+      let recentPetId:string|undefined;
+      let recentTimestamp = 0;
+      for (const key in pets) {
+        const pet = pets[key];
+        const summary: string = pet.animalSummary;
+        const locationInSummary = parseLocationFromSummary(summary);
+        console.log(`Checking pet ${pet.animalID} with location "${locationInSummary}" against search location "${location}"`);
+        if (locationInSummary === location) {
+          const date = new Date(pet.animalUpdatedDate).getTime();
+          if (date > recentTimestamp) {
+            recentTimestamp = date;
+            recentPetId = key;
+          }
+        }
+      }
+
+      return recentPetId ? parseInt(recentPetId, 10) : undefined;
+    } catch (err) {
+      console.error(
+        `RG repo searchByLocation failed (${species} @ ${location})`,
+        err,
+      );
+      return undefined;
+    }
+  }
+
+  async getDogIdFromLocation(location: string): Promise<number | undefined> {
+    return this.searchByLocation("Dog", location);
+  }
+
+  async getCatIdFromLocation(location: string): Promise<number | undefined> {
+    return this.searchByLocation("Cat", location);
   }
 }
