@@ -59,12 +59,12 @@ export class MockPetRepository implements PetRepository {
   }
 
   async getDogIdFromLocation(location: string): Promise<number | undefined> {
-    const lower = location.toLowerCase();
+    const lower = location.toLowerCase().replaceAll("-", " ");
     return this.dogLocationMap.get(lower)?.[0]?.id;
   }
 
   async getCatIdFromLocation(location: string): Promise<number | undefined> {
-    const lower = location.toLowerCase();
+    const lower = location.toLowerCase().replaceAll("-", " ");
     return this.catLocationMap.get(lower)?.[0]?.id;
   }
 }
