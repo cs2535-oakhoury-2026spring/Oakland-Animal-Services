@@ -41,7 +41,7 @@ export class MockPetRepository implements PetRepository {
 
     const dog = PetSchema.parse({
       ...marley,
-      id: 22325213,
+      id: 22324883,
       name: "Buddy",
       species: "Dog",
       summary: "I am at Oakland Animal Services in kennel E:1",
@@ -49,7 +49,7 @@ export class MockPetRepository implements PetRepository {
 
     this.pets = [marley, anotherCat, dog];
 
-    this.catLocationMap = new Map([["e:1", [anotherCat]]]);
+    this.catLocationMap = new Map([["holding 4:19", [anotherCat]]]);
 
     this.dogLocationMap = new Map([["e:1", [dog]]]);
   }

@@ -81,7 +81,7 @@ function parseLocationFromSummary(summary?: string | null): string | null {
 
   let loc = trimmed.replace("I am at Oakland Animal Services in kennel ", "");
 
-  loc = loc.trim().replace(/\s+/g, "-");
+  loc = loc.trim();
   return loc;
 }
 
@@ -153,6 +153,7 @@ export class RescueGroupPetRepository implements PetRepository {
     species: string,
     location: string,
   ): Promise<number | undefined> {
+    location = location.toLowerCase().replace(/-/g, " ");
     const payload = {
       objectType: "animals",
       objectAction: "search",
@@ -187,7 +188,8 @@ export class RescueGroupPetRepository implements PetRepository {
       for (const key in pets) {
         const pet = pets[key];
         const summary: string = pet.animalSummary;
-        const locationInSummary = parseLocationFromSummary(summary);
+        let locationInSummary = parseLocationFromSummary(summary)?.toLowerCase() || "";
+        locationInSummary = locationInSummary.replace(`${species.toLowerCase()} `, "");
         console.log(`Checking pet ${pet.animalID} with location "${locationInSummary}" against search location "${location}"`);
         if (locationInSummary === location) {
           const date = new Date(pet.animalUpdatedDate).getTime();
