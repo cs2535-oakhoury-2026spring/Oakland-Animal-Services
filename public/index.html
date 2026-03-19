@@ -25,6 +25,20 @@
       font-size: 14px;
     }
 
+    .input-container {
+      display: flex;
+      gap: 20px;
+    }
+
+    #noteInput, #summaryOutput {
+      width: 50%;
+      height: 150px;
+    }
+
+    #summaryOutput {
+      background-color: #f5f5f5;
+    }
+
     button {
       padding: 10px 20px;
       margin-top: 10px;
@@ -79,7 +93,10 @@
 <body>
   <h1>Observer Notes for animals</h1>
 
-  <textarea id="noteInput" placeholder="Enter observer note..."></textarea>
+  <div class="input-container">
+    <textarea id="noteInput" placeholder="Enter observer note..."></textarea>
+    <textarea id="summaryOutput" placeholder="AI summary will appear here..." readonly></textarea>
+</div>
 
   <div>
     <button onclick="upload()">Upload</button>
@@ -92,6 +109,11 @@
 
   <script>
     let allNotes = [];
+    const noteInput = document.getElementById('noteInput');
+    const summaryOutput = document.getElementById('summaryOutput');
+
+    let debounceTimer;
+    let currentRequestId = 0;
 
     window.addEventListener('DOMContentLoaded', () => {
       loadAllNotes();
@@ -131,6 +153,19 @@
 
     document.getElementById('noteInput').addEventListener('input', () => {
       performSearch();
+      
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+
+      if (note.length < 30) {
+        summaryOutput.value = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(() => {
+        summarizeNote(note);
+      }, 500);
     });
 
     async function performSearch() {
@@ -220,6 +255,7 @@
 
     function clearEntry() {
       document.getElementById('noteInput').value = '';
+      summaryOutput.value = '';
       displayAllNotes(allNotes);
     }
 
@@ -305,7 +341,33 @@
       }
     }
 
-   
+  async function summarizeNote(note) {
+    const requestId = ++currentRequestId;
+
+    summaryOutput.value = 'Summarizing...';
+
+    try {
+      const response = await fetch('/api/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: note }),
+      });
+
+      const data = await response.json();
+
+    // prevent old responses overwriting new ones
+      if (requestId !== currentRequestId) return;
+
+      if (data.success) {
+        summaryOutput.value = data.summary;
+      } else {
+        summaryOutput.value = 'Failed to summarize.';
+      }
+    } catch (error) {
+      console.warn('Summarization error:', error);
+      summaryOutput.value = 'Error generating summary.';
+    }
+  }
   </script>
 </body>
 </html>
