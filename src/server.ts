@@ -5,7 +5,11 @@ import { fileURLToPath } from "url";
 import config from "./config/index.js";
 import observerNotesRouter from "./routes/observerNotes.js";
 import searchRouter from "./routes/search.js";
+import summarizeRoutes from "./routes/summarize.js";
+import dotenv from "dotenv";
 import { seedObserverNotes } from "./db/observerNotes.js";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -16,8 +20,9 @@ const PORT = config.port;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
-app.use(observerNotesRouter);
+app.use('/api', summarizeRoutes);
 app.use(searchRouter);
+app.use(observerNotesRouter);
 
 seedObserverNotes([
   {
@@ -42,6 +47,6 @@ seedObserverNotes([
   },
 ]);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
