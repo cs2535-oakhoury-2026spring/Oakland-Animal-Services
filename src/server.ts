@@ -3,6 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import config from "./config/index.js";
+import petRouter from "./routes/pet.js";
 import observerNotesRouter from "./routes/observerNotes.js";
 import searchRouter from "./routes/search.js";
 import { seedObserverNotes } from "./db/observerNotes.js";
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
 app.use(observerNotesRouter);
+app.use(petRouter);
 app.use(searchRouter);
 
 seedObserverNotes([

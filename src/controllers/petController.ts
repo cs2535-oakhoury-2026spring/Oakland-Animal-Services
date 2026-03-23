@@ -47,5 +47,5 @@ export async function getPetByLocation(req: Request, res: Response) {
     return res.status(404).json({ error: "Pet not found" });
   }
 
-  res.json({ success: true, petId: pet });
+  res.json({ success: true, pets: pet });
 }

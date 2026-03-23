@@ -1,4 +1,4 @@
-import { type Pet } from "../models/Pet.schema.js";
+import { type Pet, type PetLocation } from "../models/Pet.schema.js";
 import config from "../config/index.js";
 import { PetRepository } from "../types/index.js";
 import { RescueGroupPetRepository } from "./rescueGroupPetDB.js";
@@ -14,12 +14,12 @@ export async function getPetById(id: number): Promise<Pet | undefined> {
 
 export async function getDogIdFromLocation(
   location: string,
-): Promise<number | undefined> {
+): Promise<PetLocation[] | undefined> {
   return REPO.getDogIdFromLocation(location);
 }
 
 export async function getCatIdFromLocation(
   location: string,
-): Promise<number | undefined> {
+): Promise<PetLocation[] | undefined> {
   return REPO.getCatIdFromLocation(location);
 }

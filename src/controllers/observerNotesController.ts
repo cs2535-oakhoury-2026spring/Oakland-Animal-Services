@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { z } from "zod";
 import {
   getAllObserverNotes,
   addObserverNote,
@@ -29,7 +30,7 @@ export function getObserverNotesByPetId(req: Request, res: Response) {
 export function uploadObserverNote(req: Request, res: Response) {
   const parseResult = ObserverNoteCreateSchema.safeParse(req.body);
   if (!parseResult.success) {
-    return res.status(400).json({ error: parseResult.error.format() });
+    return res.status(400).json({ error: z.treeifyError(parseResult.error) });
   }
 
   const { content, author, petId } = parseResult.data;

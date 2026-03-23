@@ -24,7 +24,14 @@ export const PetSchema = z.object({
   colorDetails: z.string().optional(),
   specialNeeds: z.string().optional(),
 
-  pictures: z.array(z.string()).optional(),
+});
+
+export const PetLocationSchema = z.object({
+  id: z.number().int(),
+  name: z.string().min(1),
+  image: z.string().optional(),
+  summary: z.string().min(1),
 });
 
 export type Pet = z.infer<typeof PetSchema>;
+export type PetLocation = z.infer<typeof PetLocationSchema>;

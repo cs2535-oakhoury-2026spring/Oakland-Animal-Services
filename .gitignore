@@ -65,3 +65,4 @@ package-lock.json
 *v8.log
 dist/
 .env
+.env.*

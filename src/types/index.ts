@@ -1,7 +1,7 @@
-import { Pet } from "../models/Pet.schema.js";
+import { Pet, PetLocation } from "../models/Pet.schema.js";
 
 export interface PetRepository {
   getById(id: number): Promise<Pet | undefined>;
-  getDogIdFromLocation(location: string): Promise<number | undefined>;
-  getCatIdFromLocation(location: string): Promise<number | undefined>;
+  getDogIdFromLocation(location: string): Promise<PetLocation[] | undefined>;
+  getCatIdFromLocation(location: string): Promise<PetLocation[] | undefined>;
 }
