@@ -35,7 +35,9 @@ export function uploadObserverNote(req: Request, res: Response) {
 
   const { content, author, petId } = parseResult.data;
   const newObserverNote: ObserverNote = {
+    id: 0, // set later.
     timestamp: new Date(),
+    status: "active",
     content,
     author,
     petId,

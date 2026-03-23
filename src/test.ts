@@ -27,18 +27,24 @@ getCatIdFromLocation("Holding-4:19").then((petId) => {
 
 const sampleNotes: ObserverNote[] = [
   {
+    id: 1,
+    status: "active",
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content: "blah balh balh dog ate homework",
     author: "Dr. A",
     petId: 1,
   },
   {
+    id: 2,
+    status: "active",
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content: "Cody has a limp on his left hind leg.",
     author: "Dr. Smith",
     petId: 1,
   },
   {
+    id: 3,
+    status: "active",
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content:
       "Cody has a red bump and limp on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
