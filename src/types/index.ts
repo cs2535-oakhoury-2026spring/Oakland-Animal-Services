@@ -20,3 +20,12 @@ export interface ObserverNoteRepository {
   removeNotesByPetId(petId: number): Promise<boolean>;
 
 }
+
+export interface BehaviorNoteRepository {
+  getBehaviorNotes(limit?:number,page?:number): Promise<ObserverNote[]>;
+  getBehaviorNoteByPetId(petId: number): Promise<ObserverNote[]>;
+  addBehaviorNote(note: ObserverNote): Promise<boolean>;
+  removeBehaviorNoteById(id: number): Promise<boolean>;
+  removeNotesByPetId(petId: number): Promise<boolean>;
+
+}

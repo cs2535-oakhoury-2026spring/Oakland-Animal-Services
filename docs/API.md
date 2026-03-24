@@ -217,3 +217,4 @@ Example:
 - Success: `200` with:
   - `{ success: true, query: string, results: SimilarNoteResult[], resultCount: number }`
 - Error: `400` if required fields are missing or invalid
+
