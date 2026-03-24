@@ -1,7 +1,8 @@
+import config from "../config/index.js";
 import OpenAI from 'openai';
 
 const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY!,
+    apiKey: config.LLM_API_KEY,
 });
 
 /**

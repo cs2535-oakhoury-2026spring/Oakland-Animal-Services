@@ -5,6 +5,7 @@ export default {
   port: Number(process.env.PORT) || 3000,
   USE_MOCK_RG_DB: process.env.USE_MOCK_RG_DB === "true",
   USE_MOCK_OBSERVER_DB: process.env.USE_MOCK_OBSERVER_DB === "true",
+  LLM_API_KEY: process.env.OPENAI_API_KEY ?? "",
   aws: {
     region: process.env.AWS_REGION ?? "us-east-1",
     endpoint: process.env.AWS_ENDPOINT ?? "http://localhost:4566",
