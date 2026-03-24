@@ -1,5 +1,5 @@
-import { PetSchema, type Pet, type PetLocation } from "../models/Pet.schema.js";
-import { PetRepository } from "../types/index.js";
+import { PetSchema, type Pet, type PetLocation } from "../../models/Pet.schema.js";
+import { PetRepository } from "../../types/index.js";
 
 function mapper(pet: any): PetLocation {
   return {

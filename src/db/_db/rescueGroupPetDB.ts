@@ -1,6 +1,6 @@
-import config from "../config/index.js";
-import { PetLocation, PetSchema, type Pet } from "../models/Pet.schema.js";
-import { PetRepository } from "../types/index.js";
+import config from "../../config/index.js";
+import { PetLocation, PetSchema, type Pet } from "../../models/Pet.schema.js";
+import { PetRepository } from "../../types/index.js";
 import axios from "axios";
 
 const RESCUE_GROUPS_ENDPOINT = config.rescueGroups.endpoint;
