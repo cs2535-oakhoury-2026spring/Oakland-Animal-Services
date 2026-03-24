@@ -24,6 +24,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(summarizeRoutes);
 app.use(searchRouter);
 app.use(observerNotesRouter);
+app.use(petRouter);
 
 
 seedObserverNotes([
