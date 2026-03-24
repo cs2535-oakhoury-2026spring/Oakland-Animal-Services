@@ -1,92 +1,92 @@
 # Oakland Animal Services Portal - API Integration Status
 
-## ✅ Connected Real Backend APIs
+## Connected Real Backend APIs
 
 ### 1. Observer Notes - Get by Pet ID
 - **Endpoint**: `GET /api/pets/:petId/observer-notes`
-- **Status**: ✅ CONNECTED
+- **Status**: CONNECTED
 - **Functionality**: Fetches all medical observations for a specific pet
-- **Data Transformation**: Backend uses `{timestamp, content, author, petId}` → Frontend expects `{id, case, by, status, body, createdAt}`
+- **Data Transformation**: Backend uses `{timestamp, content, author, petId}` - Frontend expects `{id, case, by, status, body, createdAt}`
 - **Fallback**: If API fails, falls back to mock data
 
 ### 2. Observer Notes - Create New
 - **Endpoint**: `POST /api/observer-notes`
-- **Status**: ✅ CONNECTED
+- **Status**: CONNECTED
 - **Functionality**: Creates new medical observation note
 - **Request Body**: `{content: string, author: string, petId: number}`
-- **Data Transformation**: Frontend sends `{body, by, petId}` → Backend expects `{content, author, petId}`
+- **Data Transformation**: Frontend sends `{body, by, petId}` - Backend expects `{content, author, petId}`
 - **Fallback**: If API fails, falls back to mock creation
 
 ### 3. Search Observer Notes
 - **Endpoint**: `POST /api/search`
-- **Status**: ✅ CONNECTED (but not actively used in UI yet)
+- **Status**: CONNECTED (not actively used in UI)
 - **Functionality**: Searches observer notes using similarity matching
 - **Request Body**: `{note: string, maxResults: number}`
 - **Note**: Currently frontend uses local filtering instead of this API
 
 ---
 
-## ❌ Mock Data (No Backend Endpoint)
+## Mock Data (No Backend Endpoint)
 
 ### 1. User Authentication
 - **Expected Endpoint**: `POST /api/login`
-- **Status**: ❌ MOCK ONLY
+- **Status**: MOCK ONLY
 - **Current Behavior**: Uses hardcoded user credentials
   - `shannon / oak2026` (medical role)
   - `demo / demo` (staff role)
 
 ### 2. Pet Details
 - **Expected Endpoint**: `GET /api/pets/:petId`
-- **Status**: ❌ MOCK ONLY
+- **Status**: MOCK ONLY
 - **Note**: Pet router exists in backend but NOT registered in `server.ts`
 - **Current Behavior**: Returns mock cat data (Fluffly, Whiskers, Mittens)
 
 ### 3. Pets by Location
-- **Expected Endpoint**: `GET /api/location/:petType/:location` or similar
-- **Status**: ❌ MOCK ONLY
+- **Expected Endpoint**: `GET /api/location/:petType/:location`
+- **Status**: MOCK ONLY
 - **Current Behavior**: Returns 3 mock cats from "Cat W-5"
 
 ### 4. Behavior Notes
 - **Expected Endpoint**: `GET /api/pets/:petId/behavior-note`
-- **Status**: ❌ MOCK ONLY
+- **Status**: MOCK ONLY
 - **Current Behavior**: Returns mock shared behavior note text
 
-### 5. Handler Level Update
-- **Expected Endpoint**: `PATCH /api/pets/:petId/handler-level`
-- **Status**: ❌ MOCK ONLY
-- **Current Behavior**: Updates local state only (not persisted)
+### 5. Handler Level
+- **Note**: Handler level comes from RescueGroups API `animalOthernames` field
+- **Status**: READ-ONLY (displayed from API data)
+- **Current Behavior**: Shows color indicator but no update endpoint exists
 
 ---
 
 ## Currently Functioning Features
 
-### ✅ Fully Working
+### Fully Working
 1. **Login System** (mock authentication)
 2. **Animal Selection** (if multiple animals in kennel)
-3. **Pet Profile Display** (mock data)
+3. **Pet Profile Display** (mock data with handler level from API)
 4. **Medical Observations Tab**
-   - View notes ✅ (connected to real API)
-   - Create new notes ✅ (connected to real API)
-   - Edit own notes ✅ (local state only)
-   - Search/filter notes ✅ (client-side filtering)
-   - Role-based permissions ✅ (medical staff can change status)
+   - View notes (connected to real API)
+   - Create new notes (connected to real API)
+   - Edit own notes (local state only)
+   - Search/filter notes (client-side filtering)
+   - Role-based permissions (medical staff can change status)
 5. **Behavior Notes Tab** (mock data, local edits)
-6. **Summary Tab** (aggregates data from mock + real APIs)
-7. **Dark/Light Mode Toggle** ✅
-8. **Handler Level Picker** (local state only)
+6. **Summary Tab** (aggregates data from mock and real APIs)
+7. **Dark/Light Mode Toggle**
+8. **Handler Level Indicator** (read-only from RescueGroups API)
 9. **QR Code Modal** (placeholder)
 10. **Responsive Design** (phone/tablet/desktop)
 11. **Accessibility Features** (WCAG 2.1 AA compliant)
 
-### ⚠️ Partially Working
+### Partially Working
 - **Medical Observations**: Notes are fetched and created via real API, but editing only updates local state (no PATCH endpoint exists)
 - **Search**: Backend search endpoint exists but frontend uses local filtering
 
-### ❌ Not Connected
+### Not Connected
 - User authentication (no backend endpoint)
 - Pet data persistence (pet router not registered)
 - Behavior notes persistence
-- Handler level updates
+- Handler level updates (read-only from RescueGroups API)
 
 ---
 

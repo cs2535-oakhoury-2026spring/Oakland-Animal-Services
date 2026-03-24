@@ -319,13 +319,13 @@ const themes = {
 };
 const font = "'Poppins', sans-serif";
 
-// ─── Handler Level Constants ─────────────────────────────────────────────────
-const HANDLER_LEVELS = [
-  { key: "green", color: "#4CAF50", label: "All Dog Volunteers" },
-  { key: "yellow", color: "#FFC107", label: "Yellow Level Volunteers" },
-  { key: "blue", color: "#2196F3", label: "Blue Level (Crew)" },
-  { key: "pink", color: "#E91E63", label: "Staff Only" },
-];
+// Handler level colors (from RescueGroups API animalOthernames field)
+const HANDLER_LEVEL_COLORS = {
+  green: "#4CAF50",
+  yellow: "#FFC107",
+  blue: "#2196F3",
+  pink: "#E91E63",
+};
 
 // ─── Login Screen ────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
@@ -432,38 +432,23 @@ function UserDropdown({ user, onLogout, c }) {
   );
 }
 
-// ─── Handler Level Picker ────────────────────────────────────────────────────
-function HandlerLevelPicker({ level, onChange, c }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const current = HANDLER_LEVELS.find((l) => l.key === level) || HANDLER_LEVELS[0];
-  useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
-
+// Handler level indicator (read-only from RescueGroups API)
+function HandlerLevelIndicator({ level }) {
+  const color = HANDLER_LEVEL_COLORS[level] || HANDLER_LEVEL_COLORS.green;
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-flex", alignItems: "center", flexShrink: 0 }}>
-      <button onClick={() => setOpen(!open)}
-        style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: current.color, border: "2px solid rgba(255,255,255,0.6)", cursor: "pointer", padding: 0, boxShadow: `0 0 0 2px ${current.color}44, 0 1px 4px rgba(0,0,0,0.2)`, transition: "box-shadow 0.3s" }}
-        title={`Handler level: ${current.label} — tap to change`}
-        aria-label={`Handler level: ${current.label}. Tap to change.`}
-      />
-      {open && (
-        <>
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 59 }} onClick={() => setOpen(false)} />
-          <div style={{ position: "absolute", top: 30, left: -8, backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`, borderRadius: 12, padding: 8, zIndex: 60, boxShadow: "0 8px 24px rgba(0,0,0,0.18)", minWidth: 220, fontFamily: font }}>
-            <div style={{ fontSize: 12, color: c.warmGray, padding: "4px 8px 6px", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>Handler Level</div>
-            {HANDLER_LEVELS.map((opt) => (
-              <button key={opt.key} onClick={() => { onChange(opt.key); setOpen(false); }}
-                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 10px", border: "none", borderRadius: 8, cursor: "pointer", fontFamily: font, fontSize: 14, backgroundColor: level === opt.key ? `${opt.color}18` : "transparent", color: c.textPrimary, textAlign: "left", minHeight: 44 }}
-                aria-label={opt.label}
-              >
-                <div style={{ width: 16, height: 16, borderRadius: "50%", backgroundColor: opt.color, flexShrink: 0, border: level === opt.key ? "2px solid " + c.textPrimary : "2px solid transparent" }} />
-                <span style={{ fontWeight: level === opt.key ? 600 : 400 }}>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    <div
+      style={{
+        width: 16,
+        height: 16,
+        borderRadius: "50%",
+        backgroundColor: color,
+        border: "2px solid rgba(255,255,255,0.8)",
+        boxShadow: `0 0 0 2px ${color}44, 0 1px 3px rgba(0,0,0,0.15)`,
+        flexShrink: 0,
+      }}
+      title={`Handler level: ${level}`}
+      aria-label={`Handler level: ${level}`}
+    />
   );
 }
 
@@ -692,7 +677,6 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [pet, setPet] = useState(null);
   const [notes, setNotes] = useState([]);
   const [behaviorNote, setBehaviorNote] = useState({ body: "" });
-  const [handlerLevel, setHandlerLevel] = useState("green");
   const [activeTab, setActiveTab] = useState("summary");
   const [prevTab, setPrevTab] = useState("summary");
   const [slideDirection, setSlideDirection] = useState("right");
@@ -713,7 +697,6 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       setLoading(true);
       const [petData, notesData, bNote] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNote(petId)]);
       setPet(petData);
-      setHandlerLevel(petData.handlerLevel || "green");
       setNotes(notesData);
       setBehaviorNote(bNote);
       setLoading(false);
@@ -784,20 +767,30 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
       {/* Pet Card */}
       <div style={{ margin: "12px 16px", backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
-        <div style={{ padding: 16, display: "flex", gap: 14 }}>
-          <img style={{ width: r.petImageSize, height: r.petImageSize, borderRadius: 8, objectFit: "cover", border: `2px solid ${c.cardBorder}` }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: r.petNameSize, fontWeight: 700, color: c.textPrimary, marginBottom: 4 }}>
-              <HandlerLevelPicker level={handlerLevel} onChange={setHandlerLevel} c={c} />
-              {pet.name}
+        <div style={{ padding: 20, display: "flex", gap: 20, alignItems: "flex-start" }}>
+          <img style={{ width: 160, height: 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+              <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
             </div>
-            {[["Animal ID", pet.petId], ["Location", pet.location], ["Microchip", pet.microchip]].map(([label, val]) => (
-              <div key={label} style={{ fontSize: r.detailSize, color: c.textPrimary, lineHeight: 1.8 }}><span style={{ color: c.textSecondary, fontWeight: 500 }}>{label} : </span>{val}</div>
-            ))}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontSize: r.detailSize, color: c.textPrimary, lineHeight: 1.8 }}><span style={{ color: c.textSecondary, fontWeight: 500 }}>ARN : </span>{pet.arn}</div>
-              <button onClick={() => setShowQR(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center", minHeight: 44, minWidth: 44, justifyContent: "center" }} aria-label="Show QR code">
-                <Icons.qrCode size={22} color={c.textSecondary} />
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 12px", alignItems: "center" }}>
+              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
+              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.petId}</span>
+              
+              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
+              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.location}</span>
+              
+              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
+              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.microchip}</span>
+              
+              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
+              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.arn}</span>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <button onClick={() => setShowQR(true)} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: font, transition: "all 0.2s ease" }} aria-label="Show QR code">
+                <Icons.qrCode size={16} color={c.textSecondary} />
+                View QR Code
               </button>
             </div>
           </div>
