@@ -14,3 +14,4 @@ To provide an operational system that removes paper-based or otherwise fragmente
 
 Provide each kennel in the shelter a QR code which when scanned will bring the voluenter to the current pets page. This page will display basic information about the pet and also allow the volunteer to add observeration notes or behavior notes to the pet which staff can later access.
 
+# SetUp
