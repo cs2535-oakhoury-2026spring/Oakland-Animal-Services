@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import {
   getPetById,
-  getCatIdFromLocation,
-  getDogIdFromLocation,
+  searchByLocation,
 } from "../db/pets.js";
 
 export async function getPet(req: Request, res: Response) {
@@ -32,16 +31,7 @@ export async function getPetByLocation(req: Request, res: Response) {
     return res.status(400).json({ error: "Location is required" });
   }
 
-  let pet;
-  if (petType === "dog") {
-    pet = await getDogIdFromLocation(location);
-  } else if (petType === "cat") {
-    pet = await getCatIdFromLocation(location);
-  } else {
-    return res.status(400).json({
-      error: "Invalid pet type. Use 'dog' or 'cat' in the URL.",
-    });
-  }
+  const pet = await searchByLocation(petType, location);
 
   if (!pet) {
     return res.status(404).json({ error: "Pet not found" });

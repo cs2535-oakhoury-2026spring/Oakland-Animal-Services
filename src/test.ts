@@ -4,7 +4,7 @@ import {
 } from "./services/observerNoteService.js";
 import { seedObserverNotes } from "./db/observerNotes.js";
 
-import { getCatIdFromLocation, getDogIdFromLocation, getPetById } from "./db/pets.js";
+import { searchByLocation, getPetById } from "./db/pets.js";
 import { get } from "http";
 
 // getPetById(22254130).then((pet) => {
@@ -13,13 +13,13 @@ import { get } from "http";
 //   console.log();
 // });
 
-// getDogIdFromLocation("e:1").then((petId) => {
-//   console.log("=== Dog ID by Location ===");
-//   console.log(petId);
+// searchByLocation("dog", "e:1").then((pets) => {
+//   console.log("=== Dog(s) by Location ===");
+//   console.log(pets);
 //   console.log();
 // });
 
-getCatIdFromLocation("Holding-4:19").then((petId) => {
+searchByLocation("cat", "holding-4:19").then((petId) => {
   console.log("=== Cat ID by Location ===");
   console.log(petId);
   console.log();

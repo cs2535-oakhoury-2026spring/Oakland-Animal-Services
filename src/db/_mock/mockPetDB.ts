@@ -53,6 +53,7 @@ export class MockPetRepository implements PetRepository {
       name: "Buddy",
       species: "Dog",
       summary: "I am at Oakland Animal Services in kennel E:1",
+      otherNames: "green"
     } as any);
 
     this.pets = [marley, anotherCat, dog];
@@ -67,13 +68,14 @@ export class MockPetRepository implements PetRepository {
     return this.pets.find((pet) => pet.id === id);
   }
 
-  async getDogIdFromLocation(location: string): Promise<PetLocation[] | undefined> {
+  async searchByLocation(
+    petType: "dog" | "cat",
+    location: string,
+  ): Promise<PetLocation[] | undefined> {
     const lower = location.toLowerCase().replaceAll("-", " ");
-    return this.dogLocationMap.get(lower)?.map(mapper);
-  }
-
-  async getCatIdFromLocation(location: string): Promise<PetLocation[] | undefined> {
-    const lower = location.toLowerCase().replaceAll("-", " ");
+    if (petType === "dog") {
+      return this.dogLocationMap.get(lower)?.map(mapper);
+    }
     return this.catLocationMap.get(lower)?.map(mapper);
   }
 }

@@ -165,7 +165,7 @@ export class RescueGroupPetRepository implements PetRepository {
     }
   }
 
-  private async searchByLocation(
+  private async searchByLocationInternal(
     species: string,
     location: string,
   ): Promise<PetLocation[] | undefined> {
@@ -229,15 +229,10 @@ export class RescueGroupPetRepository implements PetRepository {
     }
   }
 
-  async getDogIdFromLocation(
+  async searchByLocation(
+    petType: string,
     location: string,
   ): Promise<PetLocation[] | undefined> {
-    return this.searchByLocation("Dog", location);
-  }
-
-  async getCatIdFromLocation(
-    location: string,
-  ): Promise<PetLocation[] | undefined> {
-    return this.searchByLocation("Cat", location);
+    return this.searchByLocationInternal(petType, location);
   }
 }

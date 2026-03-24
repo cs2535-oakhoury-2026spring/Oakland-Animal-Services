@@ -12,14 +12,9 @@ export async function getPetById(id: number): Promise<Pet | undefined> {
   return REPO.getById(id);
 }
 
-export async function getDogIdFromLocation(
+export async function searchByLocation(
+  petType: string,
   location: string,
 ): Promise<PetLocation[] | undefined> {
-  return REPO.getDogIdFromLocation(location);
-}
-
-export async function getCatIdFromLocation(
-  location: string,
-): Promise<PetLocation[] | undefined> {
-  return REPO.getCatIdFromLocation(location);
+  return REPO.searchByLocation(petType, location);
 }
