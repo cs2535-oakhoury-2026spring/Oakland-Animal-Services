@@ -854,19 +854,27 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               </button>
             </div>
             
-            {/* Pet Details Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 12px", alignItems: "center" }}>
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.petId}</span>
+            {/* Pet Details */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+                <span style={{ color: c.textSecondary, fontWeight: 600 }}>Animal ID: </span>
+                <span style={{ color: c.textPrimary }}>{pet.petId}</span>
+              </div>
               
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.location}</span>
+              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+                <span style={{ color: c.textSecondary, fontWeight: 600 }}>Location: </span>
+                <span style={{ color: c.textPrimary }}>{pet.location}</span>
+              </div>
               
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.microchip}</span>
+              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+                <span style={{ color: c.textSecondary, fontWeight: 600 }}>Microchip: </span>
+                <span style={{ color: c.textPrimary }}>{pet.microchip}</span>
+              </div>
               
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
-              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.arn}</span>
+              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+                <span style={{ color: c.textSecondary, fontWeight: 600 }}>ARN: </span>
+                <span style={{ color: c.textPrimary }}>{pet.arn}</span>
+              </div>
             </div>
           </div>
         </div>
