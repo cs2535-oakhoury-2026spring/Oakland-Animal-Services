@@ -95,7 +95,7 @@
 
   <div class="input-container">
     <textarea id="noteInput" placeholder="Enter observer note..."></textarea>
-    <textarea id="summaryOutput" placeholder="AI summary will appear here..." readonly></textarea>
+    <textarea id="summaryOutput" placeholder="AI summary will appear here..." onload="summarizeNotes()" readonly></textarea>
 </div>
 
   <div>
@@ -341,7 +341,7 @@
       }
     }
 
-  async function summarizeNote(note) {
+  async function summarizeNotes(note) {
     const requestId = ++currentRequestId;
 
     summaryOutput.value = 'Summarizing...';
