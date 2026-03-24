@@ -11,16 +11,20 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1015.0",
+    "@aws-sdk/lib-dynamodb": "^3.1015.0",
     "axios": "^1.13.6",
     "compromise": "^14.14.5",
     "dotenv": "^17.3.1",
     "express": "^4.18.2",
     "fastest-levenshtein": "^1.0.16",
+    "winston": "^3.19.0",
     "zod": "^4.3.6"
   },
   "scripts": {
     "build": "tsc",
     "test": "tsc && node dist/test.js",
-    "server": "tsc && node dist/server.js"
+    "server": "tsc && node dist/server.js",
+    "create-table": "ts-node src/scripts/createTable.ts"
   }
 }

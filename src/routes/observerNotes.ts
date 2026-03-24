@@ -1,13 +1,18 @@
 import { Router } from "express";
 import {
-  listObserverNotes,
-  uploadObserverNote,
-  getObserverNotesByPetId,
+  createMedicalNote,
+  createBehavioralNote,
+  getNotesByAnimalId,
+  getNotesByDate,
+  resolveMedicalNote,
 } from "../controllers/observerNotesController.js";
 
 const router = Router();
-router.get("/api/observer-notes", listObserverNotes);
-router.get("/api/pets/:petId/observer-notes", getObserverNotesByPetId);
-router.post("/api/observer-notes", uploadObserverNote);
+
+router.post("/api/pets/:petId/medical-notes", createMedicalNote);
+router.post("/api/pets/:petId/behavioral-notes", createBehavioralNote);
+router.get("/api/pets/:petId/observer-notes", getNotesByAnimalId);
+router.get("/api/observer-notes", getNotesByDate);
+router.put("/api/pets/:petId/medical-notes/resolve", resolveMedicalNote);
 
 export default router;

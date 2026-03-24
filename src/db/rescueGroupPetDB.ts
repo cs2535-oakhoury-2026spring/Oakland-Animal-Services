@@ -1,5 +1,5 @@
-import config from "../config/index.js";
-import { PetSchema, type Pet } from "../models/Pet.schema.js";
+import { config } from "../config/index.js";
+import { PetSchema, type Pet } from "../models/schemas/Pet.schema.js";
 import { PetRepository } from "../types/index.js";
 import axios from "axios";
 

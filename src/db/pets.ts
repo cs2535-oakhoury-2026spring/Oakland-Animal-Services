@@ -1,5 +1,5 @@
-import { type Pet } from "../models/Pet.schema.js";
-import config from "../config/index.js";
+import { type Pet } from "../models/schemas/Pet.schema.js";
+import{ config }from "../config/index.js";
 import { PetRepository } from "../types/index.js";
 import { RescueGroupPetRepository } from "./rescueGroupPetDB.js";
 import { MockPetRepository } from "./mockPetDB.js";

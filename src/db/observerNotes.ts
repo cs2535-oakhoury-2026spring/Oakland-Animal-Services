@@ -1,7 +1,7 @@
 import {
   ObserverNoteSchema,
   type ObserverNote,
-} from "../models/ObserverNote.schema.js";
+} from "../models/schemas/ObserverNote.schema.js";
 
 const _observerNotes: ObserverNote[] = [];
 

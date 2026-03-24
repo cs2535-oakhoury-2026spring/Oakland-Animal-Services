@@ -1,4 +1,4 @@
-import { PetSchema, type Pet } from "../models/Pet.schema.js";
+import { PetSchema, type Pet } from "../models/schemas/Pet.schema.js";
 import { PetRepository } from "../types/index.js";
 
 export class MockPetRepository implements PetRepository {

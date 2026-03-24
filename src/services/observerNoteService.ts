@@ -2,7 +2,7 @@ import { findSimilarNotes, NoteData } from "../utils/observerNoteSearch.js";
 import {
   ObserverNoteSchema,
   type ObserverNote,
-} from "../models/ObserverNote.schema.js";
+} from "../models/schemas/ObserverNote.schema.js";
 import {
   getAllObserverNotes as _getAllObserverNotes,
   addObserverNote as _addObserverNote,

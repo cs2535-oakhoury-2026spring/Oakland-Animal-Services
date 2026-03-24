@@ -1,4 +1,4 @@
-import { Pet } from "../models/Pet.schema.js";
+import { Pet } from "../models/schemas/Pet.schema.js";
 
 export interface PetRepository {
   getById(id: number): Promise<Pet | undefined>;
