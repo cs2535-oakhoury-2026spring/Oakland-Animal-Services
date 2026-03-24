@@ -836,36 +836,41 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
       {/* Pet Card */}
       <div style={{ margin: "12px 16px", backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
-        <div style={{ padding: r.isPhone ? 16 : 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-          {/* Pet Image */}
-          <img style={{ width: r.isPhone ? 110 : 130, height: r.isPhone ? 110 : 130, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}` }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
+        <div style={{ padding: r.isPhone ? 16 : 20, display: "flex", gap: r.isPhone ? 14 : 18, alignItems: "flex-start" }}>
+          {/* Pet Image - LEFT */}
+          <img style={{ width: r.isPhone ? 100 : 120, height: r.isPhone ? 100 : 120, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
           
-          {/* Name with Handler Level */}
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
-            <h2 style={{ fontSize: r.isPhone ? 18 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
+          {/* Details - RIGHT */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Name with Handler Level */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
+              <h2 style={{ fontSize: r.isPhone ? 16 : 18, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
+            </div>
+            
+            {/* Pet Details Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 12px", alignItems: "center" }}>
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.petId}</span>
+              
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.location}</span>
+              
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.microchip}</span>
+              
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
+              <span style={{ fontSize: r.isPhone ? 12 : 13, color: c.textPrimary }}>{pet.arn}</span>
+            </div>
+            
+            {/* QR Code Button - Bottom Right */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 4 }}>
+              <button onClick={() => setShowQR(true)} style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, cursor: "pointer", fontSize: 12, fontWeight: 500, display: "flex", alignItems: "center", gap: 4, fontFamily: font, transition: "all 0.2s ease" }} aria-label="Show QR code">
+                <Icons.qrCode size={14} color={c.textSecondary} />
+                {!r.isPhone && "View QR Code"}
+              </button>
+            </div>
           </div>
-          
-          {/* Pet Details Grid */}
-          <div style={{ width: "100%", maxWidth: 320, display: "grid", gridTemplateColumns: "auto 1fr", gap: "10px 16px", alignItems: "center" }}>
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600, textAlign: "right" }}>Animal ID:</span>
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.petId}</span>
-            
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600, textAlign: "right" }}>Location:</span>
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.location}</span>
-            
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600, textAlign: "right" }}>Microchip:</span>
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.microchip}</span>
-            
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600, textAlign: "right" }}>ARN:</span>
-            <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.arn}</span>
-          </div>
-          
-          {/* QR Code Button */}
-          <button onClick={() => setShowQR(true)} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: font, transition: "all 0.2s ease", marginTop: 4 }} aria-label="Show QR code">
-            <Icons.qrCode size={16} color={c.textSecondary} />
-            View QR Code
-          </button>
         </div>
       </div>
 
