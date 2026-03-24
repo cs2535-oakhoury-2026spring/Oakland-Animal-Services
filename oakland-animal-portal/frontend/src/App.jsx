@@ -845,16 +845,16 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 12px", alignItems: "center" }}>
               <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.petId}</span>
+              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.petId}</span>
               
               <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.location}</span>
+              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-word" }}>{pet.location}</span>
               
               <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.microchip}</span>
+              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.microchip}</span>
               
               <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary }}>{pet.arn}</span>
+              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.arn}</span>
             </div>
             <div style={{ marginTop: 8 }}>
               <button onClick={() => setShowQR(true)} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: font, transition: "all 0.2s ease" }} aria-label="Show QR code">
