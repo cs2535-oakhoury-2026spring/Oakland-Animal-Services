@@ -47,7 +47,7 @@ export class MedicalObservationNote extends ObservationNote {
   /**
    * Converts the medical observation note instance into a format suitable for storage in DynamoDB.
    * Includes the primary key (PK), sort key (SK), and specific medical note fields.
-   * @returns A record object representing the medical observation note in DynamoDB format.
+   * @returns  A record object representing the medical observation note in DynamoDB format.
    */
   toDynamoDB(): Record<string, any> {
     return {
