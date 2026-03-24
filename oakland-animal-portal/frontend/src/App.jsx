@@ -542,14 +542,35 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
   const isOwner = note.by === currentUser;
   const [hovered, setHovered] = useState(false);
   
+  // Format timestamp
+  const formatTimestamp = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+      
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+    } catch {
+      return "";
+    }
+  };
+  
   return (
     <article 
       style={{ 
         backgroundColor: c.cardBg, 
         borderRadius: 12, 
-        padding: 14, 
+        padding: 16, 
         border: `1px solid ${c.cardBorder}`, 
-        marginBottom: 10, 
+        marginBottom: 12, 
         boxShadow: hovered ? "0 4px 12px rgba(0,0,0,0.1)" : c.shadow,
         transform: hovered ? "translateY(-1px)" : "none",
         transition: "all 0.2s ease"
@@ -557,15 +578,63 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, flexWrap: "wrap", gap: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: c.headerGreen }}>Case: {note.case}</span>
-        <span style={{ fontSize: 12, color: c.warmGray }}>By : {note.by}</span>
-        <span style={{ fontSize: 12, fontWeight: 600, color: note.status === "Raised" ? c.statusRaised : c.statusResolved, backgroundColor: note.status === "Raised" ? `${c.statusRaised}18` : `${c.statusResolved}18`, padding: "3px 10px", borderRadius: 6 }}>Status : {note.status}</span>
+      {/* Header with title and status */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <h4 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: "0 0 6px 0", lineHeight: 1.3 }}>
+            {note.case}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: c.warmGray, fontWeight: 500 }}>
+              {note.by}
+            </span>
+            <span style={{ fontSize: 11, color: c.warmGray }}>•</span>
+            <span style={{ fontSize: 12, color: c.warmGray }}>
+              {formatTimestamp(note.createdAt)}
+            </span>
+          </div>
+        </div>
+        <span 
+          style={{ 
+            fontSize: 11, 
+            fontWeight: 600, 
+            color: note.status === "Raised" ? c.statusRaised : c.statusResolved, 
+            backgroundColor: note.status === "Raised" ? `${c.statusRaised}18` : `${c.statusResolved}18`, 
+            padding: "4px 12px", 
+            borderRadius: 12,
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            flexShrink: 0
+          }}
+        >
+          {note.status}
+        </span>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1 }}>{note.body}</div>
+      
+      {/* Body content */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
+          {note.body}
+        </p>
         {isOwner && (
-          <button onClick={() => onEdit(note)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, marginLeft: 8, flexShrink: 0, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center", transition: "opacity 0.2s ease" }} aria-label="Edit your observation">
+          <button 
+            onClick={() => onEdit(note)} 
+            style={{ 
+              background: "none", 
+              border: "none", 
+              cursor: "pointer", 
+              padding: 6, 
+              flexShrink: 0, 
+              minHeight: 44, 
+              minWidth: 44, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              transition: "opacity 0.2s ease",
+              opacity: hovered ? 1 : 0.6
+            }} 
+            aria-label="Edit your observation"
+          >
             <Icons.pencil size={16} color={c.warmGray} />
           </button>
         )}
