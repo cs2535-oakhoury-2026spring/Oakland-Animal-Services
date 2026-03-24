@@ -836,27 +836,27 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
       {/* Pet Card */}
       <div style={{ margin: "12px 16px", backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
-        <div style={{ padding: 20, display: "flex", gap: 20, alignItems: "flex-start" }}>
-          <img style={{ width: 160, height: 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+        <div style={{ padding: r.isPhone ? 16 : 20, display: "flex", flexDirection: r.isPhone ? "column" : "row", gap: r.isPhone ? 16 : 20, alignItems: r.isPhone ? "center" : "flex-start" }}>
+          <img style={{ width: r.isPhone ? 120 : 160, height: r.isPhone ? 120 : 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, justifyContent: "center", width: r.isPhone ? "100%" : "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4, justifyContent: r.isPhone ? "center" : "flex-start" }}>
               <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
+              <h2 style={{ fontSize: r.isPhone ? 20 : 24, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 12px", alignItems: "center" }}>
-              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.petId}</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600 }}>Animal ID:</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.petId}</span>
               
-              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-word" }}>{pet.location}</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600 }}>Location:</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.location}</span>
               
-              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.microchip}</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600 }}>Microchip:</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.microchip}</span>
               
-              <span style={{ fontSize: 14, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
-              <span style={{ fontSize: 14, color: c.textPrimary, wordBreak: "break-all" }}>{pet.arn}</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textSecondary, fontWeight: 600 }}>ARN:</span>
+              <span style={{ fontSize: r.isPhone ? 13 : 14, color: c.textPrimary }}>{pet.arn}</span>
             </div>
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 8, display: "flex", justifyContent: r.isPhone ? "center" : "flex-start" }}>
               <button onClick={() => setShowQR(true)} style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, cursor: "pointer", fontSize: 13, fontWeight: 500, display: "flex", alignItems: "center", gap: 6, fontFamily: font, transition: "all 0.2s ease" }} aria-label="Show QR code">
                 <Icons.qrCode size={16} color={c.textSecondary} />
                 View QR Code
