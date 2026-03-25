@@ -464,9 +464,10 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
   const [body, setBody] = useState(note.body);
   const [caseName, setCaseName] = useState(note.case || "");
   const [status, setStatus] = useState(note.status || "Raised");
-  const canChangeStatus = userRole === "medical";
-  const handleSave = () => { onSave({ ...note, body, case: caseName, ...(canChangeStatus ? { status } : {}) }); onClose(); };
+  const isMedical = userRole === "medical";
+  const handleSave = () => { onSave({ ...note, ...(isMedical ? {} : { body, case: caseName }), ...(isMedical ? { status } : {}) }); onClose(); };
   const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
+  const readOnlyFieldStyle = { ...fieldStyle, backgroundColor: c.cardBorder, cursor: "not-allowed", opacity: 0.6 };
   const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
   
   const focusTrapRef = useFocusTrap(true);
@@ -477,10 +478,11 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
       <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
         <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>Edit Medical Observation</h2>
         <label style={labelStyle}>Case Title</label>
-        <input style={fieldStyle} value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
-        {canChangeStatus && (<><label style={labelStyle}>Status</label><select style={fieldStyle} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="Raised">Raised</option><option value="Resolved">Resolved</option></select></>)}
+        <input style={isMedical ? readOnlyFieldStyle : fieldStyle} value={caseName} onChange={(e) => !isMedical && setCaseName(e.target.value)} disabled={isMedical} aria-label="Case title" />
+        {isMedical && (<><label style={labelStyle}>Status</label><select style={fieldStyle} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="Raised">Raised</option><option value="Resolved">Resolved</option></select></>)}
         <label style={labelStyle}>Notes</label>
-        <textarea style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }} value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
+        <textarea style={{ ...(isMedical ? readOnlyFieldStyle : fieldStyle), minHeight: 120, resize: "vertical" }} value={body} onChange={(e) => !isMedical && setBody(e.target.value)} disabled={isMedical} aria-label="Observation notes" />
+        {isMedical && <div style={{ fontSize: 12, color: c.warmGray, fontStyle: "italic", marginTop: -8, marginBottom: 8 }}>Medical staff can only update status</div>}
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
           <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSave}>Save</button>
@@ -624,8 +626,9 @@ function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
 }
 
 // ─── Medical Note Card ───────────────────────────────────────────────────────
-function MedicalNoteCard({ note, currentUser, onEdit, c }) {
+function MedicalNoteCard({ note, currentUser, userRole, onEdit, c }) {
   const isOwner = note.by === currentUser;
+  const canEdit = isOwner || userRole === "medical";
   const [hovered, setHovered] = useState(false);
   
   // Format timestamp to precise datetime
@@ -698,7 +701,7 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
           {note.body}
         </p>
-        {isOwner && (
+        {canEdit && (
           <button 
             onClick={() => onEdit(note)} 
             style={{ 
@@ -726,8 +729,9 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
 }
 
 // ─── Behavior Note Card (same as medical) ───────────────────────────────────
-function BehaviorNoteCard({ note, currentUser, onEdit, c }) {
+function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c }) {
   const isOwner = note.by === currentUser;
+  const canEdit = isOwner && userRole !== "medical";
   const [hovered, setHovered] = useState(false);
   
   const formatTimestamp = (dateString) => {
@@ -782,7 +786,7 @@ function BehaviorNoteCard({ note, currentUser, onEdit, c }) {
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
           {note.body}
         </p>
-        {isOwner && (
+        {canEdit && (
           <button 
             onClick={() => onEdit(note)} 
             style={{ 
@@ -1117,7 +1121,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
             </div>
             <div style={{ padding: "0 16px 100px" }}>
               {filteredNotes.length > 0 ? filteredNotes.map((note) => (
-                <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} onEdit={setEditingNote} c={c} />
+                <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} />
               )) : (
                 <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 15 }}>
                   {searchQuery ? "No observations matching your search." : "No medical observations yet."}
@@ -1140,7 +1144,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
             </div>
             <div style={{ padding: "0 16px 100px" }}>
               {filteredBehaviorNotes.length > 0 ? filteredBehaviorNotes.map((note) => (
-                <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} onEdit={setEditingBehaviorNote} c={c} />
+                <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} />
               )) : (
                 <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 15 }}>
                   {behaviorSearchQuery ? "No behavior notes matching your search." : "No behavior notes yet."}
