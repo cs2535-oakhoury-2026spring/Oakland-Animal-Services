@@ -944,6 +944,10 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [loading, setLoading] = useState(true);
+  const [medicalNotesVisible, setMedicalNotesVisible] = useState(5);
+  const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
+  
+  const NOTES_PER_PAGE = 5;
 
   const tabs = [
     { key: "summary", label: "Summary" },
@@ -1088,7 +1092,10 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                 setSlideDirection(index > currentIndex ? "left" : "right");
                 setPrevTab(activeTab);
                 setActiveTab(tab.key); 
-                setSearchQuery(""); 
+                setSearchQuery("");
+                setBehaviorSearchQuery("");
+                setMedicalNotesVisible(NOTES_PER_PAGE);
+                setBehaviorNotesVisible(NOTES_PER_PAGE);
               }}>
               {tab.label}
             </button>
@@ -1119,10 +1126,43 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateModal(true)} aria-label="New observation"><Icons.plus size={18} /></button>
             </div>
-            <div style={{ padding: "0 16px 100px" }}>
-              {filteredNotes.length > 0 ? filteredNotes.map((note) => (
-                <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} />
-              )) : (
+            <div style={{ padding: "0 16px 100px", position: "relative" }}>
+              {filteredNotes.length > 0 ? (
+                <>
+                  {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
+                    <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} />
+                  ))}
+                  {filteredNotes.length > medicalNotesVisible && (
+                    <div style={{ position: "relative", marginTop: -60, paddingTop: 60 }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80, background: `linear-gradient(to bottom, transparent, ${c.bg})`, pointerEvents: "none" }} />
+                      <div style={{ position: "relative", zIndex: 2, textAlign: "center", paddingTop: 20 }}>
+                        <button 
+                          onClick={() => setMedicalNotesVisible(prev => prev + NOTES_PER_PAGE)}
+                          style={{ 
+                            padding: "12px 32px", 
+                            borderRadius: 12, 
+                            border: `1px solid ${c.inputBorder}`, 
+                            backgroundColor: c.cardBg, 
+                            color: c.textPrimary, 
+                            fontSize: 15, 
+                            fontWeight: 600, 
+                            cursor: "pointer", 
+                            fontFamily: font,
+                            boxShadow: c.shadow,
+                            transition: "all 0.2s ease",
+                            minHeight: 44
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+                          aria-label="Load more observations"
+                        >
+                          Load More ({filteredNotes.length - medicalNotesVisible} remaining)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 15 }}>
                   {searchQuery ? "No observations matching your search." : "No medical observations yet."}
                 </div>
@@ -1142,10 +1182,43 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateBehaviorModal(true)} aria-label="New behavior note"><Icons.plus size={18} /></button>
             </div>
-            <div style={{ padding: "0 16px 100px" }}>
-              {filteredBehaviorNotes.length > 0 ? filteredBehaviorNotes.map((note) => (
-                <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} />
-              )) : (
+            <div style={{ padding: "0 16px 100px", position: "relative" }}>
+              {filteredBehaviorNotes.length > 0 ? (
+                <>
+                  {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
+                    <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} />
+                  ))}
+                  {filteredBehaviorNotes.length > behaviorNotesVisible && (
+                    <div style={{ position: "relative", marginTop: -60, paddingTop: 60 }}>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 80, background: `linear-gradient(to bottom, transparent, ${c.bg})`, pointerEvents: "none" }} />
+                      <div style={{ position: "relative", zIndex: 2, textAlign: "center", paddingTop: 20 }}>
+                        <button 
+                          onClick={() => setBehaviorNotesVisible(prev => prev + NOTES_PER_PAGE)}
+                          style={{ 
+                            padding: "12px 32px", 
+                            borderRadius: 12, 
+                            border: `1px solid ${c.inputBorder}`, 
+                            backgroundColor: c.cardBg, 
+                            color: c.textPrimary, 
+                            fontSize: 15, 
+                            fontWeight: 600, 
+                            cursor: "pointer", 
+                            fontFamily: font,
+                            boxShadow: c.shadow,
+                            transition: "all 0.2s ease",
+                            minHeight: 44
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+                          aria-label="Load more behavior notes"
+                        >
+                          Load More ({filteredBehaviorNotes.length - behaviorNotesVisible} remaining)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
                 <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 15 }}>
                   {behaviorSearchQuery ? "No behavior notes matching your search." : "No behavior notes yet."}
                 </div>
