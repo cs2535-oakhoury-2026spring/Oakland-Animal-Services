@@ -1034,42 +1034,36 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
       {/* Pet Card */}
       <div style={{ margin: "12px 16px", backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
-        <div style={{ padding: r.isPhone ? 16 : 20, display: "flex", gap: r.isPhone ? 14 : 18, alignItems: "flex-start" }}>
+        <div style={{ padding: r.isPhone ? 18 : 24, display: "flex", gap: r.isPhone ? 16 : 20, alignItems: "flex-start" }}>
           {/* Pet Image - LEFT */}
-          <img style={{ width: r.isPhone ? 100 : 120, height: r.isPhone ? 100 : 120, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
+          <img style={{ width: r.isPhone ? 130 : 160, height: r.isPhone ? 130 : 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
           
           {/* Details - RIGHT */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* Name with Handler Level and QR Button */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
-                <h2 style={{ fontSize: r.isPhone ? 16 : 18, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
-              </div>
-              <button onClick={() => setShowQR(true)} style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, cursor: "pointer", fontSize: 11, fontWeight: 500, display: "flex", alignItems: "center", gap: 4, fontFamily: font, transition: "all 0.2s ease", flexShrink: 0 }} aria-label="Show QR code">
-                <Icons.qrCode size={13} color={c.textSecondary} />
-                {!r.isPhone && <span style={{ fontSize: 11 }}>View QR</span>}
-              </button>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
+            {/* Name with Handler Level */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
+              <h2 style={{ fontSize: r.isPhone ? 20 : 24, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h2>
             </div>
             
             {/* Pet Details */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
                 <span style={{ color: c.textSecondary, fontWeight: 600 }}>Animal ID: </span>
                 <span style={{ color: c.textPrimary }}>{pet.petId}</span>
               </div>
               
-              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+              <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
                 <span style={{ color: c.textSecondary, fontWeight: 600 }}>Location: </span>
                 <span style={{ color: c.textPrimary }}>{pet.location}</span>
               </div>
               
-              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+              <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
                 <span style={{ color: c.textSecondary, fontWeight: 600 }}>Microchip: </span>
                 <span style={{ color: c.textPrimary }}>{pet.microchip}</span>
               </div>
               
-              <div style={{ fontSize: r.isPhone ? 12 : 13, lineHeight: 1.5 }}>
+              <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
                 <span style={{ color: c.textSecondary, fontWeight: 600 }}>ARN: </span>
                 <span style={{ color: c.textPrimary }}>{pet.arn}</span>
               </div>
