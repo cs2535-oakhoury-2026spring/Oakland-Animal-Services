@@ -199,11 +199,12 @@ const mockObserverNotes = [
   { id: 2, petId: "12345678910", case: "Limp On Right Leg", by: "Shannon", status: "Resolved", type: "medical", body: "Follow-up examination completed. Vet confirmed minor sprain, no fracture detected. Prescribed rest and limited activity for one week. Pain medication administered. Cat responding well to treatment.", createdAt: "2026-03-02T14:00:00Z" },
 ];
 
-const mockBehaviorNotes = {
-  "12345678910": { petId: "12345678910", body: "Cat has been hiding in the back of the kennel for most of the day. Not responding to usual enrichment activities. Appetite seems normal but social interaction is minimal. This may be stress-related due to recent kennel move.\n\nAfternoon update: Responded well to feather toy during enrichment. Showed interest for approximately 15 minutes. Made eye contact with handler and allowed brief chin scratches.\n\nRecommending quiet time and gradual socialization approach going forward.", lastEdited: "2026-03-02T15:30:00Z" },
-  "12345678911": { petId: "12345678911", body: "Buddy is very friendly and energetic. Enjoys walks and plays well with other dogs. Good candidate for adoption events.", lastEdited: "2026-03-01T10:00:00Z" },
-  "12345678912": { petId: "12345678912", body: "", lastEdited: "" },
-};
+const mockBehaviorNotes = [
+  { id: 1001, petId: "12345678910", case: "Stress-related behavior", by: "Shannon", body: "Cat has been hiding in the back of the kennel for most of the day. Not responding to usual enrichment activities. Appetite seems normal but social interaction is minimal. This may be stress-related due to recent kennel move.", createdAt: "2026-03-02T10:15:00Z" },
+  { id: 1002, petId: "12345678910", case: "Enrichment progress", by: "Shannon", body: "Responded well to feather toy during enrichment. Showed interest for approximately 15 minutes. Made eye contact with handler and allowed brief chin scratches.", createdAt: "2026-03-02T15:30:00Z" },
+  { id: 1003, petId: "12345678910", case: "Socialization plan", by: "Demo User", body: "Recommending quiet time and gradual socialization approach going forward.", createdAt: "2026-03-03T09:00:00Z" },
+  { id: 1004, petId: "12345678911", case: "General temperament", by: "Shannon", body: "Buddy is very friendly and energetic. Enjoys walks and plays well with other dogs. Good candidate for adoption events.", createdAt: "2026-03-01T10:00:00Z" },
+];
 
 const mockUsers = [
   { username: "shannon", password: "oak2026", displayName: "Shannon", role: "medical", email: "shannon@oaklandanimal.org", department: "Veterinary Care" },
@@ -277,7 +278,13 @@ const api = {
   },
 
   // MOCK — no backend endpoint for behavior notes yet
-  getBehaviorNote: async (petId) => mockBehaviorNotes[petId] || { petId, body: "" },
+  getBehaviorNotes: async (petId) => mockBehaviorNotes.filter((n) => n.petId === petId),
+  
+  createBehaviorNote: async (note) => {
+    const newNote = { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+    mockBehaviorNotes.push(newNote);
+    return newNote;
+  },
 
   // REAL — connected to POST /api/search (searches observer notes, not pets)
   searchNotes: async (query, petId) => {
@@ -483,6 +490,85 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
   );
 }
 
+// ─── Create Behavior Note Modal ─────────────────────────────────────────────
+function CreateBehaviorNoteModal({ petId, userName, onClose, onSubmit, c }) {
+  const [caseName, setCaseName] = useState("");
+  const [body, setBody] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+  
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  const toggleSpeech = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) { alert("Speech recognition not supported."); return; }
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const r = new SR(); r.continuous = true; r.interimResults = true;
+    r.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setBody(t); };
+    r.onerror = () => setIsListening(false); r.onend = () => setIsListening(false);
+    r.start(); recognitionRef.current = r; setIsListening(true);
+  };
+
+  const handleSubmit = async () => {
+    if (!caseName.trim() || !body.trim()) return;
+    const created = await api.createBehaviorNote({ petId, by: userName, body, case: caseName });
+    onSubmit(created); onClose();
+  };
+
+  const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
+  const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
+
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="New behavior note">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>New Behavior Note</h2>
+        <label style={labelStyle}>Case Title</label>
+        <input style={fieldStyle} placeholder="e.g. Socialization Progress" value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
+        <label style={labelStyle}>
+          Observation Notes
+          <button style={{ width: 34, height: 34, marginLeft: 8, verticalAlign: "middle", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: isListening ? c.brickRed : c.inputBg, transition: "background-color 0.2s ease" }} onClick={toggleSpeech} aria-label={isListening ? "Stop speech to text" : "Start speech to text"}>
+            <Icons.microphone size={16} color={isListening ? "#fff" : c.textPrimary} />
+          </button>
+        </label>
+        <textarea style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} placeholder="Describe your observation..." value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
+          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSubmit}>Submit</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Edit Behavior Note Modal ────────────────────────────────────────────────
+function EditBehaviorNoteModal({ note, onClose, onSave, c }) {
+  const [body, setBody] = useState(note.body);
+  const [caseName, setCaseName] = useState(note.case || "");
+  const handleSave = () => { onSave({ ...note, body, case: caseName }); onClose(); };
+  const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
+  const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
+  
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  return (
+    <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="Edit behavior note">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>Edit Behavior Note</h2>
+        <label style={labelStyle}>Case Title</label>
+        <input style={fieldStyle} value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
+        <label style={labelStyle}>Notes</label>
+        <textarea style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }} value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
+          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSave}>Save</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Create Medical Note Modal ───────────────────────────────────────────────
 function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
   const [caseName, setCaseName] = useState("");
@@ -542,22 +628,18 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
   const isOwner = note.by === currentUser;
   const [hovered, setHovered] = useState(false);
   
-  // Format timestamp
+  // Format timestamp to precise datetime
   const formatTimestamp = (dateString) => {
     try {
       const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      const diffDays = Math.floor(diffMs / 86400000);
-      
-      if (diffMins < 1) return "Just now";
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-      
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+      return date.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
     } catch {
       return "";
     }
@@ -643,76 +725,175 @@ function MedicalNoteCard({ note, currentUser, onEdit, c }) {
   );
 }
 
-// ─── Behavior Tab (single shared note) ───────────────────────────────────────
-function BehaviorTab({ behaviorNote, onSave, c }) {
-  const [editing, setEditing] = useState(false);
-  const [body, setBody] = useState(behaviorNote.body);
-  const handleSave = () => { onSave(body); setEditing(false); };
-  const handleCancel = () => { setBody(behaviorNote.body); setEditing(false); };
-
+// ─── Behavior Note Card (same as medical) ───────────────────────────────────
+function BehaviorNoteCard({ note, currentUser, onEdit, c }) {
+  const isOwner = note.by === currentUser;
+  const [hovered, setHovered] = useState(false);
+  
+  const formatTimestamp = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric',
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return "";
+    }
+  };
+  
   return (
-    <section style={{ padding: "12px 16px 100px" }} aria-label="Behavior notes">
-      <div style={{ backgroundColor: c.cardBg, borderRadius: 12, padding: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: 0 }}>Behavior Notes</h3>
-          {!editing && (
-            <button onClick={() => setEditing(true)} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Edit behavior notes">
-              <Icons.pencil size={18} color={c.warmGray} />
-            </button>
-          )}
-        </div>
-        {editing ? (
-          <>
-            <textarea style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 14, outline: "none", minHeight: 200, resize: "vertical", boxSizing: "border-box", fontFamily: font, lineHeight: 1.6 }} value={body} onChange={(e) => setBody(e.target.value)} aria-label="Behavior notes content" />
-            <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-              <button style={{ flex: 1, padding: 10, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleCancel}>Cancel</button>
-              <button style={{ flex: 1, padding: 10, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSave}>Save</button>
-            </div>
-          </>
-        ) : (
-          <div style={{ fontSize: 14, lineHeight: 1.7, color: c.textSecondary, whiteSpace: "pre-wrap" }}>
-            {behaviorNote.body || "No behavior notes yet. Click the edit button to add observations."}
+    <article 
+      style={{ 
+        backgroundColor: c.cardBg, 
+        borderRadius: 12, 
+        padding: 16, 
+        border: `1px solid ${c.cardBorder}`, 
+        marginBottom: 12, 
+        boxShadow: hovered ? "0 4px 12px rgba(0,0,0,0.1)" : c.shadow,
+        transform: hovered ? "translateY(-1px)" : "none",
+        transition: "all 0.2s ease"
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <h4 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: "0 0 6px 0", lineHeight: 1.3 }}>
+            {note.case}
+          </h4>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, color: c.warmGray, fontWeight: 500 }}>
+              {note.by}
+            </span>
+            <span style={{ fontSize: 11, color: c.warmGray }}>•</span>
+            <span style={{ fontSize: 12, color: c.warmGray }}>
+              {formatTimestamp(note.createdAt)}
+            </span>
           </div>
+        </div>
+      </div>
+      
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
+          {note.body}
+        </p>
+        {isOwner && (
+          <button 
+            onClick={() => onEdit(note)} 
+            style={{ 
+              background: "none", 
+              border: "none", 
+              cursor: "pointer", 
+              padding: 6, 
+              flexShrink: 0, 
+              minHeight: 44, 
+              minWidth: 44, 
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              opacity: hovered ? 1 : 0.6,
+              transition: "opacity 0.2s ease"
+            }}
+            aria-label="Edit note"
+          >
+            <Icons.pencil size={16} color={c.warmGray} />
+          </button>
         )}
       </div>
-    </section>
+    </article>
   );
 }
 
-// ─── Summary Tab ─────────────────────────────────────────────────────────────
-function SummaryTab({ pet, notes, behaviorNote, c, onGoToBehavior }) {
-  const raisedCount = notes.filter((n) => n.status === "Raised").length;
-  const resolvedCount = notes.filter((n) => n.status === "Resolved").length;
-  const cardStyle = { backgroundColor: c.cardBg, borderRadius: 12, padding: 16, marginBottom: 12, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow };
-  const labelStyle = { fontSize: 13, color: c.textSecondary, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6, fontWeight: 600 };
-  const hasBehavior = behaviorNote.body && behaviorNote.body.trim().length > 0;
-  const maxChars = 150;
-  const isTruncated = hasBehavior && behaviorNote.body.length > maxChars;
-  const behaviorPreview = hasBehavior ? (isTruncated ? behaviorNote.body.substring(0, maxChars) + "..." : behaviorNote.body) : "No behavior notes recorded.";
-
+// ─── Summary Tab (AI Chat Interface) ────────────────────────────────────────
+function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmit, c }) {
+  const textareaRef = useRef(null);
+  
+  const handleSubmit = () => {
+    onSubmit();
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+  
   return (
-    <section style={{ padding: "12px 16px 100px" }} aria-label="Summary">
-      <div style={cardStyle}>
-        <div style={labelStyle}>General Information</div>
-        <div style={{ fontSize: 15, color: c.textPrimary, lineHeight: 1.5 }}>
-          <strong>{pet.name}</strong> is located at <strong>{pet.location}</strong>. Status: <strong>{pet.status}</strong>.
+    <section style={{ padding: "12px 16px 100px" }} aria-label="AI Summary">
+      <div style={{ backgroundColor: c.cardBg, borderRadius: 12, padding: 20, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, color: c.textPrimary, margin: "0 0 8px 0" }}>Ask AI About This Animal</h3>
+        <p style={{ fontSize: 13, color: c.textSecondary, margin: "0 0 16px 0", lineHeight: 1.5 }}>
+          Ask questions about medical observations, behavior notes, or anything related to this animal.
+        </p>
+        
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 6, display: "block", fontWeight: 500 }}>Your Question</label>
+          <textarea 
+            ref={textareaRef}
+            style={{ 
+              width: "100%", 
+              padding: "12px 14px", 
+              borderRadius: 10, 
+              border: `1px solid ${c.inputBorder}`, 
+              backgroundColor: c.inputBg, 
+              color: c.textPrimary, 
+              fontSize: 14, 
+              outline: "none", 
+              minHeight: 100, 
+              resize: "vertical", 
+              boxSizing: "border-box", 
+              fontFamily: font, 
+              lineHeight: 1.6 
+            }} 
+            placeholder="e.g., What is the current health status? Are there any behavioral concerns?"
+            value={aiQuery} 
+            onChange={(e) => onQueryChange(e.target.value)} 
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                handleSubmit();
+              }
+            }}
+            aria-label="AI query input" 
+          />
+          <div style={{ fontSize: 11, color: c.warmGray, marginTop: 6 }}>Press Cmd/Ctrl + Enter to submit</div>
         </div>
-      </div>
-      <div style={cardStyle}>
-        <div style={labelStyle}>Medical Observations Overview</div>
-        <div style={{ fontSize: 15, color: c.textPrimary, lineHeight: 1.5 }}>
-          {notes.length} observation{notes.length !== 1 ? "s" : ""} recorded. {raisedCount} raised, {resolvedCount} resolved.
-          {notes.length > 0 && <><br />Latest: "{notes[0].case}" — {notes[0].status}</>}
-        </div>
-      </div>
-      <div style={{ ...cardStyle, marginBottom: 0 }}>
-        <div style={labelStyle}>Behavior Summary</div>
-        <div style={{ fontSize: 15, color: c.textPrimary, lineHeight: 1.5, whiteSpace: "pre-wrap" }}>{behaviorPreview}</div>
-        {hasBehavior && (
-          <div style={{ marginTop: 10 }}>
-            <button onClick={onGoToBehavior} style={{ color: c.headerGreen, cursor: "pointer", fontWeight: 600, fontSize: 14, background: "none", border: "none", fontFamily: font, padding: 0, display: "flex", alignItems: "center", gap: 4, minHeight: 44 }} aria-label="Read more behavior notes">
-              Read more <Icons.arrowRight size={16} color={c.headerGreen} />
-            </button>
+        
+        <button 
+          style={{ 
+            width: "100%", 
+            padding: 12, 
+            borderRadius: 10, 
+            border: "none", 
+            backgroundColor: c.headerGreen, 
+            color: "#fff", 
+            fontSize: 15, 
+            fontWeight: 600, 
+            cursor: "pointer", 
+            fontFamily: font, 
+            minHeight: 44, 
+            transition: "background-color 0.2s ease",
+            opacity: !aiQuery.trim() ? 0.5 : 1
+          }} 
+          onClick={handleSubmit}
+          disabled={!aiQuery.trim()}
+        >
+          Ask AI
+        </button>
+        
+        {aiResponse && (
+          <div style={{ marginTop: 20, padding: 16, backgroundColor: c.inputBg, borderRadius: 10, border: `1px solid ${c.cardBorder}` }}>
+            <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 8, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>AI Response</div>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: c.textPrimary, whiteSpace: "pre-wrap" }}>
+              {aiResponse}
+            </div>
+          </div>
+        )}
+        
+        {!aiResponse && (
+          <div style={{ marginTop: 20, padding: 20, textAlign: "center", fontSize: 13, color: c.warmGray, fontStyle: "italic" }}>
+            Response will appear here after you ask a question
           </div>
         )}
       </div>
@@ -745,14 +926,19 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const r = useResponsive();
   const [pet, setPet] = useState(null);
   const [notes, setNotes] = useState([]);
-  const [behaviorNote, setBehaviorNote] = useState({ body: "" });
+  const [behaviorNotes, setBehaviorNotes] = useState([]);
   const [activeTab, setActiveTab] = useState("summary");
   const [prevTab, setPrevTab] = useState("summary");
   const [slideDirection, setSlideDirection] = useState("right");
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateBehaviorModal, setShowCreateBehaviorModal] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
+  const [editingBehaviorNote, setEditingBehaviorNote] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [behaviorSearchQuery, setBehaviorSearchQuery] = useState("");
+  const [aiQuery, setAiQuery] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
   const [loading, setLoading] = useState(true);
 
   const tabs = [
@@ -764,21 +950,33 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [petData, notesData, bNote] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNote(petId)]);
+      const [petData, notesData, bNotes] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNotes(petId)]);
       setPet(petData);
       setNotes(notesData);
-      setBehaviorNote(bNote);
+      setBehaviorNotes(bNotes);
       setLoading(false);
     })();
   }, [petId]);
 
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
   const handleNoteEdited = (n) => setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
-  const handleBehaviorSave = (body) => setBehaviorNote((prev) => ({ ...prev, body }));
+  const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
+  const handleBehaviorNoteEdited = (n) => setBehaviorNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
+  
+  const handleAiQuery = () => {
+    if (!aiQuery.trim()) return;
+    setAiResponse("AI response will be connected later. For now, this is a placeholder response based on your query: \"" + aiQuery + "\"");
+  };
 
   const filteredNotes = notes.filter((n) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
+    return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
+  });
+  
+  const filteredBehaviorNotes = behaviorNotes.filter((n) => {
+    if (!behaviorSearchQuery.trim()) return true;
+    const q = behaviorSearchQuery.toLowerCase();
     return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
   });
 
@@ -910,7 +1108,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
             animation: `slide-${slideDirection} 0.3s ease-out`,
           }}
         >
-        {activeTab === "summary" && <SummaryTab pet={pet} notes={notes} behaviorNote={behaviorNote} c={c} onGoToBehavior={() => setActiveTab("behavior")} />}
+        {activeTab === "summary" && <SummaryTab aiQuery={aiQuery} aiResponse={aiResponse} onQueryChange={setAiQuery} onSubmit={handleAiQuery} c={c} />}
 
         {activeTab === "medical" && (
           <>
@@ -922,8 +1120,6 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               </div>
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateModal(true)} aria-label="New observation"><Icons.plus size={18} /></button>
-              <button style={{ width: 44, height: 44, borderRadius: "50%", backgroundColor: c.cardBg, border: `1px solid ${c.inputBorder}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
-                aria-label="Speech to text"><Icons.microphone size={18} color={c.textPrimary} /></button>
             </div>
             <div style={{ padding: "0 16px 100px" }}>
               {filteredNotes.length > 0 ? filteredNotes.map((note) => (
@@ -937,7 +1133,28 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
           </>
         )}
 
-        {activeTab === "behavior" && <BehaviorTab behaviorNote={behaviorNote} onSave={handleBehaviorSave} c={c} />}
+        {activeTab === "behavior" && (
+          <>
+            <div style={{ margin: "12px 16px", display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ flex: 1, position: "relative" }}>
+                <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icons.search size={16} color={c.warmGray} /></div>
+                <input style={{ width: "100%", padding: "10px 14px 10px 34px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font, boxSizing: "border-box" }}
+                  placeholder="Search behavior notes..." value={behaviorSearchQuery} onChange={(e) => setBehaviorSearchQuery(e.target.value)} aria-label="Search behavior notes" />
+              </div>
+              <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+                onClick={() => setShowCreateBehaviorModal(true)} aria-label="New behavior note"><Icons.plus size={18} /></button>
+            </div>
+            <div style={{ padding: "0 16px 100px" }}>
+              {filteredBehaviorNotes.length > 0 ? filteredBehaviorNotes.map((note) => (
+                <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} onEdit={setEditingBehaviorNote} c={c} />
+              )) : (
+                <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 15 }}>
+                  {behaviorSearchQuery ? "No behavior notes matching your search." : "No behavior notes yet."}
+                </div>
+              )}
+            </div>
+          </>
+        )}
         </div>
       </div>
 
@@ -950,6 +1167,8 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
       {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} c={c} />}
+      {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
       {showQR && <QRCodeModal pet={pet} onClose={() => setShowQR(false)} c={c} />}
     </main>
   );
