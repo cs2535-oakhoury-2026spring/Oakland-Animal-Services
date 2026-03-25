@@ -1139,21 +1139,18 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                         <button 
                           onClick={() => setMedicalNotesVisible(prev => prev + NOTES_PER_PAGE)}
                           style={{ 
-                            padding: "12px 32px", 
-                            borderRadius: 12, 
-                            border: `1px solid ${c.inputBorder}`, 
-                            backgroundColor: c.cardBg, 
+                            background: "none", 
+                            border: "none", 
                             color: c.textPrimary, 
                             fontSize: 15, 
                             fontWeight: 600, 
                             cursor: "pointer", 
                             fontFamily: font,
-                            boxShadow: c.shadow,
-                            transition: "all 0.2s ease",
-                            minHeight: 44
+                            transition: "opacity 0.2s ease",
+                            padding: "8px 16px"
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
                           aria-label="Load more observations"
                         >
                           Load More ({filteredNotes.length - medicalNotesVisible} remaining)
@@ -1195,21 +1192,18 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                         <button 
                           onClick={() => setBehaviorNotesVisible(prev => prev + NOTES_PER_PAGE)}
                           style={{ 
-                            padding: "12px 32px", 
-                            borderRadius: 12, 
-                            border: `1px solid ${c.inputBorder}`, 
-                            backgroundColor: c.cardBg, 
+                            background: "none", 
+                            border: "none", 
                             color: c.textPrimary, 
                             fontSize: 15, 
                             fontWeight: 600, 
                             cursor: "pointer", 
                             fontFamily: font,
-                            boxShadow: c.shadow,
-                            transition: "all 0.2s ease",
-                            minHeight: 44
+                            transition: "opacity 0.2s ease",
+                            padding: "8px 16px"
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)"; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+                          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.7"; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
                           aria-label="Load more behavior notes"
                         >
                           Load More ({filteredBehaviorNotes.length - behaviorNotesVisible} remaining)
