@@ -11,18 +11,18 @@
 - `sex: string`
 - `species: string`
 - `image: string | null`
-- `description: string | null`
-- `summary: string`
+- `description: string | null` -> EMBED HTML
+- `summary: string` -> LOCATION
 - `breed: string | null`
 - `status: string | null`
-- `rescueId: string | null`
+- `rescueId: string | null` -> ARN
 - `availableDate: string | null`
-- `otherNames: string | null`
+- `otherNames: string | null` -> HANDLING COLOR
 - `distinguishingMarks: string | null`
 - `generalAge: string | null`
 - `generalSize: string | null`
 - `colorDetails: string | null`
-- `specialNeeds: string | null`
+- `specialNeeds: string | null` -> ANOTHER DESCRIPTION
 
 --------------------------
 ### LocationPet

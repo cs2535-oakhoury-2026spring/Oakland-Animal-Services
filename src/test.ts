@@ -7,11 +7,11 @@ import { seedObserverNotes } from "./db/observerNotes.js";
 import { searchByLocation, getPetById } from "./db/pets.js";
 import { get } from "http";
 
-// getPetById(22254130).then((pet) => {
-//   console.log("=== Pet from DB ===");
-//   console.log(pet);
-//   console.log();
-// });
+getPetById(22144859).then((pet) => {
+  console.log("=== Pet from DB ===");
+  console.log(pet);
+  console.log();
+});
 
 // searchByLocation("dog", "e:1").then((pets) => {
 //   console.log("=== Dog(s) by Location ===");
@@ -19,11 +19,11 @@ import { get } from "http";
 //   console.log();
 // });
 
-searchByLocation("cat", "holding-4:19").then((petId) => {
-  console.log("=== Cat ID by Location ===");
-  console.log(petId);
-  console.log();
-});
+// searchByLocation("cat", "holding-4:19").then((petId) => {
+//   console.log("=== Cat ID by Location ===");
+//   console.log(petId);
+//   console.log();
+// });
 
 const sampleNotes: ObserverNote[] = [
   {

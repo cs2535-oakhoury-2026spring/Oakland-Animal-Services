@@ -1,77 +1,1067 @@
 {
   "status": "ok",
   "messages": { "generalMessages": [], "recordMessages": [] },
-  "foundRows": "13014",
+  "foundRows": "143",
   "data": {
-    "22331164": {
-      "animalName": "Marshmellow",
+    "22346324": {
+      "animalName": "(ID# 89723)",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed (short coat)",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Holding 1:17",
+      "animalBreed": "French Bulldog \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:11",
+      "animalSex": "Female",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "Black",
+      "animalStatus": "Intake",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "",
+      "animalPictures": [
+        {
+          "mediaID": "102883640",
+          "mediaOrder": "1",
+          "lastUpdated": "3\/26\/2026 12:08 AM",
+          "fileSize": "1168033",
+          "resolutionX": "2431",
+          "resolutionY": "2443",
+          "fileNameFullsize": "102883640.jpg",
+          "fileNameThumbnail": "102883640.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1168033",
+            "resolutionX": "2431",
+            "resolutionY": "2443",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1168033",
+            "resolutionX": 500,
+            "resolutionY": 502,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1168033",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883640.jpg"
+          }
+        },
+        {
+          "mediaID": "102883641",
+          "mediaOrder": "2",
+          "lastUpdated": "3\/26\/2026 12:08 AM",
+          "fileSize": "950428",
+          "resolutionX": "2378",
+          "resolutionY": "2082",
+          "fileNameFullsize": "102883641.jpg",
+          "fileNameThumbnail": "102883641.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "950428",
+            "resolutionX": "2378",
+            "resolutionY": "2082",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "950428",
+            "resolutionX": 500,
+            "resolutionY": 438,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "950428",
+            "resolutionX": 100,
+            "resolutionY": 88,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883641.jpg"
+          }
+        },
+        {
+          "mediaID": "102883642",
+          "mediaOrder": "3",
+          "lastUpdated": "3\/26\/2026 12:08 AM",
+          "fileSize": "3119453",
+          "resolutionX": "4137",
+          "resolutionY": "4137",
+          "fileNameFullsize": "102883642.jpg",
+          "fileNameThumbnail": "102883642.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "3119453",
+            "resolutionX": "4137",
+            "resolutionY": "4137",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "3119453",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "3119453",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883642.jpg"
+          }
+        },
+        {
+          "mediaID": "102883643",
+          "mediaOrder": "4",
+          "lastUpdated": "3\/26\/2026 12:09 AM",
+          "fileSize": "4167158",
+          "resolutionX": "3813",
+          "resolutionY": "3813",
+          "fileNameFullsize": "102883643.jpg",
+          "fileNameThumbnail": "102883643.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "4167158",
+            "resolutionX": "3813",
+            "resolutionY": "3813",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "4167158",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "4167158",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22346\/22346324\/102883643.jpg"
+          }
+        }
+      ],
+      "animalRescueID": "89723",
       "animalSpecialneedsDescription": ""
     },
-    "22324883": {
-      "animalName": "(ID# 15694)",
+    "22327209": {
+      "animalName": "Tiny",
       "animalDescription": "",
-      "animalBreed": "Domestic Medium Hair \/ Mixed (medium coat)",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Holding 4:19",
+      "animalBreed": "Pomeranian \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:1",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "Red",
+      "animalStatus": "Intake",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Senior",
+      "animalPictures": [],
+      "animalRescueID": "89729",
       "animalSpecialneedsDescription": ""
     },
-    "19743294": {
-      "animalName": "Flurry (bonded w\/Fizz)",
-      "animalDescription": "<p>Fizz &amp; Flurry are beautiful bonded sisters who are on the shy side, especially in the scary shelter environment, but sweet in calm surroundings where they feel safe. Dilute&nbsp;tortie girl Flurry may hiss when she&rsquo;s scared, but turns on her purr motor with pets and enjoys being held. Black-and-white girl Fizz adores leaping after wand toys and also snuggling up on a warm lap for pets. She can get a little overexcited at times, and will do well with a guardian who can help her redirect that energy away from human hands and fingers.<\/p>",
-      "animalBreed": "Domestic Short Hair \/ Mixed (short coat)",
-      "animalSummary": "I am at Oakland Animal Services in kennel Visiting Room:2",
-      "animalSpecialneedsDescription": ""
-    },
-    "22314734": {
-      "animalName": "Xander (bonded w\/ Serge)",
+    "22318115": {
+      "animalName": "Jet",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed",
-      "animalSummary": "I am at Oakland Animal Services in kennel Visiting Room:3",
+      "animalBreed": "Chihuahua \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:1",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "White",
+      "animalStatus": "Intake",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Senior",
+      "animalPictures": [],
+      "animalRescueID": "82572",
       "animalSpecialneedsDescription": ""
     },
-    "22314735": {
-      "animalName": "Serge (bonded w\/ Xander)",
+    "22346517": {
+      "animalName": "chewy",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed",
-      "animalSummary": "I am at Oakland Animal Services in kennel Visiting Room:3",
+      "animalBreed": "Chihuahua \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:11",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "Black",
+      "animalStatus": "Intake",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "",
+      "animalPictures": [],
+      "animalRescueID": "88078",
       "animalSpecialneedsDescription": ""
     },
-    "22316191": {
-      "animalName": "Philip Marlowe",
-      "animalDescription": "<p data-end=\"309\" data-start=\"0\">The rain hadn&rsquo;t started yet, but the clouds were thinking about it&mdash;the kind of gray afternoon when a small, sharp-eyed gumshoe keeps to the shadows. That&rsquo;s where I first noticed&nbsp;<strong data-end=\"196\" data-start=\"178\">Philip Marlowe<\/strong>. Black and white like a tuxedo at a low-rent casino, quiet as a secret, and twice as careful with who he trusts.<\/p>\r\n\r\n<p data-end=\"640\" data-start=\"311\">Marlowe&rsquo;s a young cat with the soul of a private detective: observant, polite, and a little shy until he knows the room is safe. He doesn&rsquo;t crash parties and he doesn&rsquo;t chase trouble. Give him a calm place, a soft chair, and a human who understands the language of cats, and he&rsquo;ll settle in like he&rsquo;s finally closed a tough case.<\/p>\r\n\r\n<p data-end=\"852\" data-start=\"642\">He&rsquo;s looking for a&nbsp;<strong data-end=\"735\" data-start=\"661\">quiet home with cat-savvy adopters&mdash;no kids, no dogs, no funny business<\/strong>. Just good company, steady routines, and someone who doesn&rsquo;t mind earning a detective&rsquo;s trust the old-fashioned way.<\/p>\r\n\r\n<p data-end=\"1015\" data-start=\"854\">There&rsquo;s a nice twist in the file, too: His<strong data-end=\"970\" data-start=\"893\">&nbsp;adoption fee is waived if you flash your Oakland Public Library card.<\/strong>&nbsp;Seems Marlowe&rsquo;s got a soft spot for readers.<\/p>\r\n\r\n<p data-end=\"1225\" data-is-last-node=\"\" data-is-only-node=\"\" data-start=\"1017\">If you want to meet this soft-spoken sleuth, you can find him here Thursday from noon to 6:30 or&nbsp;<strong data-end=\"1120\" data-start=\"1079\">Friday through Sunday, noon to 3.<\/strong><strong data-end=\"1120\" data-start=\"1079\">&nbsp;<\/strong>Stop by, tip your hat, and see if this tuxedo detective might be the partner your home has been missing.<\/p>\r\n\r\n<p>&nbsp;<\/p>",
-      "animalBreed": "Domestic Short Hair \/ Mixed (short coat)",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Holding 4:5",
-      "animalSpecialneedsDescription": ""
-    },
-    "22316193": {
-      "animalName": "Agatha Christie",
-      "animalDescription": "<p>Agatha Christie is a young lady of quiet habits and impeccable whiskers&mdash;a 1-year-old ticked brown tabby whose story begins, as many good mysteries do, with a touch of reserve. At first meeting she may observe you thoughtfully, eyes taking in every detail like a seasoned detective sizing up a suspect.<\/p>\r\n\r\n<p>But offer a gentle hand and a few soft pets, and the case quickly unfolds. Miss Christie warms to kind company with surprising speed, leaning in closer, her purr rising like a well-timed plot twist. Before long, she&rsquo;s quite certain you&rsquo;re no villain at all&mdash;merely the hero of her next chapter.<\/p>\r\n\r\n<p>Prospective companions may make her acquaintance Thursdays from noon to 6:30 p.m., or Friday through Sunday from noon to 3. And here&rsquo;s a most delightful clue: Her adoption fee is entirely waived for visitors who present their Oakland Public Library card.<\/p>\r\n\r\n<p>If you&rsquo;re seeking a clever little companion with a fondness for quiet affection and a talent for winning hearts, Agatha Christie may be ready to close the case&mdash;and move into your home for good.<\/p>\r\n\r\n<p>&nbsp;<\/p>",
-      "animalBreed": "Domestic Short Hair \/ Mixed (short coat)",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Holding 4:7",
-      "animalSpecialneedsDescription": ""
-    },
-    "22333246": {
-      "animalName": "Simba",
+    "22312946": {
+      "animalName": "Prince",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Adoption:20",
+      "animalBreed": "Jack Russell Terrier (Parson Russell Terrier) \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:11",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "Tan",
+      "animalStatus": "Intake",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "",
+      "animalPictures": [],
+      "animalRescueID": "89607",
       "animalSpecialneedsDescription": ""
     },
-    "22333245": {
-      "animalName": "Itsy",
+    "22264544": {
+      "animalName": "Beanie",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Adoption:20",
+      "animalBreed": "Terrier \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:1",
+      "animalSex": "Female",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "White",
+      "animalStatus": "Not Available",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "GREEN",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Baby",
+      "animalPictures": [
+        {
+          "mediaID": "102689757",
+          "mediaOrder": "1",
+          "lastUpdated": "2\/15\/2026 4:31 PM",
+          "fileSize": "66212",
+          "resolutionX": "420",
+          "resolutionY": "420",
+          "fileNameFullsize": "102689757.jpg",
+          "fileNameThumbnail": "102689757.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "66212",
+            "resolutionX": "420",
+            "resolutionY": "420",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "66212",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "66212",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689757.jpg"
+          }
+        },
+        {
+          "mediaID": "102689758",
+          "mediaOrder": "2",
+          "lastUpdated": "2\/15\/2026 4:31 PM",
+          "fileSize": "71698",
+          "resolutionX": "420",
+          "resolutionY": "420",
+          "fileNameFullsize": "102689758.jpg",
+          "fileNameThumbnail": "102689758.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "71698",
+            "resolutionX": "420",
+            "resolutionY": "420",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "71698",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "71698",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689758.jpg"
+          }
+        },
+        {
+          "mediaID": "102689759",
+          "mediaOrder": "3",
+          "lastUpdated": "2\/15\/2026 4:31 PM",
+          "fileSize": "43938",
+          "resolutionX": "420",
+          "resolutionY": "446",
+          "fileNameFullsize": "102689759.jpg",
+          "fileNameThumbnail": "102689759.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "43938",
+            "resolutionX": "420",
+            "resolutionY": "446",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "43938",
+            "resolutionX": 500,
+            "resolutionY": 531,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "43938",
+            "resolutionX": 100,
+            "resolutionY": 106,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689759.jpg"
+          }
+        },
+        {
+          "mediaID": "102689760",
+          "mediaOrder": "4",
+          "lastUpdated": "2\/15\/2026 4:31 PM",
+          "fileSize": "48899",
+          "resolutionX": "420",
+          "resolutionY": "420",
+          "fileNameFullsize": "102689760.jpg",
+          "fileNameThumbnail": "102689760.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "48899",
+            "resolutionX": "420",
+            "resolutionY": "420",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "48899",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "48899",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22264\/22264544\/102689760.jpg"
+          }
+        }
+      ],
+      "animalRescueID": "89850",
+      "animalSpecialneedsDescription": "[GREEN]Brought in as stray on 2\/12\/26.B  Green dot on intake, described as having puppy like behavior High energy juvenile.B  Will need consistency and training as well as rewards based obedience training.B  Older children might be ok[2026-02-15 15:27:00.000]"
+    },
+    "22254130": {
+      "animalName": "Pepe",
+      "animalDescription": "",
+      "animalBreed": "Chihuahua \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:11",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "Black",
+      "animalStatus": "Not Available",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "",
+      "animalPictures": [],
+      "animalRescueID": "85389",
       "animalSpecialneedsDescription": ""
     },
-    "22333244": {
-      "animalName": "Lazy",
+    "22222905": {
+      "animalName": "Enzo",
       "animalDescription": "",
-      "animalBreed": "Domestic Short Hair \/ Mixed",
-      "animalSummary": "I am at Oakland Animal Services in kennel Cat Holding 3 (Cat Alley):4",
-      "animalSpecialneedsDescription": ""
+      "animalBreed": "Chihuahua \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:1",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "White",
+      "animalStatus": "Not Available",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "YELLOW",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Young",
+      "animalPictures": [
+        {
+          "mediaID": "102604273",
+          "mediaOrder": "1",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "2155202",
+          "resolutionX": "4069",
+          "resolutionY": "4069",
+          "fileNameFullsize": "102604273.jpg",
+          "fileNameThumbnail": "102604273.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "2155202",
+            "resolutionX": "4069",
+            "resolutionY": "4069",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "2155202",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "2155202",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604273.jpg"
+          }
+        },
+        {
+          "mediaID": "102604274",
+          "mediaOrder": "2",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "1375992",
+          "resolutionX": "2081",
+          "resolutionY": "2081",
+          "fileNameFullsize": "102604274.jpg",
+          "fileNameThumbnail": "102604274.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1375992",
+            "resolutionX": "2081",
+            "resolutionY": "2081",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1375992",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1375992",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604274.jpg"
+          }
+        },
+        {
+          "mediaID": "102604275",
+          "mediaOrder": "3",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "605051",
+          "resolutionX": "1536",
+          "resolutionY": "1536",
+          "fileNameFullsize": "102604275.jpg",
+          "fileNameThumbnail": "102604275.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "605051",
+            "resolutionX": "1536",
+            "resolutionY": "1536",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "605051",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "605051",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604275.jpg"
+          }
+        },
+        {
+          "mediaID": "102599179",
+          "mediaOrder": "4",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "254798",
+          "resolutionX": "679",
+          "resolutionY": "679",
+          "fileNameFullsize": "102599179.jpg",
+          "fileNameThumbnail": "102599179.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "254798",
+            "resolutionX": "679",
+            "resolutionY": "679",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "254798",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "254798",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102599179.jpg"
+          }
+        },
+        {
+          "mediaID": "102604276",
+          "mediaOrder": "5",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "1241451",
+          "resolutionX": "1704",
+          "resolutionY": "1704",
+          "fileNameFullsize": "102604276.jpg",
+          "fileNameThumbnail": "102604276.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1241451",
+            "resolutionX": "1704",
+            "resolutionY": "1704",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1241451",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1241451",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604276.jpg"
+          }
+        },
+        {
+          "mediaID": "102604277",
+          "mediaOrder": "6",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "430443",
+          "resolutionX": "1298",
+          "resolutionY": "1298",
+          "fileNameFullsize": "102604277.jpg",
+          "fileNameThumbnail": "102604277.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "430443",
+            "resolutionX": "1298",
+            "resolutionY": "1298",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "430443",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "430443",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102604277.jpg"
+          }
+        },
+        {
+          "mediaID": "102598666",
+          "mediaOrder": "7",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "1667924",
+          "resolutionX": "2848",
+          "resolutionY": "2848",
+          "fileNameFullsize": "102598666.jpg",
+          "fileNameThumbnail": "102598666.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1667924",
+            "resolutionX": "2848",
+            "resolutionY": "2848",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1667924",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1667924",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598666.jpg"
+          }
+        },
+        {
+          "mediaID": "102598669",
+          "mediaOrder": "8",
+          "lastUpdated": "1\/31\/2026 1:39 AM",
+          "fileSize": "2199212",
+          "resolutionX": "2997",
+          "resolutionY": "2997",
+          "fileNameFullsize": "102598669.jpg",
+          "fileNameThumbnail": "102598669.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "2199212",
+            "resolutionX": "2997",
+            "resolutionY": "2997",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "2199212",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "2199212",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22222\/22222905\/102598669.jpg"
+          }
+        }
+      ],
+      "animalRescueID": "88196",
+      "animalSpecialneedsDescription": "[YELLOW]Background - was found in front yard of shelter.  Yellow dot at intake. nervous w\/handling. Social, active young dog, barky at times. Small dog crew report that this dog is mouthy\/grabby. Has done well with the other small dogs.  Might be ok w\/dog saavy children over 13 yo[2026-01-29 18:24:00.000]"
+    },
+    "22221882": {
+      "animalName": "Huntington",
+      "animalDescription": "",
+      "animalBreed": "Maltese \/ Mixed (long coat)",
+      "animalSummary": "I am at Oakland Animal Services in kennel Dog E:1",
+      "animalSex": "Male",
+      "animalGeneralSizePotential": "Small",
+      "animalColorDetails": "White",
+      "animalStatus": "Not Available",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "YELLOW",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Adult",
+      "animalPictures": [
+        {
+          "mediaID": "102604267",
+          "mediaOrder": "1",
+          "lastUpdated": "1\/31\/2026 1:32 AM",
+          "fileSize": "1499618",
+          "resolutionX": "2627",
+          "resolutionY": "2627",
+          "fileNameFullsize": "102604267.jpg",
+          "fileNameThumbnail": "102604267.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1499618",
+            "resolutionX": "2627",
+            "resolutionY": "2627",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1499618",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1499618",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604267.jpg"
+          }
+        },
+        {
+          "mediaID": "102604269",
+          "mediaOrder": "2",
+          "lastUpdated": "1\/31\/2026 1:32 AM",
+          "fileSize": "1703634",
+          "resolutionX": "3510",
+          "resolutionY": "3510",
+          "fileNameFullsize": "102604269.jpg",
+          "fileNameThumbnail": "102604269.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1703634",
+            "resolutionX": "3510",
+            "resolutionY": "3510",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1703634",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1703634",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604269.jpg"
+          }
+        },
+        {
+          "mediaID": "102604270",
+          "mediaOrder": "3",
+          "lastUpdated": "1\/31\/2026 1:32 AM",
+          "fileSize": "1946875",
+          "resolutionX": "2530",
+          "resolutionY": "2530",
+          "fileNameFullsize": "102604270.jpg",
+          "fileNameThumbnail": "102604270.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1946875",
+            "resolutionX": "2530",
+            "resolutionY": "2530",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1946875",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1946875",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604270.jpg"
+          }
+        },
+        {
+          "mediaID": "102604271",
+          "mediaOrder": "4",
+          "lastUpdated": "1\/31\/2026 1:33 AM",
+          "fileSize": "626201",
+          "resolutionX": "1533",
+          "resolutionY": "1533",
+          "fileNameFullsize": "102604271.jpg",
+          "fileNameThumbnail": "102604271.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "626201",
+            "resolutionX": "1533",
+            "resolutionY": "1533",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "626201",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "626201",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604271.jpg"
+          }
+        },
+        {
+          "mediaID": "102604272",
+          "mediaOrder": "5",
+          "lastUpdated": "1\/31\/2026 1:34 AM",
+          "fileSize": "1020505",
+          "resolutionX": "1408",
+          "resolutionY": "1408",
+          "fileNameFullsize": "102604272.jpg",
+          "fileNameThumbnail": "102604272.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1020505",
+            "resolutionX": "1408",
+            "resolutionY": "1408",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1020505",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1020505",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102604272.jpg"
+          }
+        },
+        {
+          "mediaID": "102598662",
+          "mediaOrder": "6",
+          "lastUpdated": "1\/31\/2026 1:34 AM",
+          "fileSize": "219305",
+          "resolutionX": "1744",
+          "resolutionY": "1744",
+          "fileNameFullsize": "102598662.jpg",
+          "fileNameThumbnail": "102598662.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "219305",
+            "resolutionX": "1744",
+            "resolutionY": "1744",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "219305",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "219305",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102598662.jpg"
+          }
+        },
+        {
+          "mediaID": "102597167",
+          "mediaOrder": "7",
+          "lastUpdated": "1\/31\/2026 1:34 AM",
+          "fileSize": "131518",
+          "resolutionX": "420",
+          "resolutionY": "420",
+          "fileNameFullsize": "102597167.jpg",
+          "fileNameThumbnail": "102597167.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "131518",
+            "resolutionX": "420",
+            "resolutionY": "420",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "131518",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "131518",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22221\/22221882\/102597167.jpg"
+          }
+        }
+      ],
+      "animalRescueID": "88263",
+      "animalSpecialneedsDescription": "[YELLOW]Background - found as stray.B  Yellow dot at intake d\/t did not like to be picked up.B  Also came in very matted and was groomed by volunteer groomer Social little dog, can be slightly shy.B  Has done well with the other small dogs.B  Dog saavy children over 13 yo might be ok.B  Adopters should have dog experience as adults[2026-01-29 12:19:00.000]"
+    },
+    "22144859": {
+      "animalName": "Bellota",
+      "animalDescription": "<p data-pm-slice=\"0 0 []\">Meet Bellota!<\/p>\r\n\r\n<p>&nbsp;<\/p>\r\n\r\n<p>Bellota is a playful, friendly 5-month-old Akita mix who&rsquo;s ready to find her forever home.<\/p>\r\n\r\n<p>&nbsp;<\/p>\r\n\r\n<p>As a young, energetic pup, Bellota will thrive with an adopter who&rsquo;s ready to invest time in positive-reinforcement training, socialization, and daily enrichment. Starting training now will help her grow into a well-mannered adult. Because of her size and typical puppy mouthiness, a home with dog-savvy teens (around 14+) may be a good fit, while younger children are not recommended at this time.<\/p>\r\n\r\n<p>&nbsp;<\/p>\r\n\r\n<p>Bellota may be able to live with another dog, though this would need to be a thoughtful match. She&rsquo;ll do best with someone who has some dog or large-breed experience and feels comfortable handling a strong, growing pup.<\/p>\r\n\r\n<p>&nbsp;<\/p>\r\n\r\n<p>If you&rsquo;re looking for a smart, affectionate puppy and are ready for the commitment of raising a young dog, Bellota could be a wonderful addition to your family. Come meet her at one of our upcoming adoption events and see if she&rsquo;s the right match for you!&nbsp;<\/p>\r\n\r\n<p>&nbsp;<\/p>\r\n\r\n<blockquote class=\"instagram-media\" data-instgrm-captioned=\"\" data-instgrm-permalink=\"https:\/\/www.instagram.com\/reel\/DStl8FKkXLU\/?utm_source=ig_embed&amp;utm_campaign=loading\" data-instgrm-version=\"14\" style=\" background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);\">\r\n<div style=\"padding:16px;\">\r\n<div style=\" display: flex; flex-direction: row; align-items: center;\">\r\n<div style=\"background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 40px; margin-right: 14px; width: 40px;\">&nbsp;<\/div>\r\n\r\n<div style=\"display: flex; flex-direction: column; flex-grow: 1; justify-content: center;\">\r\n<div style=\" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 100px;\">&nbsp;<\/div>\r\n\r\n<div style=\" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 60px;\">&nbsp;<\/div>\r\n<\/div>\r\n<\/div>\r\n\r\n<div style=\"padding: 19% 0;\">&nbsp;<\/div>\r\n\r\n<div style=\"display:block; height:50px; margin:0 auto 12px; width:50px;\"><a href=\"https:\/\/www.instagram.com\/reel\/DStl8FKkXLU\/?utm_source=ig_embed&amp;utm_campaign=loading\" style=\" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;\" target=\"_blank\"><svg height=\"50px\" version=\"1.1\" viewbox=\"0 0 60 60\" width=\"50px\" xmlns=\"https:\/\/www.w3.org\/2000\/svg\" xmlns:xlink=\"https:\/\/www.w3.org\/1999\/xlink\"><g fill=\"none\" fill-rule=\"evenodd\" stroke=\"none\" stroke-width=\"1\"><g fill=\"#000000\" transform=\"translate(-511.000000, -20.000000)\"><g><path d=\"M556.869,30.41 C554.814,30.41 553.148,32.076 553.148,34.131 C553.148,36.186 554.814,37.852 556.869,37.852 C558.924,37.852 560.59,36.186 560.59,34.131 C560.59,32.076 558.924,30.41 556.869,30.41 M541,60.657 C535.114,60.657 530.342,55.887 530.342,50 C530.342,44.114 535.114,39.342 541,39.342 C546.887,39.342 551.658,44.114 551.658,50 C551.658,55.887 546.887,60.657 541,60.657 M541,33.886 C532.1,33.886 524.886,41.1 524.886,50 C524.886,58.899 532.1,66.113 541,66.113 C549.9,66.113 557.115,58.899 557.115,50 C557.115,41.1 549.9,33.886 541,33.886 M565.378,62.101 C565.244,65.022 564.756,66.606 564.346,67.663 C563.803,69.06 563.154,70.057 562.106,71.106 C561.058,72.155 560.06,72.803 558.662,73.347 C557.607,73.757 556.021,74.244 553.102,74.378 C549.944,74.521 548.997,74.552 541,74.552 C533.003,74.552 532.056,74.521 528.898,74.378 C525.979,74.244 524.393,73.757 523.338,73.347 C521.94,72.803 520.942,72.155 519.894,71.106 C518.846,70.057 518.197,69.06 517.654,67.663 C517.244,66.606 516.755,65.022 516.623,62.101 C516.479,58.943 516.448,57.996 516.448,50 C516.448,42.003 516.479,41.056 516.623,37.899 C516.755,34.978 517.244,33.391 517.654,32.338 C518.197,30.938 518.846,29.942 519.894,28.894 C520.942,27.846 521.94,27.196 523.338,26.654 C524.393,26.244 525.979,25.756 528.898,25.623 C532.057,25.479 533.004,25.448 541,25.448 C548.997,25.448 549.943,25.479 553.102,25.623 C556.021,25.756 557.607,26.244 558.662,26.654 C560.06,27.196 561.058,27.846 562.106,28.894 C563.154,29.942 563.803,30.938 564.346,32.338 C564.756,33.391 565.244,34.978 565.378,37.899 C565.522,41.056 565.552,42.003 565.552,50 C565.552,57.996 565.522,58.943 565.378,62.101 M570.82,37.631 C570.674,34.438 570.167,32.258 569.425,30.349 C568.659,28.377 567.633,26.702 565.965,25.035 C564.297,23.368 562.623,22.342 560.652,21.575 C558.743,20.834 556.562,20.326 553.369,20.18 C550.169,20.033 549.148,20 541,20 C532.853,20 531.831,20.033 528.631,20.18 C525.438,20.326 523.257,20.834 521.349,21.575 C519.376,22.342 517.703,23.368 516.035,25.035 C514.368,26.702 513.342,28.377 512.574,30.349 C511.834,32.258 511.326,34.438 511.181,37.631 C511.035,40.831 511,41.851 511,50 C511,58.147 511.035,59.17 511.181,62.369 C511.326,65.562 511.834,67.743 512.574,69.651 C513.342,71.625 514.368,73.296 516.035,74.965 C517.703,76.634 519.376,77.658 521.349,78.425 C523.257,79.167 525.438,79.673 528.631,79.82 C531.831,79.965 532.853,80.001 541,80.001 C549.148,80.001 550.169,79.965 553.369,79.82 C556.562,79.673 558.743,79.167 560.652,78.425 C562.623,77.658 564.297,76.634 565.965,74.965 C567.633,73.296 568.659,71.625 569.425,69.651 C570.167,67.743 570.674,65.562 570.82,62.369 C570.966,59.17 571,58.147 571,50 C571,41.851 570.966,40.831 570.82,37.631\"><\/path><\/g><\/g><\/g><\/svg><\/a><\/div>\r\n\r\n<div style=\"padding-top: 8px;\">\r\n<div style=\" color:#3897f0; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:550; line-height:18px;\"><a href=\"https:\/\/www.instagram.com\/reel\/DStl8FKkXLU\/?utm_source=ig_embed&amp;utm_campaign=loading\" style=\" background:#FFFFFF; line-height:0; padding:0 0; text-align:center; text-decoration:none; width:100%;\" target=\"_blank\">View this post on Instagram<\/a><\/div>\r\n<\/div>\r\n\r\n<div style=\"padding: 12.5% 0;\">&nbsp;<\/div>\r\n\r\n<div style=\"display: flex; flex-direction: row; margin-bottom: 14px; align-items: center;\">\r\n<div>\r\n<div style=\"background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(0px) translateY(7px);\">&nbsp;<\/div>\r\n\r\n<div style=\"background-color: #F4F4F4; height: 12.5px; transform: rotate(-45deg) translateX(3px) translateY(1px); width: 12.5px; flex-grow: 0; margin-right: 14px; margin-left: 2px;\">&nbsp;<\/div>\r\n\r\n<div style=\"background-color: #F4F4F4; border-radius: 50%; height: 12.5px; width: 12.5px; transform: translateX(9px) translateY(-18px);\">&nbsp;<\/div>\r\n<\/div>\r\n\r\n<div style=\"margin-left: 8px;\">\r\n<div style=\" background-color: #F4F4F4; border-radius: 50%; flex-grow: 0; height: 20px; width: 20px;\">&nbsp;<\/div>\r\n\r\n<div style=\" width: 0; height: 0; border-top: 2px solid transparent; border-left: 6px solid #f4f4f4; border-bottom: 2px solid transparent; transform: translateX(16px) translateY(-4px) rotate(30deg)\">&nbsp;<\/div>\r\n<\/div>\r\n\r\n<div style=\"margin-left: auto;\">\r\n<div style=\" width: 0px; border-top: 8px solid #F4F4F4; border-right: 8px solid transparent; transform: translateY(16px);\">&nbsp;<\/div>\r\n\r\n<div style=\" background-color: #F4F4F4; flex-grow: 0; height: 12px; width: 16px; transform: translateY(-4px);\">&nbsp;<\/div>\r\n\r\n<div style=\" width: 0; height: 0; border-top: 8px solid #F4F4F4; border-left: 8px solid transparent; transform: translateY(-4px) translateX(8px);\">&nbsp;<\/div>\r\n<\/div>\r\n<\/div>\r\n\r\n<div style=\"display: flex; flex-direction: column; flex-grow: 1; justify-content: center; margin-bottom: 24px;\">\r\n<div style=\" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; margin-bottom: 6px; width: 224px;\">&nbsp;<\/div>\r\n\r\n<div style=\" background-color: #F4F4F4; border-radius: 4px; flex-grow: 0; height: 14px; width: 144px;\">&nbsp;<\/div>\r\n<\/div>\r\n\r\n<p style=\" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; line-height:17px; margin-bottom:0; margin-top:8px; overflow:hidden; padding:8px 0 7px; text-align:center; text-overflow:ellipsis; white-space:nowrap;\"><a href=\"https:\/\/www.instagram.com\/reel\/DStl8FKkXLU\/?utm_source=ig_embed&amp;utm_campaign=loading\" style=\" color:#c9c8cd; font-family:Arial,sans-serif; font-size:14px; font-style:normal; font-weight:normal; line-height:17px; text-decoration:none;\" target=\"_blank\">A post shared by gon (@thisandafoster)<\/a><\/p>\r\n<\/div>\r\n<\/blockquote>\r\n<script async src=\"\/\/www.instagram.com\/embed.js\"><\/script>",
+      "animalBreed": "Akita \/ Mixed",
+      "animalSummary": "I am at Oakland Animal Services in kennel Smallville:1",
+      "animalSex": "Female",
+      "animalGeneralSizePotential": "Medium",
+      "animalColorDetails": "Black",
+      "animalStatus": "Not Available",
+      "animalSpecies": "Dog",
+      "animalAvailableDate": "",
+      "animalOthernames": "GREEN",
+      "animalDistinguishingMarks": "",
+      "animalGeneralAge": "Baby",
+      "animalPictures": [
+        {
+          "mediaID": "102407995",
+          "mediaOrder": "1",
+          "lastUpdated": "12\/25\/2025 1:03 AM",
+          "fileSize": "1124208",
+          "resolutionX": "1963",
+          "resolutionY": "1963",
+          "fileNameFullsize": "102407995.jpg",
+          "fileNameThumbnail": "102407995.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "1124208",
+            "resolutionX": "1963",
+            "resolutionY": "1963",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "1124208",
+            "resolutionX": 500,
+            "resolutionY": 500,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "1124208",
+            "resolutionX": 100,
+            "resolutionY": 100,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407995.jpg"
+          }
+        },
+        {
+          "mediaID": "102407658",
+          "mediaOrder": "2",
+          "lastUpdated": "12\/25\/2025 1:03 AM",
+          "fileSize": "58109",
+          "resolutionX": "420",
+          "resolutionY": "560",
+          "fileNameFullsize": "102407658.jpg",
+          "fileNameThumbnail": "102407658.jpg",
+          "urlSecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg",
+          "urlSecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg",
+          "urlInsecureFullsize": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg",
+          "urlInsecureThumbnail": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg",
+          "original": {
+            "type": "original",
+            "fileSize": "58109",
+            "resolutionX": "420",
+            "resolutionY": "560",
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg"
+          },
+          "large": {
+            "type": "large",
+            "fileSize": "58109",
+            "resolutionX": 500,
+            "resolutionY": 667,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg"
+          },
+          "small": {
+            "type": "small",
+            "fileSize": "58109",
+            "resolutionX": 100,
+            "resolutionY": 133,
+            "url": "https:\/\/cdn.rescuegroups.org\/5970\/pictures\/animals\/22144\/22144859\/102407658.jpg"
+          }
+        }
+      ],
+      "animalRescueID": "A0059990869",
+      "animalSpecialneedsDescription": "[GREEN]Friendly, playful, energetic large breed puppy, will need continued appropriate socialization with new people, places and other animals, and positive reinforcement\/rewards based training. Training should begin immediately before this puppy learns unwanted behaviors and becomes difficult to control. Dog savvy, respectful children 14+ may be okay; younger kids not recommended due to puppy's size and typical puppy mouthiness and sharp teeth. Adopter must be prepared for the time, energy, patience and commitment needed to raise and train a puppy, and be prepared for the exercise, socialization and mental enrichment needed by this breed. Breed experience or knowledge preferred.B Adopter must be physically capable of handling a strong large breed dog.[2025-12-24 11:55:00.000]"
     }
   }
 }
