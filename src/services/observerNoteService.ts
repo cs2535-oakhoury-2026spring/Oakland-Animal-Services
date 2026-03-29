@@ -7,6 +7,9 @@ import {
   getAllObserverNotes as _getAllObserverNotes,
   addObserverNote as _addObserverNote,
   getObserverNotesByPetId as _getObserverNotesByPetId,
+  removeObserverNoteById as _removeObserverNoteById,
+  removeNotesByPetId as _removeNotesByPetId,
+  updateObserverNoteStatus as _updateObserverNoteStatus,
 } from "../db/observerNotes.js";
 
 export type { ObserverNote };
@@ -21,25 +24,56 @@ export type SimilarNoteResult = {
   highlightedContent: string;
 };
 
-export function getAllObserverNotes(): ObserverNote[] {
-  return _getAllObserverNotes();
+export async function getAllObserverNotes(
+  limit?: number,
+  page?: number,
+): Promise<ObserverNote[]> {
+  return _getAllObserverNotes(limit, page);
 }
 
-export function getObserverNotesByPetId(petId: number): ObserverNote[] {
+export async function getObserverNotesByPetId(
+  petId: number,
+): Promise<ObserverNote[]> {
   return _getObserverNotesByPetId(petId);
 }
 
-export function addObserverNote(note: ObserverNote): void {
-  _addObserverNote(note);
+export async function removeObserverNoteById(id: number): Promise<boolean> {
+  return _removeObserverNoteById(id);
 }
 
-export function findSimilarObserverNotes(
+export async function removeNotesByPetId(petId: number): Promise<boolean> {
+  return _removeNotesByPetId(petId);
+}
+
+export async function updateObserverNoteStatus(
+  id: number,
+  status: string,
+): Promise<boolean> {
+  return _updateObserverNoteStatus(id, status);
+}
+
+export async function addObserverNote(note: ObserverNote): Promise<boolean> {
+  return _addObserverNote(note);
+}
+
+export async function findSimilarObserverNotes(
   query: string,
   options: {
     nameToExclude?: string;
     maxResults?: number;
+    page?: number;
     noteDataCache?: Map<string, NoteData>;
+    petId?: number;
   } = {},
-): SimilarNoteResult[] {
-  return findSimilarNotes(query, getAllObserverNotes(), options);
+): Promise<SimilarNoteResult[]> {
+  const notes = options.petId
+    ? await getObserverNotesByPetId(options.petId)
+    : await getAllObserverNotes(options.maxResults, options.page);
+
+  const results = findSimilarNotes(query, notes, options);
+
+  if (options.maxResults) {
+    return results.slice(0, options.maxResults);
+  }
+  return results;
 }

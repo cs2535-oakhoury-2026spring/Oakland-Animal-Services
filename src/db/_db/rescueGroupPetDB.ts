@@ -1,6 +1,6 @@
-import config from "../config/index.js";
-import { PetSchema, type Pet } from "../models/Pet.schema.js";
-import { PetRepository } from "../types/index.js";
+import config from "../../config/index.js";
+import { PetLocation, PetSchema, type Pet } from "../../models/Pet.schema.js";
+import { PetRepository } from "../../types/index.js";
 import axios from "axios";
 
 const RESCUE_GROUPS_ENDPOINT = config.rescueGroups.endpoint;
@@ -13,7 +13,7 @@ const rescueGroupsClient = axios.create({
   },
 });
 
-const FIELDS = [
+const GET_FIELDS = [
   "animalID",
   "animalName",
   "animalSpecies",
@@ -35,6 +35,14 @@ const FIELDS = [
   "animalRescueID",
   "animalSpecialneedsDescription",
   "animalUpdatedDate",
+];
+
+const LOCATION_FIELDS = [
+  "animalName",
+  "animalSummary",
+  "animalThumbnailUrl",
+  "animalID",
+  "animalPictures",
 ];
 
 function extractPictures(record: any): string[] | undefined {
@@ -85,10 +93,23 @@ function parseLocationFromSummary(summary?: string | null): string | null {
   return loc;
 }
 
+function parsePetLocation(record: any): PetLocation | undefined {
+  if (!record) return undefined;
+
+  const pictures = extractPictures(record);
+  const petLocation: PetLocation = {
+    id: parseInt(record.animalID, 10),
+    name: record.animalName,
+    summary: record.animalSummary || "",
+    image: record.animalThumbnailUrl || pictures?.[0] || undefined,
+  };
+  return petLocation;
+}
 
 function parsePet(record: any): Pet | undefined {
   if (!record) return undefined;
 
+  const pictures = extractPictures(record);
   const pet: Pet = {
     id: parseInt(record.animalID, 10),
     name: record.animalName,
@@ -108,12 +129,7 @@ function parsePet(record: any): Pet | undefined {
     specialNeeds: record.animalSpecialneedsDescription,
     birthdate: record.animalBirthdate,
 
-    pictures: extractPictures(record),
-    image:
-      record.animalThumbnailUrl ||
-      record.urlSecureThumbnail ||
-      record.image ||
-      undefined,
+    image: record.animalThumbnailUrl || pictures?.[0] || undefined,
     age: computeAge(record),
   } as any;
 
@@ -136,7 +152,7 @@ export class RescueGroupPetRepository implements PetRepository {
       objectType: "animals",
       objectAction: "view",
       values: [{ animalID: String(id) }],
-      fields: FIELDS,
+      fields: GET_FIELDS,
     };
 
     try {
@@ -149,10 +165,10 @@ export class RescueGroupPetRepository implements PetRepository {
     }
   }
 
-  private async searchByLocation(
+  private async searchByLocationInternal(
     species: string,
     location: string,
-  ): Promise<number | undefined> {
+  ): Promise<PetLocation[] | undefined> {
     location = location.toLowerCase().replace(/-/g, " ");
     const payload = {
       objectType: "animals",
@@ -174,7 +190,7 @@ export class RescueGroupPetRepository implements PetRepository {
             criteria: location,
           },
         ],
-        fields: FIELDS,
+        fields: LOCATION_FIELDS,
       },
     };
 
@@ -182,25 +198,28 @@ export class RescueGroupPetRepository implements PetRepository {
       const response = await rescueGroupsClient.post("", payload);
       const pets: Record<string, any> = response?.data?.data || {};
 
-      
-      let recentPetId:string|undefined;
-      let recentTimestamp = 0;
+      const parsedPets: PetLocation[] = [];
       for (const key in pets) {
         const pet = pets[key];
         const summary: string = pet.animalSummary;
-        let locationInSummary = parseLocationFromSummary(summary)?.toLowerCase() || "";
-        locationInSummary = locationInSummary.replace(`${species.toLowerCase()} `, "");
-        console.log(`Checking pet ${pet.animalID} with location "${locationInSummary}" against search location "${location}"`);
+        let locationInSummary =
+          parseLocationFromSummary(summary)?.toLowerCase() || "";
+        locationInSummary = locationInSummary.replace(
+          `${species.toLowerCase()} `,
+          "",
+        );
+        // console.log(
+        //   `Checking pet ${pet.animalID} with location "${locationInSummary}" against search location "${location}"`,
+        // );
         if (locationInSummary === location) {
-          const date = new Date(pet.animalUpdatedDate).getTime();
-          if (date > recentTimestamp) {
-            recentTimestamp = date;
-            recentPetId = key;
+          const parsed = parsePetLocation(pet);
+          if (parsed) {
+            parsedPets.push(parsed);
           }
         }
       }
 
-      return recentPetId ? parseInt(recentPetId, 10) : undefined;
+      return parsedPets.length > 0 ? parsedPets : undefined;
     } catch (err) {
       console.error(
         `RG repo searchByLocation failed (${species} @ ${location})`,
@@ -210,11 +229,10 @@ export class RescueGroupPetRepository implements PetRepository {
     }
   }
 
-  async getDogIdFromLocation(location: string): Promise<number | undefined> {
-    return this.searchByLocation("Dog", location);
-  }
-
-  async getCatIdFromLocation(location: string): Promise<number | undefined> {
-    return this.searchByLocation("Cat", location);
+  async searchByLocation(
+    petType: string,
+    location: string,
+  ): Promise<PetLocation[] | undefined> {
+    return this.searchByLocationInternal(petType, location);
   }
 }

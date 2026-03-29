@@ -1,10 +1,19 @@
-import { PetSchema, type Pet } from "../models/Pet.schema.js";
-import { PetRepository } from "../types/index.js";
+import { PetSchema, type Pet, type PetLocation } from "../../models/Pet.schema.js";
+import { PetRepository } from "../../types/index.js";
+
+function mapper(pet: any): PetLocation {
+  return {
+    id: pet.id,
+    name: pet.name,
+    image: pet.image,
+    summary: pet.summary,
+  };
+}
 
 export class MockPetRepository implements PetRepository {
   private readonly pets: Pet[];
-  private readonly catLocationMap: Map<string, Pet[]>;
-  private readonly dogLocationMap: Map<string, Pet[]>;
+  private readonly catLocationMap: Map<string, PetLocation[]>;
+  private readonly dogLocationMap: Map<string, PetLocation[]>;
 
   constructor() {
     const marley = PetSchema.parse({
@@ -28,7 +37,6 @@ export class MockPetRepository implements PetRepository {
       generalSize: "",
       colorDetails: "White",
       specialNeeds: "",
-      pictures: ["https://cdn.rescuegroups.org/12/pictures/animals//182/6.jpg"],
     } as any);
 
     const anotherCat = PetSchema.parse({
@@ -45,11 +53,13 @@ export class MockPetRepository implements PetRepository {
       name: "Buddy",
       species: "Dog",
       summary: "I am at Oakland Animal Services in kennel E:1",
+      otherNames: "green"
     } as any);
 
     this.pets = [marley, anotherCat, dog];
 
     this.catLocationMap = new Map([["holding 4:19", [anotherCat]]]);
+    this.catLocationMap = new Map([["holding 4:0", [marley,anotherCat]]]);
 
     this.dogLocationMap = new Map([["e:1", [dog]]]);
   }
@@ -58,13 +68,14 @@ export class MockPetRepository implements PetRepository {
     return this.pets.find((pet) => pet.id === id);
   }
 
-  async getDogIdFromLocation(location: string): Promise<number | undefined> {
+  async searchByLocation(
+    petType: "dog" | "cat",
+    location: string,
+  ): Promise<PetLocation[] | undefined> {
     const lower = location.toLowerCase().replaceAll("-", " ");
-    return this.dogLocationMap.get(lower)?.[0]?.id;
-  }
-
-  async getCatIdFromLocation(location: string): Promise<number | undefined> {
-    const lower = location.toLowerCase().replaceAll("-", " ");
-    return this.catLocationMap.get(lower)?.[0]?.id;
+    if (petType === "dog") {
+      return this.dogLocationMap.get(lower)?.map(mapper);
+    }
+    return this.catLocationMap.get(lower)?.map(mapper);
   }
 }
