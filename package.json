@@ -20,6 +20,8 @@
   },
   "scripts": {
     "build": "tsc",
+    "create-observer-notes-table": "node --loader ts-node/esm src/db/scripts/createObserverNotesTable.ts",
+    "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
     "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js"
   }
