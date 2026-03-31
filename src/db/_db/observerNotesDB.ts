@@ -2,7 +2,7 @@ import {
   type ObserverNote,
 } from "../../models/ObserverNote.schema.js";
 import { ObserverNoteRepository } from "../../types/index.js";
-import { DynamoDBDocumentClient, PutCommand, QueryCommand, ScanCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand, QueryCommand, ScanCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "../../config/index.js";
 const TABLE_NAME = "ObserverNotes";
 
