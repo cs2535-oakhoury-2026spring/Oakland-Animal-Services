@@ -341,33 +341,26 @@
       }
     }
 
-  async function summarizeNotes(note) {
-    const requestId = ++currentRequestId;
-
-    summaryOutput.value = 'Summarizing...';
-
-    try {
-      const response = await fetch('/api/summarize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: note }),
-      });
-
-      const data = await response.json();
-
-    // prevent old responses overwriting new ones
-      if (requestId !== currentRequestId) return;
-
-      if (data.success) {
-        summaryOutput.value = data.summary;
-      } else {
-        summaryOutput.value = 'Failed to summarize.';
-      }
-    } catch (error) {
-      console.warn('Summarization error:', error);
-      summaryOutput.value = 'Error generating summary.';
+async function summarizeNotes(petId) {
+  const requestId = ++currentRequestId;
+  summaryOutput.value = 'Summarizing...';
+  try {
+    const response = await fetch(`/api/pets/${petId}/behavior-notes/summarize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    if (requestId !== currentRequestId) return;
+    if (data.success) {
+      summaryOutput.value = data.summary;
+    } else {
+      summaryOutput.value = 'Failed to summarize.';
     }
+  } catch (error) {
+    console.warn('Summarization error:', error);
+    summaryOutput.value = 'Error generating summary.';
   }
+}
   </script>
 </body>
 </html>
