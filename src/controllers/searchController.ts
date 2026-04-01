@@ -5,6 +5,14 @@ import {
 } from "../services/observerNoteService.js";
 import { number } from "zod";
 
+/**
+ * Performs a search for similar observer notes based on content and optional filters.
+ * 
+ * @param req - Express request object containing `query` (required), `nameToExclude`, 
+ *              `maxResults`, `petId`, and `page` in the request body.
+ * @param res - Express response object.
+ * @returns A JSON response with the search results and metadata.
+ */
 export async function search(req: Request, res: Response) {
   const {
     query: observerNoteContent,
