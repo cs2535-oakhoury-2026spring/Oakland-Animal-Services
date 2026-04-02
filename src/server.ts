@@ -5,10 +5,12 @@ import { fileURLToPath } from "url";
 import config from "./config/index.js";
 import petRouter from "./routes/pet.js";
 import observerNotesRouter from "./routes/observerNotes.js";
+import behaviorNotesRouter from "./routes/behaviorNotes.js";
 import searchRouter from "./routes/search.js";
 import summarizeRoutes from "./routes/summarize.js";
 import dotenv from "dotenv";
 import { seedObserverNotes } from "./db/observerNotes.js";
+import { seedBehaviorNotes } from "./db/behaviorNotes.js";
 
 dotenv.config();
 
@@ -24,6 +26,7 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(summarizeRoutes);
 app.use(searchRouter);
 app.use(observerNotesRouter);
+app.use(behaviorNotesRouter);
 app.use(petRouter);
 
 
@@ -53,6 +56,23 @@ seedObserverNotes([
   },
 ]);
 
-app.listen(PORT, '0.0.0.0', () => {
+seedBehaviorNotes([
+  {
+    id: 1,
+    timestamp: new Date("2024-06-01T11:00:00Z"),
+    content: "Marley loves people but needs training around strangers.",
+    author: "Trainer A",
+    petId: 22254130,
+  },
+  {
+    id: 2,
+    timestamp: new Date("2024-06-01T11:30:00Z"),
+    content: "Luna gets anxious when in a crate; calming treats help.",
+    author: "Trainer B",
+    petId: 22324883,
+  },
+]);
+
+app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

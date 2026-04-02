@@ -14,6 +14,14 @@ import {
   ObserverNoteSchema,
 } from "../models/ObserverNote.schema.js";
 
+/**
+ * Retrieves a paginated list of all observer notes.
+ * 
+ * @param req - Express request object containing optional query parameters:
+ *              `limit` (number of notes per page) and `page` (page number).
+ * @param res - Express response object.
+ * @returns A JSON response with success status and the list of observer notes.
+ */
 export async function listObserverNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
   const pageParam = req.query.page;
@@ -42,6 +50,13 @@ export async function listObserverNotes(req: Request, res: Response) {
   res.json({ success: true, observerNotes });
 }
 
+/**
+ * Deletes an observer note by its unique identifier.
+ * 
+ * @param req - Express request object containing the note `id` in path parameters.
+ * @param res - Express response object.
+ * @returns A JSON response indicating success or an error message if the note was not found.
+ */
 export async function deleteObserverNote(req: Request, res: Response) {
   const idParam = req.params.id;
   const id = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
@@ -57,6 +72,14 @@ export async function deleteObserverNote(req: Request, res: Response) {
   res.json({ success: true, message: "Observer note deleted" });
 }
 
+/**
+ * Updates the status of an existing observer note.
+ * 
+ * @param req - Express request object containing the note `id` in path parameters 
+ *              and the new `status` in the request body.
+ * @param res - Express response object.
+ * @returns A JSON response indicating success or an error message.
+ */
 export async function patchObserverNoteStatus(req: Request, res: Response) {
   const idParam = req.params.id;
   const id = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
@@ -83,6 +106,13 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
   }
 }
 
+/**
+ * Retrieves all observer notes associated with a specific pet ID.
+ * 
+ * @param req - Express request object containing the `petId` in path parameters.
+ * @param res - Express response object.
+ * @returns A JSON response with success status and the list of notes for the pet.
+ */
 export async function getObserverNotesByPetId(req: Request, res: Response) {
   const petIdParam = req.params.petId;
   const petId = typeof petIdParam === "string" ? parseInt(petIdParam) : NaN;
@@ -96,6 +126,13 @@ export async function getObserverNotesByPetId(req: Request, res: Response) {
   });
 }
 
+/**
+ * Deletes all observer notes associated with a specific pet ID.
+ * 
+ * @param req - Express request object containing the `petId` in path parameters.
+ * @param res - Express response object.
+ * @returns A JSON response indicating success or an error if no notes were found.
+ */
 export async function deleteObserverNotesByPetId(req: Request, res: Response) {
   const petIdParam = req.params.petId;
   const petId = typeof petIdParam === "string" ? parseInt(petIdParam, 10) : NaN;
@@ -111,6 +148,13 @@ export async function deleteObserverNotesByPetId(req: Request, res: Response) {
   res.json({ success: true, message: "Observer notes deleted for pet" });
 }
 
+/**
+ * Validates and uploads a new observer note.
+ * 
+ * @param req - Express request object containing `content`, `author`, and `petId` in the body.
+ * @param res - Express response object.
+ * @returns A JSON response with the created observer note or validation errors.
+ */
 export async function uploadObserverNote(req: Request, res: Response) {
   const parseResult = ObserverNoteCreateSchema.safeParse(req.body);
   if (!parseResult.success) {

@@ -1,7 +1,6 @@
 import { type Pet, type PetLocation } from "../models/Pet.schema.js";
 import { type ObserverNote } from "../models/ObserverNote.schema.js";
-
-
+import { type BehaviorNote } from "../models/BehaviorNote.schema.js";
 
 export interface PetRepository {
   getById(id: number): Promise<Pet | undefined>;
@@ -22,9 +21,9 @@ export interface ObserverNoteRepository {
 }
 
 export interface BehaviorNoteRepository {
-  getBehaviorNotes(limit?:number,page?:number): Promise<ObserverNote[]>;
-  getBehaviorNoteByPetId(petId: number): Promise<ObserverNote[]>;
-  addBehaviorNote(note: ObserverNote): Promise<boolean>;
+  getBehaviorNotes(limit?: number, page?: number): Promise<BehaviorNote[]>;
+  getBehaviorNoteByPetId(petId: number): Promise<BehaviorNote[]>;
+  addBehaviorNote(note: BehaviorNote): Promise<boolean>;
   removeBehaviorNoteById(id: number): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
 

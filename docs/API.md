@@ -11,18 +11,18 @@
 - `sex: string`
 - `species: string`
 - `image: string | null`
-- `description: string | null`
-- `summary: string`
+- `description: string | null` -> EMBED HTML
+- `summary: string` -> LOCATION
 - `breed: string | null`
 - `status: string | null`
-- `rescueId: string | null`
+- `rescueId: string | null` -> ARN
 - `availableDate: string | null`
-- `otherNames: string | null`
+- `otherNames: string | null` -> HANDLING COLOR
 - `distinguishingMarks: string | null`
 - `generalAge: string | null`
 - `generalSize: string | null`
 - `colorDetails: string | null`
-- `specialNeeds: string | null`
+- `specialNeeds: string | null` -> ANOTHER DESCRIPTION
 
 --------------------------
 ### LocationPet
@@ -217,4 +217,49 @@ Example:
 - Success: `200` with:
   - `{ success: true, query: string, results: SimilarNoteResult[], resultCount: number }`
 - Error: `400` if required fields are missing or invalid
+
+## Behavior Notes
+
+### GET `/api/behavior-notes?limit=10&page=1`
+
+- Description: List behavior notes with optional pagination.
+- Query params:
+  - `limit` (number, optional)
+  - `page` (number, optional)
+- Success: `200` with `{ success: true, behaviorNotes: BehaviorNote[] }`
+- Error: `400` for invalid query values
+
+### GET `/api/pets/:petId/behavior-notes`
+
+- Description: List behavior notes for a single pet.
+- Path params:
+  - `petId` (number, required)
+- Success: `200` with `{ success: true, behaviorNotes: BehaviorNote[] }`
+- Error: `400` if `petId` is invalid
+
+### POST `/api/behavior-notes`
+
+- Description: Add a new behavior note.
+- Body JSON:
+  - `content` (string, required)
+  - `author` (string, required)
+  - `petId` (number, required)
+- Success: `200` with `{ success: true, message: string, behaviorNote: BehaviorNote }`
+- Error: `400` for validation failure
+
+### DELETE `/api/behavior-notes/:id`
+
+- Description: Delete a behavior note by id.
+- Path params:
+  - `id` (number, required)
+- Success: `200` with `{ success: true, message: "Behavior note deleted" }`
+- Error: `400` for invalid id, `404` if not found
+
+### DELETE `/api/pets/:petId/behavior-notes`
+
+- Description: Delete all behavior notes for a given pet.
+- Path params:
+  - `petId` (number, required)
+- Success: `200` with `{ success: true, message: "Behavior notes deleted for pet" }`
+- Error: `400` for invalid id, `404` if no notes exist for that pet
 

@@ -11,6 +11,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1021.0",
+    "@aws-sdk/lib-dynamodb": "^3.1021.0",
     "axios": "^1.13.6",
     "compromise": "^14.14.5",
     "dotenv": "^17.3.1",
@@ -21,6 +23,8 @@
   },
   "scripts": {
     "build": "tsc",
+    "create-observer-notes-table": "node --loader ts-node/esm src/db/scripts/createObserverNotesTable.ts",
+    "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
     "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js"
   }

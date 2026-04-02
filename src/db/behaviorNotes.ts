@@ -2,10 +2,14 @@ import {
   BehaviorNoteSchema,
   type BehaviorNote,
 } from "../models/BehaviorNote.schema.js";
+import config from "../config/index.js";
 import { BehaviorNoteRepository } from "../types/index.js";
 import { MockBehaviorNoteRepository } from "./_mock/mockBehaviorNotesDB.js";
+import { BehaviorNoteDBRepository } from "./_db/behaviorNotesDB.js";
 
-const REPO: BehaviorNoteRepository = new MockBehaviorNoteRepository();
+const REPO: BehaviorNoteRepository = config.USE_MOCK_NOTES_DB
+  ? new MockBehaviorNoteRepository()
+  : new BehaviorNoteDBRepository();
 
 export async function getAllBehaviorNotes(
   limit?: number,

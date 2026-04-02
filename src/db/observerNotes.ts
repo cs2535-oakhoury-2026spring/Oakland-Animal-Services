@@ -2,10 +2,14 @@ import {
   ObserverNoteSchema,
   type ObserverNote,
 } from "../models/ObserverNote.schema.js";
+import config from "../config/index.js";
 import { ObserverNoteRepository } from "../types/index.js";
 import { MockObserverNoteRepository } from "./_mock/mockObserverNotesDB.js";
+import { ObserverNoteDBRepository } from "./_db/observerNotesDB.js";
 
-const REPO: ObserverNoteRepository = new MockObserverNoteRepository();
+const REPO: ObserverNoteRepository = config.USE_MOCK_NOTES_DB
+  ? new MockObserverNoteRepository()
+  : new ObserverNoteDBRepository();
 
 export async function getAllObserverNotes(
   limit?: number,
