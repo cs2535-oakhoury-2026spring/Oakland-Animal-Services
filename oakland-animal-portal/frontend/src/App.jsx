@@ -528,6 +528,27 @@ const api = {
       return null;
     }
   },
+
+  // REAL — connected to POST /api/pets/:petId/behavior-notes/summarize
+  // Uses OpenAI GPT-4o-mini to generate AI summaries from behavior notes
+  getSummary: async (petId, prompt) => {
+    try {
+      const res = await fetch(`/api/pets/${petId}/behavior-notes/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt || "Summarize the note data in 2-5 concise sentences" }),
+      });
+      if (!res.ok) throw new Error("AI summary failed");
+      const data = await res.json();
+      if (data.success && data.summary) {
+        return data.summary;
+      }
+      return "Unable to generate summary. Please try again.";
+    } catch (err) {
+      console.error("getSummary error:", err);
+      return "AI service is currently unavailable. Please check your API key configuration.";
+    }
+  },
 };
 
 /**
@@ -1777,9 +1798,16 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
   const handleBehaviorNoteEdited = (n) => setBehaviorNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
   
-  const handleAiQuery = () => {
+  const handleAiQuery = async () => {
     if (!aiQuery.trim()) return;
-    setAiResponse("AI response will be connected later. For now, this is a placeholder response based on your query: \"" + aiQuery + "\"");
+    setAiResponse("Generating AI summary...");
+    try {
+      const summary = await api.getSummary(petId, aiQuery.trim());
+      setAiResponse(summary);
+    } catch (err) {
+      console.error("AI query error:", err);
+      setAiResponse("Failed to generate summary. Please try again.");
+    }
   };
 
   // Use backend search results when available, otherwise local filter as fallback

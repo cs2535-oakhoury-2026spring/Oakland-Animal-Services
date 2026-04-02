@@ -37,7 +37,7 @@ export const summarizeText = async (
       { role: "user", content: instruction + "\n" + text },
     ],
     temperature: 0.3,
-    max_tokens: 10,
+    max_tokens: 500,
   });
 
   return completion.choices[0]?.message?.content?.trim() || "";
