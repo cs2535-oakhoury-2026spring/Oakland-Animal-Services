@@ -1,11 +1,15 @@
 import nlp from "compromise";
 import { distance } from "fastest-levenshtein";
-import { ObserverNote, SimilarNoteResult } from "../services/observerNoteService.js";
+import {
+  type ObserverNote,
+  type SimilarNoteResult,
+} from "../services/observerNoteService.js";
 
 function levenshteinDistance(str1: string, str2: string): number {
   return distance(str1, str2);
 }
 
+// Common words to exclude from keyword extraction
 const TOKENS_TO_EXCLUDE = new Set([
   "the",
   "a",
@@ -40,6 +44,7 @@ const TOKENS_TO_EXCLUDE = new Set([
   "must",
 ]);
 
+// Words to exclude from normalization to avoid incorrect matches (e.g. "left" vs "leave")
 const NORMALIZATION_EXCLUSIONS = new Set([
   "left",
   "right",
@@ -55,6 +60,12 @@ export type NoteData = {
   lowerContent: string;
 };
 
+/**
+ *  Extracts keywords from the given text.
+ * @param text The input text to extract keywords from.
+ * @param nameToExclude An optional name to exclude from the keywords (e.g. animal name).
+ * @returns An array of extracted keywords.
+ */
 export function extractKeywords(
   text: string,
   nameToExclude?: string,
@@ -124,6 +135,14 @@ export function extractKeywords(
   return keywords;
 }
 
+/**
+ *  Finds matching indices in the note content for a given keyword, allowing for fuzzy matches based on Levenshtein distance.
+ * @param tokens The preprocessed tokens of the note content.
+ * @param keyword The keyword to search for.
+ * @param normalizations A map of token normalizations.
+ * @param lowerText The lowercase version of the note content.
+ * @returns An array of matching indices.
+ */
 function findMatchIndices(
   tokens: Array<{ text: string; lower: string }>,
   keyword: string,
@@ -159,6 +178,12 @@ function findMatchIndices(
   return indices;
 }
 
+/**
+ *  Highlights matched keywords in the note content by wrapping them in <b> tags.
+ * @param content   The original note content.
+ * @param matchedIndices  A set of character indices that are part of matched keywords.
+ * @returns The note content with matched keywords highlighted.
+ */
 function highlightMatches(
   content: string,
   matchedIndices: Set<number>,
@@ -196,6 +221,13 @@ function highlightMatches(
   return result;
 }
 
+/**
+ *  Finds notes similar to the search note based on extracted keywords and fuzzy matching.
+ * @param searchNote The note content to search for similar notes.
+ * @param allNotes The list of all notes to search within.
+ * @param options Additional options for the search such as caching and result limits.
+ * @returns A list of similar notes.
+ */
 export function findSimilarNotes(
   searchNote: string,
   allNotes: ObserverNote[],
@@ -221,6 +253,7 @@ export function findSimilarNotes(
   const noteDataMap = noteDataCache || new Map<string, NoteData>();
   const startTime = performance.now();
 
+  // Preprocess all notes to extract tokens and normalizations, using cache if available
   allNotes.forEach((note) => {
     const noteKey = `${note.author}|${note.timestamp}|${note.content}`;
     if (noteDataMap.has(noteKey)) return;
@@ -296,7 +329,7 @@ export function findSimilarNotes(
     }
   >();
   const startFindTime = performance.now();
-
+  // Find matches for each keyword in each note
   allNotes.forEach((note) => {
     const noteKey = `${note.author}|${note.timestamp}|${note.content}`;
     const noteData = noteDataMap.get(noteKey)!;
@@ -342,6 +375,7 @@ export function findSimilarNotes(
     `Found matches for ${keywords.length} keywords in ${(endFindTime - startFindTime).toFixed(2)} ms\n`,
   );
 
+  // Compile results with highlighted content and sort by relevance and recency
   const results: SimilarNoteResult[] = Array.from(noteMatches.values())
     .map((match) => {
       const seenPositions = new Set<string>();
