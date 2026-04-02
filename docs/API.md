@@ -160,6 +160,28 @@ Example:
 - Success: `200` with `{ success: true, message: "Observer notes deleted for pet" }`
 - Error: `400` for invalid id, `404` if no notes exist for that pet
 
+## Summarizer
+
+### POST `/api/pets/:petId/behavior-notes/summarize`
+
+- Description: Summarize behavior notes for a specific pet into concise text.
+- Path params:
+  - `petId` (number, required)
+- Body JSON:
+  - `prompt` (string, optional) - Custom instructions for summarization; falls back to default.
+- Success: `200` with `{ success: true, summary: string }`
+- Error:
+  - `400` for invalid `petId`
+  - `500` if summarization service fails
+
+Example:
+```json
+{
+  "success": true,
+  "summary": "Marley has been friendly with staff and shows mild anxiety around loud noises; weekly crate desensitization is recommended."
+}
+```
+
 ## Search
 
 ### POST `/api/search`
@@ -204,19 +226,6 @@ Example:
   "resultCount": 1
 }
 ```
-
-### POST `/api/search`
-
-- Description: Search observer notes by term. If `petId` was provided then `page` will be ignored, else a global search will be done.
-- Body JSON:
-  - `note` (string, required)
-  - `petId` (number, optional)
-  - `nameToExclude` (string, optional)
-  - `maxResults` (number, optional)
-  - `page` (number, optional)
-- Success: `200` with:
-  - `{ success: true, query: string, results: SimilarNoteResult[], resultCount: number }`
-- Error: `400` if required fields are missing or invalid
 
 ## Behavior Notes
 

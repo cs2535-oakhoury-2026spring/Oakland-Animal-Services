@@ -1,28 +1,44 @@
 import config from "../config/index.js";
-import OpenAI from 'openai';
-import { MockBehaviorNoteRepository } from "../db/_mock/mockBehaviorNotesDB.js";
+import OpenAI from "openai";
+import { getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
 
 const client = new OpenAI({
-    apiKey: config.LLM_API_KEY,
+  apiKey: config.LLM_API_KEY,
 });
 
 /**
  * Summarizes text using OpenAI (placeholder for now, can swap Azure later)
  */
-export const summarizeText = async (petId: number): Promise<string> => {
-    const repo = new MockBehaviorNoteRepository();
-    const notes = await repo.getBehaviorNoteByPetId(petId);
-    const text = notes.map(note => note.content).join(" ");
+export const summarizeText = async (
+  petId: number,
+  prompt?: string,
+): Promise<string> => {
+  const notes = await getBehaviorNotesByPetId(petId);
 
-    const completion = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+  if (notes.length === 0) {
+    return "No behavior notes found for this pet.";
+  }
+  const text = notes
+    .map(
+      (note) =>
+        `${note.content}|${note.timestamp.toISOString()}|${note.author}`,
+    )
+    .join("\n");
+  const instruction =
+    prompt || "Summarize the note data in 2-5 concise sentences";
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o-mini",
     messages: [
-        { role: 'system', content: 'Summarize the following text in 2-4 concise sentences' },
-        { role: 'user', content: text },
+      {
+        role: "system",
+        content:
+          "You are a helpful assistant that summarizes pet notes for shelter staff. Note content is separated by | and includes the note text, timestamp, and author.",
+      },
+      { role: "user", content: instruction + "\n" + text },
     ],
     temperature: 0.3,
-    max_tokens: 100,
-    });
+    max_tokens: 10,
+  });
 
-    return completion.choices[0]?.message?.content?.trim() || '';
+  return completion.choices[0]?.message?.content?.trim() || "";
 };
