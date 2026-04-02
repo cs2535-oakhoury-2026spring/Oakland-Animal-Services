@@ -1,5 +1,23 @@
 // Oakland Animal Services Portal - Frontend
 // Connects to Express backend on port 3000 via proxy (see package.json)
+/**
+ * Oakland Animal Services Portal - Frontend Application
+ * 
+ * This is the main React application for the Oakland Animal Services Portal.
+ * It provides staff with real-time access to animal data, medical observations,
+ * and behavior notes integrated with the RescueGroups API.
+ * 
+ * Key Features:
+ * - QR code-based kennel navigation for quick animal lookup
+ * - Direct pet ID URLs for sharing specific animal profiles
+ * - Real-time medical and behavior note management with search
+ * - AI-powered summary generation from animal notes
+ * - Responsive design (mobile-first with desktop two-column layout)
+ * - Dark mode support
+ * - Sex-based coloring and compatibility indicators
+ * - Handler-level color coding (green/yellow/blue/pink)
+ */
+
 import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── Focus Trap Hook for Modals (WCAG 2.1 AA) ─────────────────────────────────
@@ -186,30 +204,99 @@ const Icons = {
 const PLACEHOLDER_CAT = "https://cdn.pixabay.com/photo/2024/02/28/07/42/european-shorthair-8601492_640.jpg";
 const PLACEHOLDER_DOG = "https://cdn.pixabay.com/photo/2023/08/18/15/02/dog-8198719_640.jpg";
 
-// Parse kennel location from RescueGroups summary field
-// Real format: "I am at Oakland Animal Services in kennel Cat W:5"
-// Output format: "W-5" (strip species prefix, use dash separator)
+// Strip HTML tags from API description fields for plain-text display
+function stripHtml(html) {
+  if (!html) return "";
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent || "";
+}
+
+// Parse weight from description text (e.g. "about 56 pounds" → "56 lbs")
+function parseWeightFromDesc(desc) {
+  if (!desc) return null;
+  const m = desc.match(/(\d+)\s*(?:pounds?|lbs?)/i);
+  return m ? `${m[1]} lbs` : null;
+}
+
+// Compute display age as "Xy Zm/o" from description age + listing date
+// Parses "X year(s) old" from description, then adds months elapsed since reference date
+// Prefers receivedDate (when shelter assessed the animal) over createdDate
+function computeDisplayAge(desc, createdDate, receivedDate, generalAge) {
+  let baseMonths = 0;
+  if (desc) {
+    const ym = desc.match(/(\d+)\s*year/i);
+    const mm = desc.match(/(\d+)\s*month/i);
+    if (ym) baseMonths += parseInt(ym[1], 10) * 12;
+    if (mm) baseMonths += parseInt(mm[1], 10);
+  }
+  const refDate = receivedDate || createdDate;
+  if (baseMonths > 0 && refDate) {
+    const ref = new Date(refDate);
+    if (!isNaN(ref.getTime())) {
+      const now = new Date();
+      const elapsedMonths = (now.getFullYear() - ref.getFullYear()) * 12 + (now.getMonth() - ref.getMonth());
+      baseMonths += Math.max(0, elapsedMonths);
+    }
+  }
+  if (baseMonths > 0) {
+    const y = Math.floor(baseMonths / 12);
+    const m = baseMonths % 12;
+    if (y > 0 && m > 0) return `${y}y ${m}m/o`;
+    if (y > 0) return `${y}y`;
+    return `${m}m/o`;
+  }
+  return generalAge || "Unknown";
+}
+
+/**
+ * Map RescueGroups okWithKids value to display label
+ * "No" → "Unlikely" for gentler messaging to potential adopters
+ */
+function mapKidsCompat(val) {
+  if (!val) return "Unknown";
+  if (val === "No") return "Unlikely";
+  if (val === "Yes") return "Yes";
+  return val;
+}
+
+/**
+ * Parse kennel location from RescueGroups summary field
+ * Example: "I am at Oakland Animal Services in kennel Cat W:5" → "Cat W:5"
+ * Handles foster animals specially: returns "In Foster"
+ */
 function parseLocationFromSummary(summary) {
   if (!summary) return "";
   const trimmed = summary.trim();
   if (trimmed.toLowerCase().includes("foster")) return "In Foster";
   const prefix = "I am at Oakland Animal Services in kennel ";
   if (trimmed.startsWith(prefix)) {
-    let location = trimmed.slice(prefix.length).trim();
-    // Strip species prefix (e.g., "Cat ", "Dog ")
-    location = location.replace(/^(Cat|Dog)\s+/i, "");
-    // Replace colon with dash (W:5 → W-5)
-    location = location.replace(":", "-");
-    return location;
+    return trimmed.slice(prefix.length).trim();
   }
   return "";
 }
 
-// ─── Mock Data & Service Layer ───────────────────────────────────────────────
-// Mock data is used as fallback when backend endpoints fail.
-// Each api method is marked REAL or MOCK based on backend connectivity.
-// Backend endpoints: /api/pets/:id, /api/location/:type/:loc, /api/pets/:id/observer-notes,
-//   /api/pets/:id/behavior-notes, /api/observer-notes, /api/behavior-notes, /api/search
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * API SERVICE LAYER
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * All frontend API calls go through this `api` object. Each method connects to
+ * the Express backend running on port 3000 (proxied via package.json).
+ * 
+ * Backend API Routes:
+ * - GET /api/pets/:id                    → Individual pet details
+ * - GET /api/location/:type/:location    → Pets at a kennel (for QR codes)
+ * - GET /api/pets/:id/observer-notes     → Medical observations for a pet
+ * - GET /api/pets/:id/behavior-notes     → Behavior notes for a pet
+ * - POST /api/observer-notes             → Create new medical observation
+ * - POST /api/behavior-notes             → Create new behavior note
+ * - PATCH /api/observer-notes/:id        → Update medical observation
+ * - PATCH /api/behavior-notes/:id        → Update behavior note
+ * - POST /api/search                     → NLP-powered search across notes
+ * - POST /api/ai-summary                 → AI-generated summary from notes
+ * 
+ * Mock data is kept minimal and only used as fallback for getPet when API fails.
+ */
 
 const mockPets = [
   { petId: "12345678910", name: "Fluffly", species: "Cat", location: "Cat W:5", arn: "736727", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "green" },
@@ -230,17 +317,9 @@ const formatTimestamp = (dateString) => {
   }
 };
 
-const mockObserverNotes = [
-  { id: 1, petId: "12345678910", case: "Limp On Right Leg", by: "Shannon", status: "Raised", type: "medical", body: "Noticed limping during morning check. The cat appears to favor the left side when walking. No visible swelling or wounds detected on initial observation. Will need further examination by veterinary staff.", createdAt: "2026-03-01T09:00:00Z" },
-  { id: 2, petId: "12345678910", case: "Limp On Right Leg", by: "Shannon", status: "Resolved", type: "medical", body: "Follow-up examination completed. Vet confirmed minor sprain, no fracture detected. Prescribed rest and limited activity for one week. Pain medication administered. Cat responding well to treatment.", createdAt: "2026-03-02T14:00:00Z" },
-];
-
-const mockBehaviorNotes = [
-  { id: 1001, petId: "12345678910", case: "Stress-related behavior", by: "Shannon", body: "Cat has been hiding in the back of the kennel for most of the day. Not responding to usual enrichment activities. Appetite seems normal but social interaction is minimal. This may be stress-related due to recent kennel move.", createdAt: "2026-03-02T10:15:00Z" },
-  { id: 1002, petId: "12345678910", case: "Enrichment progress", by: "Shannon", body: "Responded well to feather toy during enrichment. Showed interest for approximately 15 minutes. Made eye contact with handler and allowed brief chin scratches.", createdAt: "2026-03-02T15:30:00Z" },
-  { id: 1003, petId: "12345678910", case: "Socialization plan", by: "Demo User", body: "Recommending quiet time and gradual socialization approach going forward.", createdAt: "2026-03-03T09:00:00Z" },
-  { id: 1004, petId: "12345678911", case: "General temperament", by: "Shannon", body: "Buddy is very friendly and energetic. Enjoys walks and plays well with other dogs. Good candidate for adoption events.", createdAt: "2026-03-01T10:00:00Z" },
-];
+// Mock data kept as fallback only - real data comes from backend API
+const mockObserverNotes = [];
+const mockBehaviorNotes = [];
 
 const mockUsers = [
   { username: "shannon", password: "oak2026", displayName: "Shannon", role: "medical", email: "shannon@oaklandanimal.org", department: "Veterinary Care" },
@@ -276,6 +355,7 @@ const api = {
       const data = await res.json();
       if (data.success && data.pet) {
         const p = data.pet;
+        const plainDesc = stripHtml(p.description || "");
         return {
           petId: String(p.id),
           name: p.name,
@@ -287,9 +367,15 @@ const api = {
           handlerLevel: (p.otherNames || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
-          age: p.age,
+          age: computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
           sex: p.sex || "",
-          description: p.description || "",
+          description: plainDesc,
+          weight: parseWeightFromDesc(plainDesc) || "Unknown",
+          spayedNeutered: p.altered || "Unknown",
+          kidsOver12: mapKidsCompat(p.okWithKids),
+          kidsUnder12: mapKidsCompat(p.okWithKids),
+          canLiveWithCats: p.okWithCats || "Unknown",
+          dogToDog: p.distinguishingMarks || "Unknown",
         };
       }
       throw new Error("Invalid response");
@@ -302,28 +388,25 @@ const api = {
   // REAL — connected to GET /api/location/:petType/:location (QR code driven)
   getPetsByLocation: async (petType, location) => {
     if (!petType || !location) {
-      console.warn("No location params - using mock data");
-      return mockPets;
+      throw new Error("Invalid location parameters");
     }
-    try {
-      const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}`);
-      if (!res.ok) throw new Error("Failed to fetch pets by location");
-      const data = await res.json();
-      if (data.success && Array.isArray(data.pets)) {
-        return data.pets.map((pet) => ({
-          petId: String(pet.id),
-          name: pet.name,
-          species: petType === "cat" ? "Cat" : "Dog",
-          location: location,
-          imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
-          summary: pet.summary || "",
-        }));
-      }
-      return [];
-    } catch (err) {
-      console.warn("getPetsByLocation: falling back to mock data", err);
-      return mockPets;
+    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}`);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.error || "Location not found");
     }
+    const data = await res.json();
+    if (data.success && Array.isArray(data.pets)) {
+      return data.pets.map((pet) => ({
+        petId: String(pet.id),
+        name: pet.name,
+        species: petType === "cat" ? "Cat" : "Dog",
+        location: location,
+        imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
+        summary: pet.summary || "",
+      }));
+    }
+    throw new Error("No animals found at this location");
   },
 
   // REAL — connected to GET /api/pets/:petId/observer-notes
@@ -447,24 +530,58 @@ const api = {
   },
 };
 
-// ─── Theme ───────────────────────────────────────────────────────────────────
+/**
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THEME & STYLING
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+// Light and dark mode color palettes
 const themes = {
   light: {
-    headerGreen: "#2d5a27", tabActiveBg: "#d4edda", brickRed: "#BE3A2B", warmGray: "#666666",
-    statusRaised: "#BE3A2B", statusResolved: "#2d7a24", bg: "#f2f2f2", cardBg: "#ffffff",
-    cardBorder: "#cccccc", textPrimary: "#1a1a1a", textSecondary: "#333333", inputBg: "#f7f7f7",
-    inputBorder: "#bbb", shadow: "0 2px 8px rgba(0,0,0,0.06)",
+    headerGreen: "#2d5a27",    // Oakland Animal Services brand green
+    tabActiveBg: "#d4edda",    // Active tab background (light green)
+    brickRed: "#BE3A2B",       // Alert/raised status color
+    warmGray: "#666666",       // Secondary text and labels
+    statusRaised: "#BE3A2B",   // Medical issue raised (red)
+    statusResolved: "#2d7a24", // Medical issue resolved (green)
+    bg: "#f2f2f2",             // Page background
+    cardBg: "#ffffff",         // Card background
+    cardBorder: "#cccccc",     // Card borders
+    textPrimary: "#1a1a1a",    // Primary text
+    textSecondary: "#333333",  // Secondary text
+    inputBg: "#f7f7f7",        // Input field background
+    inputBorder: "#bbb",       // Input field border
+    shadow: "0 2px 8px rgba(0,0,0,0.06)",
   },
   dark: {
-    headerGreen: "#2d5a27", tabActiveBg: "#1e3d1a", brickRed: "#E04B3A", warmGray: "#aaaaaa",
-    statusRaised: "#E04B3A", statusResolved: "#4CAF50", bg: "#1a1a1a", cardBg: "#2a2a2a",
-    cardBorder: "#3a3a3a", textPrimary: "#f0f0f0", textSecondary: "#d0d0d0", inputBg: "#333333",
-    inputBorder: "#555555", shadow: "0 2px 8px rgba(0,0,0,0.3)",
+    headerGreen: "#2d5a27",
+    tabActiveBg: "#1e3d1a",
+    brickRed: "#E04B3A",
+    warmGray: "#aaaaaa",
+    statusRaised: "#E04B3A",
+    statusResolved: "#4CAF50",
+    bg: "#1a1a1a",
+    cardBg: "#2a2a2a",
+    cardBorder: "#3a3a3a",
+    textPrimary: "#f0f0f0",
+    textSecondary: "#d0d0d0",
+    inputBg: "#333333",
+    inputBorder: "#555555",
+    shadow: "0 2px 8px rgba(0,0,0,0.3)",
   },
 };
+
 const font = "'Poppins', sans-serif";
 
-// Handler level colors (from RescueGroups API animalOthernames field)
+/**
+ * Handler level colors indicate how experienced a handler should be to work with the animal
+ * Mapped from RescueGroups API animalOthernames field
+ * - Green: Any handler (gentle, easy)
+ * - Yellow: Experienced handler recommended
+ * - Blue: Specialized handling required
+ * - Pink: Extra caution/specialized protocols
+ */
 const HANDLER_LEVEL_COLORS = {
   green: "#4CAF50",
   yellow: "#FFC107",
@@ -544,6 +661,47 @@ function LoginScreen({ onLogin }) {
       </button>
       {error && <div role="alert" style={{ color: c.brickRed, fontSize: 14, marginTop: 8 }}>{error}</div>}
       <div style={{ marginTop: 24, fontSize: 13, color: c.warmGray, textAlign: "center", lineHeight: 1.6 }}>Demo credentials:<br />shannon / oak2026 (medical)<br />demo / demo (staff)</div>
+    </main>
+  );
+}
+
+// ─── Error Screen ────────────────────────────────────────────────────────────
+// Shown when a kennel location URL is invalid or returns no animals
+function ErrorScreen({ error, onLogout, c }) {
+  const r = useResponsive();
+  return (
+    <main id="main-content" style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: r.padding }}>
+      <div style={{ textAlign: "center", maxWidth: 500 }}>
+        <div style={{ width: 80, height: 80, borderRadius: "50%", backgroundColor: c.cardBg, border: `2px solid ${c.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px" }}>
+          <Icons.alertCircle size={40} color={c.brickRed} />
+        </div>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: c.textPrimary, marginBottom: 12 }}>Location Not Found</h1>
+        <p style={{ fontSize: 16, color: c.warmGray, lineHeight: 1.6, marginBottom: 32 }}>
+          {error || "The kennel location in this URL does not exist or has no animals currently assigned."}
+        </p>
+        <p style={{ fontSize: 14, color: c.textSecondary, marginBottom: 24, padding: "12px 20px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
+          Please verify the QR code URL or contact your administrator if you believe this is an error.
+        </p>
+        <button 
+          onClick={onLogout}
+          style={{ 
+            padding: "12px 32px", 
+            borderRadius: 12, 
+            border: "none", 
+            backgroundColor: c.headerGreen, 
+            color: "#fff", 
+            fontSize: 15, 
+            fontWeight: 600, 
+            cursor: "pointer", 
+            fontFamily: font,
+            transition: "opacity 0.2s ease"
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+        >
+          Return to Login
+        </button>
+      </div>
     </main>
   );
 }
@@ -1068,6 +1226,458 @@ function QRCodeModal({ pet, onClose, c }) {
   );
 }
 
+// ─── Desktop Portal (iPad/Desktop two-column layout, width >= 768px) ─────────
+function DesktopPortal({
+  user, pet, notes, behaviorNotes,
+  filteredNotes, filteredBehaviorNotes,
+  activeTab, setActiveTab,
+  searchQuery, handleMedicalSearch,
+  behaviorSearchQuery, setBehaviorSearchQuery,
+  isSearching,
+  aiQuery, setAiQuery, aiResponse, handleAiQuery,
+  medicalNotesVisible, setMedicalNotesVisible,
+  behaviorNotesVisible, setBehaviorNotesVisible,
+  NOTES_PER_PAGE,
+  showCreateModal, setShowCreateModal,
+  showCreateBehaviorModal, setShowCreateBehaviorModal,
+  editingNote, setEditingNote,
+  editingBehaviorNote, setEditingBehaviorNote,
+  handleNoteCreated, handleNoteEdited,
+  handleBehaviorNoteCreated, handleBehaviorNoteEdited,
+  onBack, onLogout,
+  darkMode, setDarkMode,
+  c, r,
+}) {
+  const [hoveredDetail, setHoveredDetail] = useState(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  const tabs = [
+    { key: "medical", label: "Medical Observations" },
+    { key: "behavior", label: "Behavior Notes" },
+    { key: "summary", label: "AI Summary" },
+  ];
+
+  return (
+    <main role="main" aria-label={`${pet.name} details`} style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, position: "relative" }}>
+
+      {/* Top Bar */}
+      <header role="banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 28px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {onBack && (
+            <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, transition: "background-color 0.15s" }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = c.inputBg}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+              aria-label="Back to animal list">
+              <Icons.back size={22} color={c.textSecondary} />
+            </button>
+          )}
+          <UserDropdown user={user} onLogout={onLogout} c={c} />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+            aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
+            {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+          </button>
+        </div>
+      </header>
+
+      {/* Main Two-Column Layout */}
+      <div style={{ display: "flex", gap: 24, padding: "24px 28px", alignItems: "flex-start" }}>
+
+        {/* LEFT COLUMN: Pet Profile */}
+        <div style={{ width: 380, flexShrink: 0 }}>
+
+          {/* Pet Image Card */}
+          <div style={{ backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow, overflow: "hidden", marginBottom: 16 }}>
+            <img
+              src={pet.imageUrl}
+              alt={`Photo of ${pet.name}`}
+              style={{ width: "100%", height: 280, objectFit: "cover", display: "block" }}
+              onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }}
+            />
+          </div>
+
+          {/* Pet Info Card */}
+          <div style={{ backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow, padding: 24 }}>
+
+            {/* Name + Status Row */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <HandlerLevelIndicator level={pet.handlerLevel || "green"} />
+                <h1 style={{ fontSize: 26, fontWeight: 700, color: c.textPrimary, margin: 0 }}>{pet.name}</h1>
+              </div>
+              {pet.status && (
+                <span style={{
+                  fontSize: 13, fontWeight: 600, color: c.statusResolved,
+                  backgroundColor: `${c.statusResolved}15`, padding: "5px 14px",
+                  borderRadius: 20, border: `1px solid ${c.statusResolved}30`,
+                  textTransform: "capitalize"
+                }}>
+                  {pet.status}
+                </span>
+              )}
+            </div>
+
+            {/* Description with Read More/Less */}
+            {pet.description && (
+              <div style={{ marginBottom: 20 }}>
+                <p style={{
+                  fontSize: 14, lineHeight: 1.6, color: c.textSecondary, margin: 0,
+                  ...(!descExpanded ? { display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" } : {}),
+                }}>
+                  {pet.description}
+                </p>
+                <button
+                  onClick={() => setDescExpanded(!descExpanded)}
+                  aria-expanded={descExpanded}
+                  style={{
+                    background: "none", border: "none", padding: 0, marginTop: 6,
+                    color: c.headerGreen, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                    fontFamily: font,
+                  }}>
+                  {descExpanded ? "Show Less" : "Read More"}
+                </button>
+              </div>
+            )}
+
+            {/* Quick Stats - 2x3 Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", marginBottom: 20, borderRadius: 10, border: `1px solid ${c.cardBorder}`, overflow: "hidden" }}>
+              {[
+                { label: "Sex", value: pet.sex },
+                { label: "Age", value: pet.age },
+                { label: "Breed", value: pet.breed },
+                { label: "Species", value: pet.species },
+                { label: "Neutered", value: pet.spayedNeutered || "Unknown" },
+                { label: "Weight", value: pet.weight || "N/A" },
+              ].filter(d => d.value).map((stat, i, arr) => {
+                const getSexColor = () => {
+                  if (stat.label !== "Sex") return c.textPrimary;
+                  const sex = stat.value?.toLowerCase();
+                  if (sex === "female") return darkMode ? "#ff6bb5" : "#d946a6";
+                  if (sex === "male") return darkMode ? "#60b5ff" : "#1d72d8";
+                  return c.textPrimary;
+                };
+                return (
+                  <div key={stat.label} style={{
+                    padding: "12px 10px", textAlign: "center",
+                    borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                    borderBottom: i < arr.length - 2 ? `1px solid ${c.cardBorder}` : "none",
+                    backgroundColor: c.inputBg,
+                  }}>
+                    <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 3, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{stat.label}</div>
+                    <div style={{ fontSize: 13, color: getSexColor(), fontWeight: 600 }}>{stat.value}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Detail Grid - 2x2 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", borderTop: `1px solid ${c.cardBorder}` }}>
+              {[
+                { label: "ACR", value: pet.arn },
+                { label: "Location", value: pet.location },
+                { label: "Animal ID", value: pet.petId },
+                { label: "Handler", value: (pet.handlerLevel || "green").toUpperCase(), color: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"] },
+              ].map((detail, i) => (
+                <div key={detail.label} style={{
+                  padding: "12px 0", borderBottom: `1px solid ${c.cardBorder}`,
+                  borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                  paddingLeft: i % 2 === 0 ? 0 : 16,
+                  paddingRight: i % 2 === 0 ? 16 : 0,
+                }}>
+                  <div style={{ fontSize: 12, color: c.warmGray, fontWeight: 600, marginBottom: 3 }}>{detail.label}</div>
+                  <div style={{ fontSize: 14, color: c.textPrimary, fontWeight: 500 }}>
+                    {detail.color ? (
+                      <span style={{ backgroundColor: detail.color, color: "#fff", padding: "2px 10px", borderRadius: 4, fontSize: 12, fontWeight: 700 }}>{detail.value}</span>
+                    ) : detail.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Tabs + Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Tab Navigation */}
+          <nav style={{
+            display: "flex", backgroundColor: c.cardBg, borderRadius: 12, padding: 4,
+            border: `1px solid ${c.cardBorder}`, marginBottom: 16, boxShadow: c.shadow,
+          }} role="tablist" aria-label="Pet information tabs">
+            {tabs.map((tab) => {
+              const active = activeTab === tab.key;
+              return (
+                <button key={tab.key} role="tab" aria-selected={active}
+                  id={`desktop-tab-${tab.key}`} aria-controls={`desktop-panel-${tab.key}`}
+                  style={{
+                    flex: 1, padding: "12px 16px", fontSize: 14, fontWeight: active ? 700 : 500,
+                    color: active ? (darkMode ? "#8eff8e" : c.headerGreen) : c.warmGray,
+                    backgroundColor: active ? c.tabActiveBg : "transparent",
+                    border: "none", borderRadius: 10, cursor: "pointer",
+                    transition: "all 0.2s ease", fontFamily: font, minHeight: 48,
+                  }}
+                  onClick={() => {
+                    setActiveTab(tab.key);
+                    setMedicalNotesVisible(NOTES_PER_PAGE);
+                    setBehaviorNotesVisible(NOTES_PER_PAGE);
+                  }}
+                  onKeyDown={(e) => {
+                    const idx = tabs.findIndex(t => t.key === tab.key);
+                    if (e.key === "ArrowRight") { e.preventDefault(); const next = tabs[(idx + 1) % tabs.length]; setActiveTab(next.key); document.getElementById(`desktop-tab-${next.key}`)?.focus(); }
+                    if (e.key === "ArrowLeft") { e.preventDefault(); const prev = tabs[(idx - 1 + tabs.length) % tabs.length]; setActiveTab(prev.key); document.getElementById(`desktop-tab-${prev.key}`)?.focus(); }
+                  }}>
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Medical Observations Tab */}
+          {activeTab === "medical" && (
+            <div role="tabpanel" id="desktop-panel-medical" aria-labelledby="desktop-tab-medical">
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
+                <div style={{ flex: 1, position: "relative" }}>
+                  <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
+                    <Icons.search size={16} color={c.warmGray} />
+                  </div>
+                  <input
+                    style={{
+                      width: "100%", padding: "12px 16px 12px 38px", borderRadius: 10,
+                      border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg,
+                      color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font,
+                      boxSizing: "border-box", transition: "border-color 0.2s",
+                    }}
+                    placeholder="Search observations..."
+                    value={searchQuery}
+                    onChange={(e) => handleMedicalSearch(e.target.value)}
+                    aria-label="Search observations"
+                    onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
+                    onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
+                  />
+                  {isSearching && (
+                    <div style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: c.warmGray }}>Searching...</div>
+                  )}
+                </div>
+                <button style={{
+                  height: 48, padding: "0 20px", borderRadius: 10, border: "none",
+                  backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6, fontFamily: font,
+                  fontSize: 14, fontWeight: 600, flexShrink: 0, transition: "opacity 0.15s",
+                }}
+                  onClick={() => setShowCreateModal(true)}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                  aria-label="New observation">
+                  <Icons.plus size={16} color="#fff" /> Add New
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredNotes.length > 0 ? (
+                  <>
+                    {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
+                      <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} searchQuery={searchQuery} />
+                    ))}
+                    {filteredNotes.length > medicalNotesVisible && (
+                      <button
+                        onClick={() => setMedicalNotesVisible(prev => prev + NOTES_PER_PAGE)}
+                        style={{
+                          padding: "12px 20px", borderRadius: 10, border: `1px solid ${c.cardBorder}`,
+                          backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 14,
+                          fontWeight: 600, cursor: "pointer", fontFamily: font, textAlign: "center",
+                          transition: "all 0.15s", minHeight: 44,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = c.cardBg; }}
+                        aria-label="Load more observations">
+                        Load More ({filteredNotes.length - medicalNotesVisible} remaining)
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: 60, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+                    {searchQuery ? "No observations matching your search." : "No medical observations yet."}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Behavior Notes Tab */}
+          {activeTab === "behavior" && (
+            <div role="tabpanel" id="desktop-panel-behavior" aria-labelledby="desktop-tab-behavior">
+              {/* Compatibility Info Boxes */}
+              <div style={{ display: "flex", marginBottom: 16, borderRadius: 10, border: `1px solid ${c.cardBorder}`, overflow: "hidden", boxShadow: c.shadow }}>
+                {[
+                  { label: "Kids over 12?", value: pet.kidsOver12 || pet.okWithKids || "Unknown" },
+                  { label: "Kids under 12?", value: pet.kidsUnder12 || pet.okWithKids || "Unknown" },
+                  { label: "Live with cats?", value: pet.canLiveWithCats || pet.okWithCats || "Unknown" },
+                  { label: "Dog-to-dog", value: pet.dogToDog || pet.distinguishingMarks || "Unknown" },
+                ].map((s, i, a) => {
+                  const val = s.value?.toLowerCase() || "";
+                  const getColor = () => {
+                    if (val === "unlikely" || val === "no") return c.statusRaised;
+                    if (val === "gentle" || val === "yes") return c.statusResolved;
+                    if (val === "maybe") return "#FFA500";
+                    return c.warmGray;
+                  };
+                  const color = getColor();
+                  return (
+                    <div key={s.label} style={{
+                      flex: 1, padding: "12px 8px", textAlign: "center",
+                      borderRight: i < a.length - 1 ? `1px solid ${c.cardBorder}` : "none",
+                      backgroundColor: c.cardBg,
+                    }}>
+                      <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>{s.label}</div>
+                      <div style={{
+                        fontSize: 13, fontWeight: 600, display: "inline-block", padding: "3px 10px", borderRadius: 6,
+                        color: color,
+                        backgroundColor: `${color}12`,
+                      }}>{s.value}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
+                <div style={{ flex: 1, position: "relative" }}>
+                  <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
+                    <Icons.search size={16} color={c.warmGray} />
+                  </div>
+                  <input
+                    style={{
+                      width: "100%", padding: "12px 16px 12px 38px", borderRadius: 10,
+                      border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg,
+                      color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font,
+                      boxSizing: "border-box", transition: "border-color 0.2s",
+                    }}
+                    placeholder="Search behavior notes..."
+                    value={behaviorSearchQuery}
+                    onChange={(e) => setBehaviorSearchQuery(e.target.value)}
+                    aria-label="Search behavior notes"
+                    onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
+                    onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
+                  />
+                </div>
+                <button style={{
+                  height: 48, padding: "0 20px", borderRadius: 10, border: "none",
+                  backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 6, fontFamily: font,
+                  fontSize: 14, fontWeight: 600, flexShrink: 0, transition: "opacity 0.15s",
+                }}
+                  onClick={() => setShowCreateBehaviorModal(true)}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
+                  aria-label="New behavior note">
+                  <Icons.plus size={16} color="#fff" /> Add New
+                </button>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredBehaviorNotes.length > 0 ? (
+                  <>
+                    {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
+                      <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} searchQuery={behaviorSearchQuery} />
+                    ))}
+                    {filteredBehaviorNotes.length > behaviorNotesVisible && (
+                      <button
+                        onClick={() => setBehaviorNotesVisible(prev => prev + NOTES_PER_PAGE)}
+                        style={{
+                          padding: "12px 20px", borderRadius: 10, border: `1px solid ${c.cardBorder}`,
+                          backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 14,
+                          fontWeight: 600, cursor: "pointer", fontFamily: font, textAlign: "center",
+                          transition: "all 0.15s", minHeight: 44,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = c.cardBg; }}
+                        aria-label="Load more behavior notes">
+                        Load More ({filteredBehaviorNotes.length - behaviorNotesVisible} remaining)
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: 60, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+                    {behaviorSearchQuery ? "No behavior notes matching your search." : "No behavior notes yet."}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* AI Summary Tab */}
+          {activeTab === "summary" && (
+            <div role="tabpanel" id="desktop-panel-summary" aria-labelledby="desktop-tab-summary" style={{ backgroundColor: c.cardBg, borderRadius: 12, padding: 24, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
+              <h3 style={{ fontSize: 18, fontWeight: 600, color: c.textPrimary, margin: "0 0 8px 0" }}>Ask AI About This Animal</h3>
+              <p style={{ fontSize: 14, color: c.textSecondary, margin: "0 0 20px 0", lineHeight: 1.5 }}>
+                Ask questions about medical observations, behavior notes, or anything related to {pet.name}.
+              </p>
+
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 6, display: "block", fontWeight: 500 }}>Your Question</label>
+                <textarea
+                  style={{
+                    width: "100%", padding: "14px 16px", borderRadius: 10,
+                    border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg,
+                    color: c.textPrimary, fontSize: 15, outline: "none", minHeight: 120,
+                    resize: "vertical", boxSizing: "border-box", fontFamily: font, lineHeight: 1.6,
+                    transition: "border-color 0.2s",
+                  }}
+                  placeholder="e.g., What is the current health status? Are there any behavioral concerns?"
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAiQuery(); }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
+                  onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
+                  aria-label="AI query input"
+                />
+                <div style={{ fontSize: 12, color: c.warmGray, marginTop: 6 }}>Press Cmd/Ctrl + Enter to submit</div>
+              </div>
+
+              <button
+                style={{
+                  width: "100%", padding: 14, borderRadius: 10, border: "none",
+                  backgroundColor: c.headerGreen, color: "#fff", fontSize: 15,
+                  fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 48,
+                  transition: "opacity 0.15s", opacity: !aiQuery.trim() ? 0.5 : 1,
+                }}
+                onClick={handleAiQuery}
+                disabled={!aiQuery.trim()}
+                onMouseEnter={(e) => { if (aiQuery.trim()) e.currentTarget.style.opacity = "0.9"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.opacity = !aiQuery.trim() ? "0.5" : "1"; }}
+              >
+                Ask AI
+              </button>
+
+              {aiResponse && (
+                <div style={{ marginTop: 24, padding: 20, backgroundColor: c.inputBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+                  <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>AI Response</div>
+                  <div style={{ fontSize: 15, lineHeight: 1.7, color: c.textPrimary, whiteSpace: "pre-wrap" }}>{aiResponse}</div>
+                </div>
+              )}
+
+              {!aiResponse && (
+                <div style={{ marginTop: 24, padding: 30, textAlign: "center", fontSize: 14, color: c.warmGray, fontStyle: "italic", backgroundColor: c.inputBg, borderRadius: 12, border: `1px dashed ${c.cardBorder}` }}>
+                  Response will appear here after you ask a question
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} c={c} />}
+      {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} c={c} />}
+      {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
+    </main>
+  );
+}
+
 // ─── Main Portal ─────────────────────────────────────────────────────────────
 // The main animal detail view with tabs: Summary (AI), Medical Observations, Behavior Notes.
 // Medical search uses backend NLP-powered search with keyword highlighting.
@@ -1095,6 +1705,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [loading, setLoading] = useState(true);
   const [medicalNotesVisible, setMedicalNotesVisible] = useState(5);
   const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
+  const [expanded, setExpanded] = useState(false);
   const searchTimerRef = useRef(null);
   
   const NOTES_PER_PAGE = 5;
@@ -1225,6 +1836,32 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     );
   }
 
+  // Desktop/iPad two-column layout (width >= 768px)
+  if (r.width >= 768) {
+    return <DesktopPortal
+      user={user} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
+      filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
+      activeTab={activeTab} setActiveTab={setActiveTab}
+      searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
+      behaviorSearchQuery={behaviorSearchQuery} setBehaviorSearchQuery={setBehaviorSearchQuery}
+      isSearching={isSearching}
+      aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
+      medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
+      behaviorNotesVisible={behaviorNotesVisible} setBehaviorNotesVisible={setBehaviorNotesVisible}
+      NOTES_PER_PAGE={NOTES_PER_PAGE}
+      showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
+      showCreateBehaviorModal={showCreateBehaviorModal} setShowCreateBehaviorModal={setShowCreateBehaviorModal}
+      editingNote={editingNote} setEditingNote={setEditingNote}
+      editingBehaviorNote={editingBehaviorNote} setEditingBehaviorNote={setEditingBehaviorNote}
+      handleNoteCreated={handleNoteCreated} handleNoteEdited={handleNoteEdited}
+      handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
+      onBack={onBack} onLogout={onLogout}
+      darkMode={darkMode} setDarkMode={setDarkMode}
+      c={c} r={r}
+    />;
+  }
+
+  // Phone layout (< 768px) — unchanged
   return (
     <main id="main-content" style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, position: "relative" }}>
       {/* Top bar */}
@@ -1273,6 +1910,121 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
             </div>
           </div>
         </div>
+
+        {/* Expandable More Details Section */}
+        <div style={{ 
+          maxHeight: expanded ? 400 : 0, 
+          overflow: "hidden", 
+          transition: "max-height 0.35s ease, opacity 0.3s ease", 
+          opacity: expanded ? 1 : 0 
+        }}>
+          <div style={{ padding: "0 16px 4px" }}>
+            {/* 2x3 Grid: Sex, Age, Breed, Species, Neutered, Weight */}
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "1fr 1fr", 
+              borderRadius: 10, 
+              border: `1px solid ${c.cardBorder}`, 
+              overflow: "hidden",
+              marginBottom: 10
+            }}>
+              {[
+                { label: "Sex", value: pet.sex },
+                { label: "Age", value: pet.age },
+                { label: "Breed", value: pet.breed },
+                { label: "Species", value: pet.species },
+                { label: "Neutered", value: pet.spayedNeutered || "Unknown" },
+                { label: "Weight", value: pet.weight || "N/A" },
+              ].map((item, i, arr) => (
+                <div key={item.label} style={{
+                  padding: "12px 10px",
+                  textAlign: "center",
+                  borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                  borderBottom: i < arr.length - 2 ? `1px solid ${c.cardBorder}` : "none",
+                  backgroundColor: c.inputBg,
+                }}>
+                  <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 3, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</div>
+                  <div style={{ fontSize: 13, color: c.textPrimary, fontWeight: 600 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* 2x2 Grid: Handler, Location, ACR, Animal ID */}
+            <div style={{ 
+              display: "grid", 
+              gridTemplateColumns: "1fr 1fr", 
+              borderRadius: 10, 
+              border: `1px solid ${c.cardBorder}`, 
+              overflow: "hidden"
+            }}>
+              {[
+                { label: "Handler", value: (pet.handlerLevel || "green").toUpperCase(), special: true },
+                { label: "Location", value: pet.location },
+                { label: "ACR", value: pet.arn || "N/A" },
+                { label: "Animal ID", value: pet.petId },
+              ].map((item, i) => (
+                <div key={item.label} style={{
+                  padding: "12px 10px",
+                  textAlign: "center",
+                  borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                  borderBottom: i < 2 ? `1px solid ${c.cardBorder}` : "none",
+                  backgroundColor: c.cardBg,
+                }}>
+                  <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 3, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</div>
+                  {item.special ? (
+                    <span style={{ 
+                      backgroundColor: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"], 
+                      color: "#fff", 
+                      padding: "2px 8px", 
+                      borderRadius: 4, 
+                      fontSize: 13, 
+                      fontWeight: 600,
+                      display: "inline-block"
+                    }}>{item.value}</span>
+                  ) : (
+                    <div style={{ fontSize: 13, color: c.textPrimary, fontWeight: 600 }}>{item.value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Toggle Button */}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            width: "100%",
+            padding: "14px 16px",
+            borderTop: `1px solid ${c.cardBorder}`,
+            marginTop: expanded ? 12 : 0,
+            background: "none",
+            border: "none",
+            borderTop: `1px solid ${c.cardBorder}`,
+            color: c.headerGreen,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: font,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            transition: "all 0.2s ease"
+          }}
+          aria-expanded={expanded}
+          aria-label={expanded ? "Show less details" : "Show more details"}
+        >
+          {expanded ? "Less Details" : "More Details"}
+          <div style={{ 
+            transform: expanded ? "rotate(180deg)" : "rotate(0deg)", 
+            transition: "transform 0.3s ease",
+            display: "flex",
+            alignItems: "center"
+          }}>
+            <Icons.chevron size={16} color={c.headerGreen} down={true} />
+          </div>
+        </button>
       </div>
 
       {/* Tabs */}
@@ -1366,6 +2118,61 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
         {activeTab === "behavior" && (
           <>
+            {/* Compatibility Boxes */}
+            <div style={{ 
+              margin: "12px 16px", 
+              display: "grid", 
+              gridTemplateColumns: "1fr 1fr", 
+              borderRadius: 10, 
+              border: `1px solid ${c.cardBorder}`, 
+              overflow: "hidden"
+            }}>
+              {[
+                { label: "Kids over 12?", value: pet.kidsOver12 || pet.okWithKids || "Unknown" },
+                { label: "Kids under 12?", value: pet.kidsUnder12 || pet.okWithKids || "Unknown" },
+                { label: "Live with cats?", value: pet.canLiveWithCats || pet.okWithCats || "Unknown" },
+                { label: "Dog-to-dog", value: pet.dogToDog || pet.distinguishingMarks || "Unknown" },
+              ].map((item, i) => {
+                const getColorStyle = () => {
+                  const val = item.value?.toLowerCase() || "";
+                  if (val === "unlikely" || val === "no") {
+                    return { color: c.statusRaised, backgroundColor: darkMode ? "rgba(224, 75, 58, 0.15)" : "rgba(190, 58, 43, 0.1)" };
+                  }
+                  if (val === "gentle" || val === "yes") {
+                    return { color: c.statusResolved, backgroundColor: darkMode ? "rgba(76, 175, 80, 0.15)" : "rgba(45, 122, 36, 0.1)" };
+                  }
+                  if (val === "maybe") {
+                    return { color: "#FFA500", backgroundColor: darkMode ? "rgba(255, 165, 0, 0.15)" : "rgba(255, 165, 0, 0.1)" };
+                  }
+                  if (val === "unknown" || val === "") {
+                    return { color: c.warmGray, backgroundColor: darkMode ? "rgba(170, 170, 170, 0.1)" : "rgba(102, 102, 102, 0.08)" };
+                  }
+                  return { color: c.textPrimary, backgroundColor: "transparent" };
+                };
+                const colorStyle = getColorStyle();
+                return (
+                  <div key={item.label} style={{
+                    padding: "12px 10px",
+                    textAlign: "center",
+                    borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                    borderBottom: i < 2 ? `1px solid ${c.cardBorder}` : "none",
+                    backgroundColor: c.cardBg,
+                  }}>
+                    <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</div>
+                    <div style={{ 
+                      fontSize: 12, 
+                      fontWeight: 700,
+                      color: colorStyle.color,
+                      backgroundColor: colorStyle.backgroundColor,
+                      padding: "3px 8px",
+                      borderRadius: 4,
+                      display: "inline-block"
+                    }}>{item.value}</div>
+                  </div>
+                );
+              })}
+            </div>
+
             <div style={{ margin: "12px 16px", display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{ flex: 1, position: "relative" }}>
                 <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icons.search size={16} color={c.warmGray} /></div>
@@ -1419,12 +2226,14 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
         </div>
       </div>
 
-      {/* Dark/Light mode toggle */}
-      <button onClick={() => setDarkMode(!darkMode)}
-        style={{ position: "fixed", bottom: 24, right: 24, width: 48, height: 48, borderRadius: "50%", backgroundColor: c.headerGreen, color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", zIndex: 10 }}
-        aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
-        {darkMode ? <Icons.sun size={22} color="#fff" /> : <Icons.moon size={22} color="#fff" />}
-      </button>
+      {/* Dark/Light mode toggle — phone only, desktop has it in top bar */}
+      {r.width < 768 && (
+        <button onClick={() => setDarkMode(!darkMode)}
+          style={{ position: "fixed", bottom: 24, right: 24, width: 48, height: 48, borderRadius: "50%", backgroundColor: c.headerGreen, color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", zIndex: 10 }}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
+          {darkMode ? <Icons.sun size={22} color="#fff" /> : <Icons.moon size={22} color="#fff" />}
+        </button>
+      )}
 
       {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
@@ -1443,28 +2252,46 @@ export default function App() {
   const [animals, setAnimals] = useState([]);
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [locationError, setLocationError] = useState(null);
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
 
   // Read pet type and location from URL query params (set by QR code on kennel)
+  // Also support direct pet ID links: ?petId=12345
   const urlParams = new URLSearchParams(window.location.search);
+  const urlPetId = urlParams.get("petId");
   const petType = urlParams.get("type");
   const kennelLocation = urlParams.get("location");
 
   useEffect(() => {
     if (user) {
-      // Fetch pets at this kennel location from backend
-      api.getPetsByLocation(petType, kennelLocation).then((pets) => {
-        setAnimals(pets);
-        // If only 1 animal at this location, skip selection and go straight to portal
-        if (pets.length === 1) setSelectedPetId(pets[0].petId);
-      });
+      // Direct pet ID link - skip location fetch and go straight to that pet
+      if (urlPetId) {
+        setSelectedPetId(urlPetId);
+        return;
+      }
+      // QR code link - fetch pets at this kennel location from backend
+      setLocationError(null);
+      api.getPetsByLocation(petType, kennelLocation)
+        .then((pets) => {
+          setAnimals(pets);
+          // If only 1 animal at this location, skip selection and go straight to portal
+          if (pets.length === 1) setSelectedPetId(pets[0].petId);
+        })
+        .catch((err) => {
+          setLocationError(err.message);
+        });
     }
-  }, [user, petType, kennelLocation]);
+  }, [user, urlPetId, petType, kennelLocation]);
 
-  const handleLogout = () => { setUser(null); setSelectedPetId(null); setAnimals([]); };
+  const handleLogout = () => { setUser(null); setSelectedPetId(null); setAnimals([]); setLocationError(null); };
 
   if (!user) return <LoginScreen onLogin={setUser} />;
+
+  // Show error screen if location fetch failed
+  if (locationError) {
+    return <ErrorScreen error={locationError} onLogout={handleLogout} c={c} />;
+  }
 
   // Only show selection screen when multiple animals share the same kennel
   if (!selectedPetId && animals.length > 1) {
@@ -1477,7 +2304,7 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-      <div style={{ width: 48, height: 48, border: `4px solid ${c.border}`, borderTop: `4px solid ${c.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div style={{ width: 48, height: 48, border: `4px solid ${c.cardBorder}`, borderTop: `4px solid ${c.headerGreen}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
       <div style={{ color: c.warmGray, fontSize: 15 }}>Loading animals...</div>
       <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
     </div>

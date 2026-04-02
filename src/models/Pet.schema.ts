@@ -23,7 +23,14 @@ export const PetSchema = z.object({
   generalSize: z.string().optional(),
   colorDetails: z.string().optional(),
   specialNeeds: z.string().optional(),
-
+  altered: z.string().optional(),
+  okWithCats: z.string().optional(),
+  okWithDogs: z.string().optional(),
+  okWithKids: z.string().optional(),
+  energyLevel: z.string().optional(),
+  notes: z.string().optional(),
+  createdDate: z.string().optional(),
+  receivedDate: z.string().optional(),
 });
 
 export const PetLocationSchema = z.object({
