@@ -6,7 +6,6 @@ dotenv.config();
 export default {
   port: Number(process.env.PORT) || 3000,
   USE_MOCK_RG_DB: process.env.USE_MOCK_RG_DB === "true",
-  USE_MOCK_OBSERVER_DB: process.env.USE_MOCK_OBSERVER_DB === "true",
   LLM_API_KEY: process.env.OPENAI_API_KEY ?? "",
 
   USE_MOCK_NOTES_DB: process.env.USE_MOCK_NOTES_DB === "true",
