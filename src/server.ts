@@ -7,8 +7,12 @@ import petRouter from "./routes/pet.js";
 import observerNotesRouter from "./routes/observerNotes.js";
 import behaviorNotesRouter from "./routes/behaviorNotes.js";
 import searchRouter from "./routes/search.js";
+import summarizeRoutes from "./routes/summarize.js";
+import dotenv from "dotenv";
 import { seedObserverNotes } from "./db/observerNotes.js";
 import { seedBehaviorNotes } from "./db/behaviorNotes.js";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,10 +23,12 @@ const PORT = config.port;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
+app.use(summarizeRoutes);
+app.use(searchRouter);
 app.use(observerNotesRouter);
 app.use(behaviorNotesRouter);
 app.use(petRouter);
-app.use(searchRouter);
+
 
 seedObserverNotes([
   {
