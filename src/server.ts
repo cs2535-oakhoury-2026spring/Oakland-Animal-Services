@@ -29,24 +29,32 @@ seedObserverNotes([
     id: 1,
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content:
-      "Buddy has been very energetic today, loves playing fetch in the yard",
+      "Marley has been very energetic today, loves playing with feather toys",
     author: "Dr. A",
-    petId: 1,
+    petId: 22254130,
   },
   {
     id: 2,
     timestamp: new Date("2024-06-01T10:00:00Z"),
     content:
-      "Buddy showed signs of limping on his left hind leg after exercise",
+      "Marley showed signs of limping on his left hind leg after playtime",
     author: "Dr. Smith",
-    petId: 1,
+    petId: 22254130,
   },
   {
     id: 3,
     timestamp: new Date("2024-06-01T09:15:00Z"),
-    content: "Whiskers has been more vocal than usual, meowing frequently",
+    content: "Nala has been more vocal than usual, meowing frequently",
     author: "Dr. Brown",
-    petId: 2,
+    petId: 22254131,
+  },
+  {
+    id: 4,
+    timestamp: new Date("2024-06-02T14:30:00Z"),
+    content:
+      "Buddy is very friendly and energetic, loves playing fetch in the yard",
+    author: "Dr. A",
+    petId: 22324883,
   },
 ]);
 

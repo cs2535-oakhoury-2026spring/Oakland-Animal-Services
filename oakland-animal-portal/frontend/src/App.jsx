@@ -1,3 +1,5 @@
+// Oakland Animal Services Portal - Frontend
+// Connects to Express backend on port 3000 via proxy (see package.json)
 import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── Focus Trap Hook for Modals (WCAG 2.1 AA) ─────────────────────────────────
@@ -181,18 +183,52 @@ const Icons = {
 
 // ─── Placeholder Image ───────────────────────────────────────────────────────
 // Replace with actual image URLs from RescueGroups API when connected
-const PLACEHOLDER_CAT = "https://placekitten.com/300/300";
-const PLACEHOLDER_DOG = "https://placedog.net/300/300";
+const PLACEHOLDER_CAT = "https://cdn.pixabay.com/photo/2024/02/28/07/42/european-shorthair-8601492_640.jpg";
+const PLACEHOLDER_DOG = "https://cdn.pixabay.com/photo/2023/08/18/15/02/dog-8198719_640.jpg";
+
+// Parse kennel location from RescueGroups summary field
+// Real format: "I am at Oakland Animal Services in kennel Cat W:5"
+// Output format: "W-5" (strip species prefix, use dash separator)
+function parseLocationFromSummary(summary) {
+  if (!summary) return "";
+  const trimmed = summary.trim();
+  if (trimmed.toLowerCase().includes("foster")) return "In Foster";
+  const prefix = "I am at Oakland Animal Services in kennel ";
+  if (trimmed.startsWith(prefix)) {
+    let location = trimmed.slice(prefix.length).trim();
+    // Strip species prefix (e.g., "Cat ", "Dog ")
+    location = location.replace(/^(Cat|Dog)\s+/i, "");
+    // Replace colon with dash (W:5 → W-5)
+    location = location.replace(":", "-");
+    return location;
+  }
+  return "";
+}
 
 // ─── Mock Data & Service Layer ───────────────────────────────────────────────
-// NOTE: Pet data comes from RescueGroups API via backend proxy.
-// Per-endpoint flags — each method marked REAL or MOCK based on backend availability.
+// Mock data is used as fallback when backend endpoints fail.
+// Each api method is marked REAL or MOCK based on backend connectivity.
+// Backend endpoints: /api/pets/:id, /api/location/:type/:loc, /api/pets/:id/observer-notes,
+//   /api/pets/:id/behavior-notes, /api/observer-notes, /api/behavior-notes, /api/search
 
 const mockPets = [
-  { petId: "12345678910", name: "Fluffly", species: "Cat", location: "Cat W-5", microchip: "123456789101213", arn: "736727", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "green" },
-  { petId: "12345678912", name: "Whiskers", species: "Cat", location: "Cat W-5", microchip: "111222333444555", arn: "736729", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "pink" },
-  { petId: "12345678913", name: "Mittens", species: "Cat", location: "Cat W-5", microchip: "222333444555666", arn: "736730", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "yellow" },
+  { petId: "12345678910", name: "Fluffly", species: "Cat", location: "Cat W:5", arn: "736727", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "green" },
+  { petId: "12345678912", name: "Whiskers", species: "Cat", location: "Cat W:5", arn: "736729", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "pink" },
+  { petId: "12345678913", name: "Mittens", species: "Cat", location: "Cat W:5", arn: "736730", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "yellow" },
 ];
+
+// Shared timestamp formatter used by note cards
+const formatTimestamp = (dateString) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', { 
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true 
+    });
+  } catch {
+    return "";
+  }
+};
 
 const mockObserverNotes = [
   { id: 1, petId: "12345678910", case: "Limp On Right Leg", by: "Shannon", status: "Raised", type: "medical", body: "Noticed limping during morning check. The cat appears to favor the left side when walking. No visible swelling or wounds detected on initial observation. Will need further examination by veterinary staff.", createdAt: "2026-03-01T09:00:00Z" },
@@ -211,7 +247,8 @@ const mockUsers = [
   { username: "demo", password: "demo", displayName: "Demo User", role: "staff", email: "demo@oaklandanimal.org", department: "Animal Care" },
 ];
 
-// Transform backend observer note to frontend format
+// Transform backend observer note shape ({ id, content, author, petId, timestamp })
+// into frontend shape ({ id, petId, case, by, status, type, body, createdAt })
 const transformObserverNote = (note, index) => ({
   id: note.id || Date.now() + index,
   petId: String(note.petId),
@@ -231,11 +268,63 @@ const api = {
     return { success: false, error: "Invalid credentials" };
   },
 
-  // MOCK — pet router exists but not registered in server.ts
-  getPet: async (petId) => mockPets.find((p) => p.petId === petId) || mockPets[0],
+  // REAL — connected to GET /api/pets/:petId
+  getPet: async (petId) => {
+    try {
+      const res = await fetch(`/api/pets/${petId}`);
+      if (!res.ok) throw new Error("Failed to fetch pet");
+      const data = await res.json();
+      if (data.success && data.pet) {
+        const p = data.pet;
+        return {
+          petId: String(p.id),
+          name: p.name,
+          species: p.species || "Unknown",
+          location: parseLocationFromSummary(p.summary) || "",
+          imageUrl: p.image || (p.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
+          summary: p.summary || "",
+          arn: p.rescueId || "N/A",
+          handlerLevel: (p.otherNames || "green").toLowerCase(),
+          status: p.status || "Unknown",
+          breed: p.breed || "",
+          age: p.age,
+          sex: p.sex || "",
+          description: p.description || "",
+        };
+      }
+      throw new Error("Invalid response");
+    } catch (err) {
+      console.warn("getPet: falling back to mock data", err);
+      return mockPets.find((p) => p.petId === String(petId)) || mockPets[0];
+    }
+  },
 
-  // MOCK — no backend multi-pet/kennel query endpoint yet
-  getPetsByLocation: async () => mockPets,
+  // REAL — connected to GET /api/location/:petType/:location (QR code driven)
+  getPetsByLocation: async (petType, location) => {
+    if (!petType || !location) {
+      console.warn("No location params - using mock data");
+      return mockPets;
+    }
+    try {
+      const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}`);
+      if (!res.ok) throw new Error("Failed to fetch pets by location");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.pets)) {
+        return data.pets.map((pet) => ({
+          petId: String(pet.id),
+          name: pet.name,
+          species: petType === "cat" ? "Cat" : "Dog",
+          location: location,
+          imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
+          summary: pet.summary || "",
+        }));
+      }
+      return [];
+    } catch (err) {
+      console.warn("getPetsByLocation: falling back to mock data", err);
+      return mockPets;
+    }
+  },
 
   // REAL — connected to GET /api/pets/:petId/observer-notes
   getNotes: async (petId) => {
@@ -277,34 +366,83 @@ const api = {
     }
   },
 
-  // MOCK — no backend endpoint for behavior notes yet
-  getBehaviorNotes: async (petId) => mockBehaviorNotes.filter((n) => n.petId === petId),
-  
-  createBehaviorNote: async (note) => {
-    const newNote = { ...note, id: Date.now(), createdAt: new Date().toISOString() };
-    mockBehaviorNotes.push(newNote);
-    return newNote;
+  // REAL — connected to GET /api/pets/:petId/behavior-notes
+  getBehaviorNotes: async (petId) => {
+    try {
+      const res = await fetch(`/api/pets/${petId}/behavior-notes`);
+      if (!res.ok) throw new Error("Failed to fetch behavior notes");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.behaviorNotes)) {
+        return data.behaviorNotes.map((note, i) => ({
+          id: note.id || Date.now() + i,
+          petId: String(note.petId),
+          case: note.case || "Behavior Observation",
+          by: note.author || "Unknown",
+          body: note.content || "",
+          createdAt: note.timestamp || new Date().toISOString(),
+        }));
+      }
+      return [];
+    } catch (err) {
+      console.warn("getBehaviorNotes: falling back to mock data", err);
+      return mockBehaviorNotes.filter((n) => n.petId === petId);
+    }
   },
 
-  // REAL — connected to POST /api/search (searches observer notes, not pets)
+  // REAL — connected to POST /api/behavior-notes
+  createBehaviorNote: async (note) => {
+    try {
+      const res = await fetch("/api/behavior-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: note.body,
+          author: note.by,
+          petId: parseInt(note.petId, 10) || 0,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create behavior note");
+      const data = await res.json();
+      if (data.success && data.behaviorNote) {
+        return {
+          id: data.behaviorNote.id || Date.now(),
+          petId: String(data.behaviorNote.petId),
+          case: note.case,
+          by: data.behaviorNote.author || note.by,
+          body: data.behaviorNote.content || note.body,
+          createdAt: data.behaviorNote.timestamp || new Date().toISOString(),
+        };
+      }
+      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+    } catch (err) {
+      console.warn("createBehaviorNote: falling back to mock", err);
+      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+    }
+  },
+
+  // REAL — connected to POST /api/search (NLP keyword search on observer notes)
+  // Note: Medical tab search uses handleMedicalSearch() which calls this endpoint
+  // directly with debouncing. This method is available for programmatic use.
   searchNotes: async (query, petId) => {
     try {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ note: query, maxResults: 20 }),
+        body: JSON.stringify({ query, petId: petId ? parseInt(petId, 10) : undefined, maxResults: 20 }),
       });
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       if (data.success && Array.isArray(data.results)) {
-        return data.results
-          .filter((r) => String(r.petId) === String(petId))
-          .map((r) => transformObserverNote(r.note, 0));
+        return data.results.map((r) => ({
+          ...transformObserverNote(r.observerNote, 0),
+          highlightedBody: r.highlightedContent || "",
+          matchCount: r.matchCount || 0,
+        }));
       }
       return [];
     } catch (err) {
       console.warn("searchNotes: falling back to local filter", err);
-      return null; // Signal to use local filtering
+      return null;
     }
   },
 };
@@ -333,6 +471,42 @@ const HANDLER_LEVEL_COLORS = {
   blue: "#2196F3",
   pink: "#E91E63",
 };
+
+// ─── Highlighted Text Component ──────────────────────────────────────────────
+// Renders text with <b> tags from backend search as bold styled spans.
+// Also supports client-side highlighting by wrapping query matches.
+function HighlightedText({ text, searchQuery, highlightColor = "#FFEB3B" }) {
+  // If text has <b> tags from backend search, render those
+  if (text && text.includes("<b>")) {
+    const parts = text.split(/(<b>.*?<\/b>)/g);
+    return (
+      <span>
+        {parts.map((part, i) => {
+          if (part.startsWith("<b>") && part.endsWith("</b>")) {
+            const inner = part.slice(3, -4);
+            return <mark key={i} style={{ backgroundColor: highlightColor, padding: "0 1px", borderRadius: 2 }}>{inner}</mark>;
+          }
+          return <span key={i}>{part}</span>;
+        })}
+      </span>
+    );
+  }
+  // Client-side highlighting for local search (behavior notes)
+  if (searchQuery && searchQuery.trim() && text) {
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+    return (
+      <span>
+        {parts.map((part, i) =>
+          part.toLowerCase() === searchQuery.toLowerCase()
+            ? <mark key={i} style={{ backgroundColor: highlightColor, padding: "0 1px", borderRadius: 2 }}>{part}</mark>
+            : <span key={i}>{part}</span>
+        )}
+      </span>
+    );
+  }
+  return <span>{text}</span>;
+}
 
 // ─── Login Screen ────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin }) {
@@ -375,6 +549,8 @@ function LoginScreen({ onLogin }) {
 }
 
 // ─── Animal Selection Screen ─────────────────────────────────────────────────
+// Only shown when multiple animals share the same kennel location.
+// If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
 function AnimalSelection({ animals, onSelect, user, onLogout, c }) {
   const r = useResponsive();
   return (
@@ -398,7 +574,8 @@ function AnimalSelection({ animals, onSelect, user, onLogout, c }) {
             onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
             aria-label={`View ${pet.name}'s profile`}
           >
-            <img src={pet.imageUrl} alt={pet.name} style={{ width: 64, height: 64, borderRadius: 10, objectFit: "cover", border: `2px solid ${c.cardBorder}` }} />
+            <img src={pet.imageUrl} alt={pet.name} style={{ width: 64, height: 64, borderRadius: 10, objectFit: "cover", border: `2px solid ${c.cardBorder}` }}
+              onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: c.textPrimary }}>{pet.name}</div>
               <div style={{ fontSize: 13, color: c.textSecondary }}>{pet.species} · {pet.location}</div>
@@ -626,27 +803,10 @@ function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
 }
 
 // ─── Medical Note Card ───────────────────────────────────────────────────────
-function MedicalNoteCard({ note, currentUser, userRole, onEdit, c }) {
+function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
   const canEdit = isOwner || userRole === "medical";
   const [hovered, setHovered] = useState(false);
-  
-  // Format timestamp to precise datetime
-  const formatTimestamp = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric',
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-    } catch {
-      return "";
-    }
-  };
   
   return (
     <article 
@@ -696,10 +856,10 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c }) {
         </span>
       </div>
       
-      {/* Body content */}
+      {/* Body content - highlights matched keywords when searching */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
-          {note.body}
+          <HighlightedText text={note.highlightedBody || note.body} searchQuery={searchQuery} />
         </p>
         {canEdit && (
           <button 
@@ -729,26 +889,10 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c }) {
 }
 
 // ─── Behavior Note Card (same as medical) ───────────────────────────────────
-function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c }) {
+function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
   const canEdit = isOwner && userRole !== "medical";
   const [hovered, setHovered] = useState(false);
-  
-  const formatTimestamp = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        year: 'numeric',
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-    } catch {
-      return "";
-    }
-  };
   
   return (
     <article 
@@ -784,7 +928,7 @@ function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c }) {
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
-          {note.body}
+          <HighlightedText text={note.body} searchQuery={searchQuery} />
         </p>
         {canEdit && (
           <button 
@@ -925,6 +1069,9 @@ function QRCodeModal({ pet, onClose, c }) {
 }
 
 // ─── Main Portal ─────────────────────────────────────────────────────────────
+// The main animal detail view with tabs: Summary (AI), Medical Observations, Behavior Notes.
+// Medical search uses backend NLP-powered search with keyword highlighting.
+// Behavior search uses client-side filtering with text highlighting.
 function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
@@ -941,11 +1088,14 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [showQR, setShowQR] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [behaviorSearchQuery, setBehaviorSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState(null); // Backend search results with highlighting
+  const [isSearching, setIsSearching] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [loading, setLoading] = useState(true);
   const [medicalNotesVisible, setMedicalNotesVisible] = useState(5);
   const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
+  const searchTimerRef = useRef(null);
   
   const NOTES_PER_PAGE = 5;
 
@@ -966,6 +1116,51 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     })();
   }, [petId]);
 
+  // Backend-powered search for medical notes with keyword highlighting
+  const handleMedicalSearch = useCallback((query) => {
+    setSearchQuery(query);
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    if (!query.trim()) {
+      setSearchResults(null);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, petId: parseInt(petId, 10) || 0, maxResults: 50 }),
+        });
+        if (!res.ok) throw new Error("Search failed");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.results)) {
+          // Map backend results, cross-referencing existing notes to preserve case titles
+          const mapped = data.results.map((r) => {
+            const backendNote = transformObserverNote(r.observerNote, 0);
+            // Find the original note in state to keep frontend-only fields (case, status)
+            const existing = notes.find((n) => n.id === backendNote.id);
+            return {
+              ...backendNote,
+              case: existing?.case || backendNote.case,
+              status: existing?.status || backendNote.status,
+              highlightedBody: r.highlightedContent || "",
+              matchCount: r.matchCount || 0,
+            };
+          });
+          // If backend NLP returned no results, fall back to local substring filter
+          // so partial queries like "energ" still match "energetic"
+          setSearchResults(mapped.length > 0 ? mapped : null);
+        }
+      } catch (err) {
+        console.warn("Backend search failed, falling back to local filter", err);
+        setSearchResults(null);
+      }
+      setIsSearching(false);
+    }, 300);
+  }, [petId, notes]);
+
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
   const handleNoteEdited = (n) => setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
   const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
@@ -976,12 +1171,16 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     setAiResponse("AI response will be connected later. For now, this is a placeholder response based on your query: \"" + aiQuery + "\"");
   };
 
-  const filteredNotes = notes.filter((n) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
-  });
+  // Use backend search results when available, otherwise local filter as fallback
+  const filteredNotes = searchResults !== null
+    ? searchResults
+    : notes.filter((n) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
+      });
   
+  // Client-side filtering + highlighting for behavior notes
   const filteredBehaviorNotes = behaviorNotes.filter((n) => {
     if (!behaviorSearchQuery.trim()) return true;
     const q = behaviorSearchQuery.toLowerCase();
@@ -1044,7 +1243,8 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       <div style={{ margin: "12px 16px", backgroundColor: c.cardBg, borderRadius: 16, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
         <div style={{ padding: r.isPhone ? 18 : 24, display: "flex", gap: r.isPhone ? 16 : 20, alignItems: "flex-start" }}>
           {/* Pet Image - LEFT */}
-          <img style={{ width: r.isPhone ? 130 : 160, height: r.isPhone ? 130 : 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`} />
+          <img style={{ width: r.isPhone ? 130 : 160, height: r.isPhone ? 130 : 160, borderRadius: 12, objectFit: "cover", border: `2px solid ${c.cardBorder}`, flexShrink: 0 }} src={pet.imageUrl} alt={`Photo of ${pet.name}`}
+            onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }} />
           
           {/* Details - RIGHT */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, justifyContent: "center" }}>
@@ -1067,13 +1267,8 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               </div>
               
               <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
-                <span style={{ color: c.textSecondary, fontWeight: 600 }}>Microchip: </span>
-                <span style={{ color: c.textPrimary }}>{pet.microchip}</span>
-              </div>
-              
-              <div style={{ fontSize: r.isPhone ? 14 : 15, lineHeight: 1.5 }}>
-                <span style={{ color: c.textSecondary, fontWeight: 600 }}>ARN: </span>
-                <span style={{ color: c.textPrimary }}>{pet.arn}</span>
+                <span style={{ color: c.textSecondary, fontWeight: 600 }}>ACR: </span>
+                <span style={{ color: c.textPrimary }}>{pet.arn || "N/A"}</span>
               </div>
             </div>
           </div>
@@ -1093,6 +1288,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                 setPrevTab(activeTab);
                 setActiveTab(tab.key); 
                 setSearchQuery("");
+                setSearchResults(null);
                 setBehaviorSearchQuery("");
                 setMedicalNotesVisible(NOTES_PER_PAGE);
                 setBehaviorNotesVisible(NOTES_PER_PAGE);
@@ -1121,7 +1317,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <div style={{ flex: 1, position: "relative" }}>
                 <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icons.search size={16} color={c.warmGray} /></div>
                 <input style={{ width: "100%", padding: "10px 14px 10px 34px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font, boxSizing: "border-box" }}
-                  placeholder="Search observations..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} aria-label="Search observations" />
+                  placeholder="Search observations..." value={searchQuery} onChange={(e) => handleMedicalSearch(e.target.value)} aria-label="Search observations" />
               </div>
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateModal(true)} aria-label="New observation"><Icons.plus size={18} /></button>
@@ -1130,7 +1326,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               {filteredNotes.length > 0 ? (
                 <>
                   {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
-                    <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} />
+                    <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} c={c} searchQuery={searchQuery} />
                   ))}
                   {filteredNotes.length > medicalNotesVisible && (
                     <div style={{ position: "relative", marginTop: -60, paddingTop: 60 }}>
@@ -1183,7 +1379,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               {filteredBehaviorNotes.length > 0 ? (
                 <>
                   {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
-                    <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} />
+                    <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} c={c} searchQuery={behaviorSearchQuery} />
                   ))}
                   {filteredBehaviorNotes.length > behaviorNotesVisible && (
                     <div style={{ position: "relative", marginTop: -60, paddingTop: 60 }}>
@@ -1240,6 +1436,8 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 }
 
 // ─── App Root ────────────────────────────────────────────────────────────────
+// URL params drive the QR code flow: ?type=cat&location=holding-4:0
+// Each kennel has a QR code that encodes petType + location in the URL.
 export default function App() {
   const [user, setUser] = useState(null);
   const [animals, setAnimals] = useState([]);
@@ -1248,19 +1446,27 @@ export default function App() {
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
 
+  // Read pet type and location from URL query params (set by QR code on kennel)
+  const urlParams = new URLSearchParams(window.location.search);
+  const petType = urlParams.get("type");
+  const kennelLocation = urlParams.get("location");
+
   useEffect(() => {
     if (user) {
-      api.getPetsByLocation().then((pets) => {
+      // Fetch pets at this kennel location from backend
+      api.getPetsByLocation(petType, kennelLocation).then((pets) => {
         setAnimals(pets);
+        // If only 1 animal at this location, skip selection and go straight to portal
         if (pets.length === 1) setSelectedPetId(pets[0].petId);
       });
     }
-  }, [user]);
+  }, [user, petType, kennelLocation]);
 
   const handleLogout = () => { setUser(null); setSelectedPetId(null); setAnimals([]); };
 
   if (!user) return <LoginScreen onLogin={setUser} />;
 
+  // Only show selection screen when multiple animals share the same kennel
   if (!selectedPetId && animals.length > 1) {
     return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} c={c} />;
   }
@@ -1269,5 +1475,11 @@ export default function App() {
     return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : null} darkMode={darkMode} setDarkMode={setDarkMode} />;
   }
 
-  return <div style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: c.warmGray, fontSize: 15 }}>Loading animals...</div></div>;
+  return (
+    <div style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+      <div style={{ width: 48, height: 48, border: `4px solid ${c.border}`, borderTop: `4px solid ${c.accent}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+      <div style={{ color: c.warmGray, fontSize: 15 }}>Loading animals...</div>
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
 }
