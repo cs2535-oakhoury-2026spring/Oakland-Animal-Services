@@ -3,7 +3,7 @@ import { z } from "zod";
 
 
 import {
-    BehaviorNote,
+  BehaviorNote,
   BehaviorNoteCreateSchema,
   BehaviorNoteSchema,
 } from "../models/BehaviorNote.schema.js";

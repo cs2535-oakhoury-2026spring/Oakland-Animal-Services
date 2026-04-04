@@ -50,6 +50,15 @@ const GET_FIELDS = [
   "animalRescueID",
   "animalSpecialneedsDescription",
   "animalUpdatedDate",
+  "animalAltered",
+  "animalOKWithCats",
+  "animalOKWithDogs",
+  "animalOKWithKids",
+  "animalEnergyLevel",
+  "animalNotes",
+  "animalBirthdateExact",
+  "animalCreatedDate",
+  "animalReceivedDate",
 ];
 
 /**
@@ -190,6 +199,14 @@ function parsePet(record: any): Pet | undefined {
     colorDetails: record.animalColorDetails,
     specialNeeds: record.animalSpecialneedsDescription,
     birthdate: record.animalBirthdate,
+    altered: record.animalAltered || undefined,
+    okWithCats: record.animalOKWithCats || undefined,
+    okWithDogs: record.animalOKWithDogs || undefined,
+    okWithKids: record.animalOKWithKids || undefined,
+    energyLevel: record.animalEnergyLevel || undefined,
+    notes: record.animalNotes || undefined,
+    createdDate: record.animalCreatedDate || undefined,
+    receivedDate: record.animalReceivedDate || undefined,
 
     image: record.animalThumbnailUrl || pictures?.[0] || undefined,
     age: computeAge(record),

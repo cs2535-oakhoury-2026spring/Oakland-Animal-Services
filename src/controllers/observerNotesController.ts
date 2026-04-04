@@ -165,7 +165,7 @@ export async function uploadObserverNote(req: Request, res: Response) {
   const newObserverNote: ObserverNote = {
     id: 0, // set later.
     timestamp: new Date(),
-    status: "active",
+    status: "RAISED",
     content,
     author,
     petId,
