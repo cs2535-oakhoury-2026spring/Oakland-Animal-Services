@@ -142,6 +142,35 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
    * @returns A promise resolving to true if the deletions succeeded, false otherwise.
    */
   async removeNotesByPetId(petId: number): Promise<boolean> {
-    throw new Error("BehaviorNoteDBRepository: removeNotesByPetId not implemented");
+    //DeleteCommand requires both Partition Key and Sort Key
+    //So we query all the Items by petId and then delete each iteam by Partition and Sort Key
+    try {
+      const command = new QueryCommand({
+        TableName : TABLE_NAME,
+        KeyConditionExpression : "petId = :petId",
+        ExpressionAttributeValues : {":petId" : petId}
+      })
+
+      const result = await docClient.send(command);
+      if (!result.Items || result.Items.length === 0) {
+        return false;
+      }
+      
+      // Delete each item
+      for (const item of result.Items) {
+        const deleteCommand = new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            petId: item.petId,
+            timestamp: item.timestamp
+          }
+        });
+        await docClient.send(deleteCommand);
+      }
+      
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 }

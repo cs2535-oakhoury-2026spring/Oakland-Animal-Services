@@ -170,15 +170,19 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
           petId: item.petId,
           timestamp: item.timestamp
         },
-        UpdateExpression: "SET status = :status",
+        UpdateExpression: "SET #status = :status",
+        ExpressionAttributeNames: {
+          "#status": "status"
+        },
         ExpressionAttributeValues: {
-          ":status": (status === "RESOLVED") ? status : "RAISED"
+          ":status": status
         }
       });
       
       await docClient.send(updateCommand);
       return true;
     } catch (error) {
+      console.error("Error updating observer note status:", error);
       return false;
     }
   }
