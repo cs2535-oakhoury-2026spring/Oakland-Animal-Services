@@ -23,8 +23,23 @@ export const PetSchema = z.object({
   generalSize: z.string().optional(),
   colorDetails: z.string().optional(),
   specialNeeds: z.string().optional(),
+  altered: z.string().optional(),
+  okWithCats: z.string().optional(),
+  okWithDogs: z.string().optional(),
+  okWithKids: z.string().optional(),
+  weightPounds: z.string().optional(),
+  energyLevel: z.string().optional(),
+  notes: z.string().optional(),
+  createdDate: z.string().optional(),
+  receivedDate: z.string().optional(),
+});
 
-  pictures: z.array(z.string()).optional(),
+export const PetLocationSchema = z.object({
+  id: z.number().int(),
+  name: z.string().min(1),
+  image: z.string().optional(),
+  summary: z.string().min(1),
 });
 
 export type Pet = z.infer<typeof PetSchema>;
+export type PetLocation = z.infer<typeof PetLocationSchema>;

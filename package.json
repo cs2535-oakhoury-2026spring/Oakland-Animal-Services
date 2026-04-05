@@ -7,20 +7,28 @@
     "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
+    "concurrently": "^9.2.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1021.0",
+    "@aws-sdk/lib-dynamodb": "^3.1021.0",
     "axios": "^1.13.6",
     "compromise": "^14.14.5",
     "dotenv": "^17.3.1",
     "express": "^4.18.2",
     "fastest-levenshtein": "^1.0.16",
+    "openai": "^6.31.0",
     "zod": "^4.3.6"
   },
   "scripts": {
     "build": "tsc",
+    "create-observer-notes-table": "node --loader ts-node/esm src/db/scripts/createObserverNotesTable.ts",
+    "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
     "test": "tsc && node dist/test.js",
-    "server": "tsc && node dist/server.js"
+    "server": "tsc && node dist/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   }
 }
