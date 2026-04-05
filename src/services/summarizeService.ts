@@ -20,8 +20,12 @@ export const summarizeText = async (
   }
   const text = notes
     .map(
-      (note) =>
-        `${note.content}|${note.timestamp.toISOString()}|${note.author}`,
+      (note) => {
+        const ts = note.timestamp instanceof Date
+          ? note.timestamp.toISOString()
+          : String(note.timestamp);
+        return `${note.content}|${ts}|${note.author}`;
+      }
     )
     .join("\n");
   const instruction =

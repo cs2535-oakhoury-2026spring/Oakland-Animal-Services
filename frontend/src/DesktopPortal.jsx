@@ -82,7 +82,7 @@ export default function DesktopPortal({
 
   const rightColumnDetails = [
     { label: "Age", value: pet.age },
-    { label: "Handler", value: pet.handlerLevel, handler: true },
+    { label: "Handler Level", value: pet.handlerLevel, handler: true },
   ].filter(d => d.value);
 
   const tabs = [
@@ -107,6 +107,7 @@ export default function DesktopPortal({
           )}
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
+        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
@@ -189,7 +190,7 @@ export default function DesktopPortal({
                 { label: "ACR", value: pet.arn },
                 { label: "Location", value: pet.location },
                 { label: "Animal ID", value: pet.petId },
-                { label: "Handler", value: (pet.handlerLevel || "green").toUpperCase(), color: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"] },
+                { label: "Handler Level", value: (pet.handlerLevel || "green").toUpperCase(), color: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"] },
               ].map((detail, i) => (
                 <div key={detail.label} style={{
                   padding: "12px 0", borderBottom: `1px solid ${c.cardBorder}`,

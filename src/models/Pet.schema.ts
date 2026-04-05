@@ -27,6 +27,7 @@ export const PetSchema = z.object({
   okWithCats: z.string().optional(),
   okWithDogs: z.string().optional(),
   okWithKids: z.string().optional(),
+  weightPounds: z.string().optional(),
   energyLevel: z.string().optional(),
   notes: z.string().optional(),
   createdDate: z.string().optional(),

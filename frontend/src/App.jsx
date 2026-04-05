@@ -248,6 +248,21 @@ function computeDisplayAge(desc, createdDate, receivedDate, generalAge) {
   return generalAge || "Unknown";
 }
 
+// Compute display age from ISO birthdate string e.g. "2023-06-01" → "2y 10m/o"
+function computeAgeFromBirthdate(birthdate) {
+  const birth = new Date(birthdate);
+  if (isNaN(birth.getTime())) return "Unknown";
+  const now = new Date();
+  let months = (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  if (now.getDate() < birth.getDate()) months--;
+  if (months <= 0) return "< 1m/o";
+  const y = Math.floor(months / 12);
+  const m = months % 12;
+  if (y > 0 && m > 0) return `${y}y ${m}m/o`;
+  if (y > 0) return `${y}y`;
+  return `${m}m/o`;
+}
+
 /**
  * Map RescueGroups okWithKids value to display label
  * "No" → "Unlikely" for gentler messaging to potential adopters
@@ -367,10 +382,10 @@ const api = {
           handlerLevel: (p.otherNames || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
-          age: computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
+          age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
           sex: p.sex || "",
           description: plainDesc,
-          weight: parseWeightFromDesc(plainDesc) || "Unknown",
+          weight: p.weightPounds || parseWeightFromDesc(plainDesc) || "Unknown",
           spayedNeutered: p.altered || "Unknown",
           kidsOver12: mapKidsCompat(p.okWithKids),
           kidsUnder12: mapKidsCompat(p.okWithKids),
@@ -742,8 +757,9 @@ function AnimalSelection({ animals, onSelect, user, onLogout, c }) {
         <button onClick={onLogout} style={{ fontSize: 13, color: c.warmGray, background: "none", border: "none", cursor: "pointer", fontFamily: font, minHeight: 44, minWidth: 44 }} aria-label="Logout">Logout</button>
       </div>
       <div style={{ padding: "16px 16px 0" }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, marginBottom: 4 }}>Select an Animal</h2>
-        <p style={{ fontSize: 14, color: c.textSecondary, marginBottom: 16 }}>Choose which animal to view</p>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, marginBottom: 16 }}>
+          Select an Animal: {animals[0]?.location}
+        </h2>
       </div>
       <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {animals.map((pet) => (
@@ -757,7 +773,7 @@ function AnimalSelection({ animals, onSelect, user, onLogout, c }) {
               onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }} />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 600, color: c.textPrimary }}>{pet.name}</div>
-              <div style={{ fontSize: 13, color: c.textSecondary }}>{pet.species} · {pet.location}</div>
+              <div style={{ fontSize: 13, color: c.textSecondary }}>{pet.petId}</div>
             </div>
             <Icons.arrowRight size={18} color={c.warmGray} />
           </button>
@@ -1400,7 +1416,7 @@ function DesktopPortal({
                 { label: "ACR", value: pet.arn },
                 { label: "Location", value: pet.location },
                 { label: "Animal ID", value: pet.petId },
-                { label: "Handler", value: (pet.handlerLevel || "green").toUpperCase(), color: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"] },
+                { label: "Handler Level", value: (pet.handlerLevel || "green").toUpperCase(), color: HANDLER_LEVEL_COLORS[pet.handlerLevel || "green"] },
               ].map((detail, i) => (
                 <div key={detail.label} style={{
                   padding: "12px 0", borderBottom: `1px solid ${c.cardBorder}`,
@@ -1893,7 +1909,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   return (
     <main id="main-content" style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, position: "relative" }}>
       {/* Top bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {onBack && (
             <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center" }} aria-label="Back to animal list">
@@ -1902,6 +1918,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
           )}
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
+        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
       </div>
 
       {/* Pet Card */}
@@ -1986,7 +2003,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               overflow: "hidden"
             }}>
               {[
-                { label: "Handler", value: (pet.handlerLevel || "green").toUpperCase(), special: true },
+                { label: "Handler Level", value: (pet.handlerLevel || "green").toUpperCase(), special: true },
                 { label: "Location", value: pet.location },
                 { label: "ACR", value: pet.arn || "N/A" },
                 { label: "Animal ID", value: pet.petId },

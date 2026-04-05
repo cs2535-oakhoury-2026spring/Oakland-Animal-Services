@@ -7,6 +7,7 @@
     "@types/node": "^25.2.3",
     "@typescript-eslint/eslint-plugin": "^8.55.0",
     "@typescript-eslint/parser": "^8.55.0",
+    "concurrently": "^9.2.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.9.3"
   },
@@ -26,6 +27,8 @@
     "create-observer-notes-table": "node --loader ts-node/esm src/db/scripts/createObserverNotesTable.ts",
     "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
     "test": "tsc && node dist/test.js",
-    "server": "tsc && node dist/server.js"
+    "server": "tsc && node dist/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
   }
 }

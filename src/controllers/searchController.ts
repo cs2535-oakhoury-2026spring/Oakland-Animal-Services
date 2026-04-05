@@ -3,7 +3,6 @@ import {
   findSimilarObserverNotes,
   SimilarNoteResult,
 } from "../services/observerNoteService.js";
-import { number } from "zod";
 
 /**
  * Performs a search for similar observer notes based on content and optional filters.
