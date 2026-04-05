@@ -137,10 +137,11 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
     return res.status(400).json({ error: z.treeifyError(parseResult.error) });
   }
 
-  const { content, author, petId } = parseResult.data;
+  const { title, content, author, petId } = parseResult.data;
   const newBehaviorNote: BehaviorNote = {
     id: 0, // set later.
     timestamp: new Date(),
+    title,
     content,
     author,
     petId,

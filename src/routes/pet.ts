@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { getPet, getPetByLocation } from "../controllers/petController.js";
+import { getPet, getPetByLocation, getAllAnimalsHandler } from "../controllers/petController.js";
+import { getCompatibilityHandler, updateCompatibilityHandler } from "../controllers/petCompatibilityController.js";
 
 const router = Router();
+router.get("/api/animals/all", getAllAnimalsHandler);
+router.get("/api/pets/:petId/compatibility", getCompatibilityHandler);
+router.put("/api/pets/:petId/compatibility", updateCompatibilityHandler);
 router.get("/api/pets/:petId", getPet);
-
-// Example /api/location/dog/e:1
-// EX:     /api/location/cat/cat-w:6
-// multi cats EX: /api/location/cat/cat-w:5 (in mock)
-// Returns an array of pets that are located there.
 router.get("/api/location/:petType/:location", getPetByLocation);
 
 export default router;

@@ -1,0 +1,11 @@
+import { z } from "zod";
+
+export const PetCompatibilitySchema = z.object({
+  petId: z.number().int(),
+  kidsOver12: z.string().optional(),
+  kidsUnder12: z.string().optional(),
+  canLiveWithCats: z.string().optional(),
+  dogToDog: z.string().optional(),
+});
+
+export type PetCompatibility = z.infer<typeof PetCompatibilitySchema>;

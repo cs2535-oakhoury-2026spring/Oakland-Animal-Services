@@ -332,21 +332,12 @@ const formatTimestamp = (dateString) => {
   }
 };
 
-// Mock data kept as fallback only - real data comes from backend API
-const mockObserverNotes = [];
-const mockBehaviorNotes = [];
-
-const mockUsers = [
-  { username: "shannon", password: "oak2026", displayName: "Shannon", role: "medical", email: "shannon@oaklandanimal.org", department: "Veterinary Care" },
-  { username: "demo", password: "demo", displayName: "Demo User", role: "staff", email: "demo@oaklandanimal.org", department: "Animal Care" },
-];
-
-// Transform backend observer note shape ({ id, content, author, petId, timestamp })
+// Transform backend observer note shape ({ id, title, content, author, petId, timestamp })
 // into frontend shape ({ id, petId, case, by, status, type, body, createdAt })
 const transformObserverNote = (note, index) => ({
   id: note.id || Date.now() + index,
   petId: String(note.petId),
-  case: note.case || "General Observation",
+  case: note.title || note.case || "General Observation",
   by: note.author || note.by || "Unknown",
   status: note.status || "Raised",
   type: note.type || "medical",
@@ -355,12 +346,6 @@ const transformObserverNote = (note, index) => ({
 });
 
 const api = {
-  // MOCK — no backend auth endpoint yet
-  login: async (username, password) => {
-    const user = mockUsers.find((u) => u.username === username && u.password === password);
-    if (user) return { success: true, user: { displayName: user.displayName, role: user.role, email: user.email, department: user.department } };
-    return { success: false, error: "Invalid credentials" };
-  },
 
   // REAL — connected to GET /api/pets/:petId
   getPet: async (petId) => {
@@ -447,6 +432,7 @@ const api = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          title: note.case,
           content: note.body,
           author: note.by,
           petId: parseInt(note.petId, 10) || 0,
@@ -455,7 +441,7 @@ const api = {
       if (!res.ok) throw new Error("Failed to create note");
       const data = await res.json();
       if (data.success && data.observerNote) {
-        return transformObserverNote({ ...data.observerNote, case: note.case, status: note.status }, 0);
+        return transformObserverNote({ ...data.observerNote, status: note.status }, 0);
       }
       return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
     } catch (err) {
@@ -474,7 +460,7 @@ const api = {
         return data.behaviorNotes.map((note, i) => ({
           id: note.id || Date.now() + i,
           petId: String(note.petId),
-          case: note.case || "Behavior Observation",
+          case: note.title || note.case || "Behavior Observation",
           by: note.author || "Unknown",
           body: note.content || "",
           createdAt: note.timestamp || new Date().toISOString(),
@@ -494,6 +480,7 @@ const api = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          title: note.case,
           content: note.body,
           author: note.by,
           petId: parseInt(note.petId, 10) || 0,
@@ -505,7 +492,7 @@ const api = {
         return {
           id: data.behaviorNote.id || Date.now(),
           petId: String(data.behaviorNote.petId),
-          case: note.case,
+          case: data.behaviorNote.title || note.case,
           by: data.behaviorNote.author || note.by,
           body: data.behaviorNote.content || note.body,
           createdAt: data.behaviorNote.timestamp || new Date().toISOString(),
@@ -562,6 +549,38 @@ const api = {
     } catch (err) {
       console.error("getSummary error:", err);
       return "AI service is currently unavailable. Please check your API key configuration.";
+    }
+  },
+
+  getCompatibility: async (petId) => {
+    try {
+      const res = await fetch(`/api/pets/${petId}/compatibility`);
+      if (!res.ok) return {};
+      const data = await res.json();
+      return data.compatibility || {};
+    } catch { return {}; }
+  },
+
+  updateCompatibility: async (petId, fields) => {
+    try {
+      await fetch(`/api/pets/${petId}/compatibility`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
+      });
+    } catch (err) { console.error("updateCompatibility error:", err); }
+  },
+
+  getAllAnimals: async () => {
+    try {
+      const res = await fetch("/api/animals/all");
+      if (!res.ok) throw new Error("Failed to fetch animals");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.animals)) return data.animals;
+      throw new Error("Invalid response");
+    } catch (err) {
+      console.error("getAllAnimals error:", err);
+      return null;
     }
   },
 };
@@ -661,46 +680,6 @@ function HighlightedText({ text, searchQuery, highlightColor = "#FFEB3B" }) {
   return <span>{text}</span>;
 }
 
-// ─── Login Screen ────────────────────────────────────────────────────────────
-function LoginScreen({ onLogin }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const c = themes.light;
-  const r = useResponsive();
-
-  const handleLogin = async () => {
-    if (!username || !password) { setError("Please enter both fields"); return; }
-    setLoading(true); setError("");
-    const result = await api.login(username, password);
-    setLoading(false);
-    if (result.success) onLogin(result.user);
-    else setError(result.error || "Invalid credentials");
-  };
-
-  const inputStyle = { width: "100%", maxWidth: 400, padding: "14px 16px", marginBottom: 12, borderRadius: 12, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 16, outline: "none", boxSizing: "border-box", fontFamily: font };
-
-  return (
-    <main id="main-content" style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: r.padding }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32, color: c.textSecondary, fontSize: 15 }}>
-        <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: c.cardBorder, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Icons.user size={20} color={c.textSecondary} />
-        </div>
-        <span style={{ fontWeight: 500 }}>LOGIN</span>
-      </div>
-      <div style={{ backgroundColor: c.headerGreen, color: "#fff", padding: "12px 40px", borderRadius: 25, fontSize: 17, fontWeight: 600, textAlign: "center", marginBottom: 40, width: "100%", maxWidth: 400 }}>Oakland Animal Services</div>
-      <input style={inputStyle} placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleLogin()} aria-label="Username" />
-      <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleLogin()} aria-label="Password" />
-      <button style={{ width: "100%", maxWidth: 400, padding: 14, marginTop: 8, borderRadius: 12, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 16, fontWeight: 600, cursor: "pointer", opacity: loading ? 0.6 : 1, fontFamily: font, minHeight: 48, transition: "opacity 0.2s ease, background-color 0.2s ease" }} onClick={handleLogin} disabled={loading} aria-label="Sign in">
-        {loading ? "Signing in..." : "Sign In"}
-      </button>
-      {error && <div role="alert" style={{ color: c.brickRed, fontSize: 14, marginTop: 8 }}>{error}</div>}
-      <div style={{ marginTop: 24, fontSize: 13, color: c.warmGray, textAlign: "center", lineHeight: 1.6 }}>Demo credentials:<br />shannon / oak2026 (medical)<br />demo / demo (staff)</div>
-    </main>
-  );
-}
-
 // ─── Error Screen ────────────────────────────────────────────────────────────
 // Shown when a kennel location URL is invalid or returns no animals
 function ErrorScreen({ error, onLogout, c }) {
@@ -745,39 +724,96 @@ function ErrorScreen({ error, onLogout, c }) {
 // ─── Animal Selection Screen ─────────────────────────────────────────────────
 // Only shown when multiple animals share the same kennel location.
 // If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
-function AnimalSelection({ animals, onSelect, user, onLogout, c }) {
+function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c }) {
   const r = useResponsive();
+  const isDesktop = r.width >= 768;
+  const location = animals[0]?.location || "";
+  const maxWidth = isDesktop ? 860 : 480;
+
   return (
-    <main id="main-content" style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, padding: "0 0 24px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: c.textSecondary }}>
-          <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: c.cardBorder, display: "flex", alignItems: "center", justifyContent: "center" }}><Icons.user size={16} color={c.textSecondary} /></div>
-          <span style={{ fontWeight: 500 }}>{user.displayName}</span>
-        </div>
-        <button onClick={onLogout} style={{ fontSize: 13, color: c.warmGray, background: "none", border: "none", cursor: "pointer", fontFamily: font, minHeight: 44, minWidth: 44 }} aria-label="Logout">Logout</button>
-      </div>
-      <div style={{ padding: "16px 16px 0" }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, marginBottom: 16 }}>
-          Select an Animal: {animals[0]?.location}
-        </h2>
-      </div>
-      <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 10 }}>
-        {animals.map((pet) => (
-          <button key={pet.petId} onClick={() => onSelect(pet.petId)}
-            style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, backgroundColor: c.cardBg, borderRadius: 14, border: `1px solid ${c.cardBorder}`, cursor: "pointer", fontFamily: font, textAlign: "left", width: "100%", boxShadow: c.shadow, transition: "transform 0.15s, box-shadow 0.15s", minHeight: 44 }}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
-            aria-label={`View ${pet.name}'s profile`}
-          >
-            <img src={pet.imageUrl} alt={pet.name} style={{ width: 64, height: 64, borderRadius: 10, objectFit: "cover", border: `2px solid ${c.cardBorder}` }}
-              onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 600, color: c.textPrimary }}>{pet.name}</div>
-              <div style={{ fontSize: 13, color: c.textSecondary }}>{pet.petId}</div>
-            </div>
-            <Icons.arrowRight size={18} color={c.warmGray} />
+    <main id="main-content" style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg }}>
+
+      {/* Top Bar */}
+      <header style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: isDesktop ? "14px 28px" : "12px 16px",
+        borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isDesktop ? 12 : 8 }}>
+          {/* Back button */}
+          <button
+            onClick={onBack}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 6, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, transition: "background-color 0.15s" }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = c.inputBg}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
+            aria-label="Back to home">
+            <Icons.back size={isDesktop ? 22 : 20} color={c.textSecondary} />
           </button>
-        ))}
+          <UserDropdown user={user} onLogout={onLogout} c={c} />
+        </div>
+        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: isDesktop ? 40 : 36, objectFit: "contain" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {setDarkMode && (
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
+              {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Content */}
+      <div style={{ maxWidth, margin: "0 auto", padding: isDesktop ? "32px 28px" : "20px 16px" }}>
+        {/* Heading */}
+        <div style={{ marginBottom: isDesktop ? 24 : 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: c.warmGray, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>
+            Location
+          </div>
+          <h2 style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>
+            Select an Animal: <span style={{ color: c.headerGreen }}>{location}</span>
+          </h2>
+          <div style={{ fontSize: 13, color: c.textSecondary, marginTop: 6 }}>
+            {animals.length} animal{animals.length !== 1 ? "s" : ""} found at this location
+          </div>
+        </div>
+
+        {/* Animal list — 2-col grid on desktop */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr",
+          gap: isDesktop ? 14 : 10,
+        }}>
+          {animals.map((pet) => (
+            <button key={pet.petId} onClick={() => onSelect(pet.petId)}
+              style={{
+                display: "flex", alignItems: "center", gap: 14, padding: isDesktop ? 18 : 14,
+                backgroundColor: c.cardBg, borderRadius: 14, border: `1px solid ${c.cardBorder}`,
+                cursor: "pointer", fontFamily: font, textAlign: "left", width: "100%",
+                boxShadow: c.shadow, transition: "transform 0.15s, box-shadow 0.15s", minHeight: 44,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+              aria-label={`View ${pet.name}'s profile`}
+            >
+              <img
+                src={pet.imageUrl}
+                alt={pet.name}
+                style={{ width: isDesktop ? 72 : 64, height: isDesktop ? 72 : 64, borderRadius: 10, objectFit: "cover", border: `1px solid ${c.cardBorder}`, flexShrink: 0 }}
+                onError={(e) => { e.target.src = pet.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG; }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: isDesktop ? 17 : 16, fontWeight: 600, color: c.textPrimary, marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pet.name}</div>
+                <div style={{ fontSize: 13, color: c.textSecondary }}>ID: {pet.petId}</div>
+                {pet.species && <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2, textTransform: "capitalize" }}>{pet.species}</div>}
+              </div>
+              <Icons.arrowRight size={18} color={c.warmGray} />
+            </button>
+          ))}
+        </div>
       </div>
     </main>
   );
@@ -1265,7 +1301,7 @@ function QRCodeModal({ pet, onClose, c }) {
 
 // ─── Desktop Portal (iPad/Desktop two-column layout, width >= 768px) ─────────
 function DesktopPortal({
-  user, pet, notes, behaviorNotes,
+  user, pet, petId, notes, behaviorNotes,
   filteredNotes, filteredBehaviorNotes,
   activeTab, setActiveTab,
   searchQuery, handleMedicalSearch,
@@ -1283,6 +1319,7 @@ function DesktopPortal({
   handleBehaviorNoteCreated, handleBehaviorNoteEdited,
   onBack, onLogout,
   darkMode, setDarkMode,
+  compatibility, setCompatibility,
   c, r,
 }) {
   const [hoveredDetail, setHoveredDetail] = useState(null);
@@ -1298,8 +1335,8 @@ function DesktopPortal({
     <main role="main" aria-label={`${pet.name} details`} style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, position: "relative" }}>
 
       {/* Top Bar */}
-      <header role="banner" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 28px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <header role="banner" style={{ display: "flex", alignItems: "center", padding: "14px 28px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 12 }}>
           {onBack && (
             <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", padding: 6, minHeight: 44, minWidth: 44, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, transition: "background-color 0.15s" }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = c.inputBg}
@@ -1310,7 +1347,8 @@ function DesktopPortal({
           )}
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
           <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
@@ -1547,37 +1585,27 @@ function DesktopPortal({
           {/* Behavior Notes Tab */}
           {activeTab === "behavior" && (
             <div role="tabpanel" id="desktop-panel-behavior" aria-labelledby="desktop-tab-behavior">
-              {/* Compatibility Info Boxes */}
-              <div style={{ display: "flex", marginBottom: 16, borderRadius: 10, border: `1px solid ${c.cardBorder}`, overflow: "hidden", boxShadow: c.shadow }}>
+              {/* Compatibility Info Boxes - editable */}
+              <div style={{ display: "flex", marginBottom: 16, borderRadius: 10, border: `1px solid ${c.cardBorder}`, overflow: "visible", boxShadow: c.shadow, backgroundColor: c.cardBg }}>
                 {[
-                  { label: "Kids over 12?", value: pet.kidsOver12 || pet.okWithKids || "Unknown" },
-                  { label: "Kids under 12?", value: pet.kidsUnder12 || pet.okWithKids || "Unknown" },
-                  { label: "Live with cats?", value: pet.canLiveWithCats || pet.okWithCats || "Unknown" },
-                  { label: "Dog-to-dog", value: pet.dogToDog || pet.distinguishingMarks || "Unknown" },
-                ].map((s, i, a) => {
-                  const val = s.value?.toLowerCase() || "";
-                  const getColor = () => {
-                    if (val === "unlikely" || val === "no") return c.statusRaised;
-                    if (val === "gentle" || val === "yes") return c.statusResolved;
-                    if (val === "maybe") return "#FFA500";
-                    return c.warmGray;
-                  };
-                  const color = getColor();
-                  return (
-                    <div key={s.label} style={{
-                      flex: 1, padding: "12px 8px", textAlign: "center",
-                      borderRight: i < a.length - 1 ? `1px solid ${c.cardBorder}` : "none",
-                      backgroundColor: c.cardBg,
-                    }}>
-                      <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>{s.label}</div>
-                      <div style={{
-                        fontSize: 13, fontWeight: 600, display: "inline-block", padding: "3px 10px", borderRadius: 6,
-                        color: color,
-                        backgroundColor: `${color}12`,
-                      }}>{s.value}</div>
-                    </div>
-                  );
-                })}
+                  { label: "Kids over 12?", key: "kidsOver12" },
+                  { label: "Kids under 12?", key: "kidsUnder12" },
+                  { label: "Live with cats?", key: "canLiveWithCats" },
+                  { label: "Dog-to-dog", key: "dogToDog" },
+                ].map((s, i, a) => (
+                  <div key={s.key} style={{ flex: 1, borderRight: i < a.length - 1 ? `1px solid ${c.cardBorder}` : "none" }}>
+                    <CompatibilityField
+                      label={s.label}
+                      value={compatibility[s.key] || "Unknown"}
+                      c={c}
+                      onChange={(val) => {
+                        const updated = { ...compatibility, [s.key]: val };
+                        setCompatibility(updated);
+                        api.updateCompatibility(petId, updated);
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
 
               <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center" }}>
@@ -1719,6 +1747,61 @@ function DesktopPortal({
 // The main animal detail view with tabs: Summary (AI), Medical Observations, Behavior Notes.
 // Medical search uses backend NLP-powered search with keyword highlighting.
 // Behavior search uses client-side filtering with text highlighting.
+const COMPAT_OPTIONS = ["Yes", "No", "Likely", "Unlikely", "Maybe", "Unknown"];
+
+function CompatibilityField({ label, value, onChange, c }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const getColor = (val) => {
+    const v = (val || "").toLowerCase();
+    if (v === "yes" || v === "likely") return c.statusResolved;
+    if (v === "no" || v === "unlikely") return c.statusRaised;
+    if (v === "maybe") return "#FFA500";
+    return c.warmGray;
+  };
+  const color = getColor(value);
+
+  return (
+    <div ref={ref} style={{ flex: 1, padding: "10px 8px", textAlign: "center", position: "relative" }}>
+      <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</div>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6,
+          color, backgroundColor: `${color}15`, border: `1px dashed ${color}60`,
+          cursor: "pointer", fontFamily: font,
+        }}
+        title="Click to edit"
+      >
+        {value || "Unknown"} ▾
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "100%", left: "50%", transform: "translateX(-50%)",
+          backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`,
+          borderRadius: 8, zIndex: 50, boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+          minWidth: 110, overflow: "hidden",
+        }}>
+          {COMPAT_OPTIONS.map((opt) => (
+            <button key={opt} onClick={() => { onChange(opt); setOpen(false); }} style={{
+              display: "block", width: "100%", padding: "8px 14px", textAlign: "left",
+              background: opt === value ? `${getColor(opt)}15` : "none",
+              border: "none", cursor: "pointer", fontFamily: font,
+              fontSize: 13, color: getColor(opt), fontWeight: opt === value ? 700 : 400,
+            }}>{opt}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
@@ -1739,6 +1822,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [isSearching, setIsSearching] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
+  const [compatibility, setCompatibility] = useState({});
   const [loading, setLoading] = useState(true);
   const [medicalNotesVisible, setMedicalNotesVisible] = useState(5);
   const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
@@ -1756,10 +1840,11 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [petData, notesData, bNotes] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNotes(petId)]);
+      const [petData, notesData, bNotes, compat] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNotes(petId), api.getCompatibility(petId)]);
       setPet(petData);
       setNotes(notesData);
       setBehaviorNotes(bNotes);
+      setCompatibility(compat);
       setLoading(false);
     })();
   }, [petId]);
@@ -1883,7 +1968,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   // Desktop/iPad two-column layout (width >= 768px)
   if (r.width >= 768) {
     return <DesktopPortal
-      user={user} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
+      user={user} pet={pet} petId={petId} notes={notes} behaviorNotes={behaviorNotes}
       filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
       activeTab={activeTab} setActiveTab={setActiveTab}
       searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
@@ -1901,6 +1986,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
       onBack={onBack} onLogout={onLogout}
       darkMode={darkMode} setDarkMode={setDarkMode}
+      compatibility={compatibility} setCompatibility={setCompatibility}
       c={c} r={r}
     />;
   }
@@ -2163,59 +2249,38 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 
         {activeTab === "behavior" && (
           <>
-            {/* Compatibility Boxes */}
-            <div style={{ 
-              margin: "12px 16px", 
-              display: "grid", 
-              gridTemplateColumns: "1fr 1fr", 
-              borderRadius: 10, 
-              border: `1px solid ${c.cardBorder}`, 
-              overflow: "hidden"
+            {/* Compatibility Boxes - editable */}
+            <div style={{
+              margin: "12px 16px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              borderRadius: 10,
+              border: `1px solid ${c.cardBorder}`,
+              overflow: "visible",
+              backgroundColor: c.cardBg,
             }}>
               {[
-                { label: "Kids over 12?", value: pet.kidsOver12 || pet.okWithKids || "Unknown" },
-                { label: "Kids under 12?", value: pet.kidsUnder12 || pet.okWithKids || "Unknown" },
-                { label: "Live with cats?", value: pet.canLiveWithCats || pet.okWithCats || "Unknown" },
-                { label: "Dog-to-dog", value: pet.dogToDog || pet.distinguishingMarks || "Unknown" },
-              ].map((item, i) => {
-                const getColorStyle = () => {
-                  const val = item.value?.toLowerCase() || "";
-                  if (val === "unlikely" || val === "no") {
-                    return { color: c.statusRaised, backgroundColor: darkMode ? "rgba(224, 75, 58, 0.15)" : "rgba(190, 58, 43, 0.1)" };
-                  }
-                  if (val === "gentle" || val === "yes") {
-                    return { color: c.statusResolved, backgroundColor: darkMode ? "rgba(76, 175, 80, 0.15)" : "rgba(45, 122, 36, 0.1)" };
-                  }
-                  if (val === "maybe") {
-                    return { color: "#FFA500", backgroundColor: darkMode ? "rgba(255, 165, 0, 0.15)" : "rgba(255, 165, 0, 0.1)" };
-                  }
-                  if (val === "unknown" || val === "") {
-                    return { color: c.warmGray, backgroundColor: darkMode ? "rgba(170, 170, 170, 0.1)" : "rgba(102, 102, 102, 0.08)" };
-                  }
-                  return { color: c.textPrimary, backgroundColor: "transparent" };
-                };
-                const colorStyle = getColorStyle();
-                return (
-                  <div key={item.label} style={{
-                    padding: "12px 10px",
-                    textAlign: "center",
-                    borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
-                    borderBottom: i < 2 ? `1px solid ${c.cardBorder}` : "none",
-                    backgroundColor: c.cardBg,
-                  }}>
-                    <div style={{ fontSize: 10, color: c.warmGray, marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5 }}>{item.label}</div>
-                    <div style={{ 
-                      fontSize: 12, 
-                      fontWeight: 700,
-                      color: colorStyle.color,
-                      backgroundColor: colorStyle.backgroundColor,
-                      padding: "3px 8px",
-                      borderRadius: 4,
-                      display: "inline-block"
-                    }}>{item.value}</div>
-                  </div>
-                );
-              })}
+                { label: "Kids over 12?", key: "kidsOver12" },
+                { label: "Kids under 12?", key: "kidsUnder12" },
+                { label: "Live with cats?", key: "canLiveWithCats" },
+                { label: "Dog-to-dog", key: "dogToDog" },
+              ].map((item, i) => (
+                <div key={item.key} style={{
+                  borderRight: i % 2 === 0 ? `1px solid ${c.cardBorder}` : "none",
+                  borderBottom: i < 2 ? `1px solid ${c.cardBorder}` : "none",
+                }}>
+                  <CompatibilityField
+                    label={item.label}
+                    value={compatibility[item.key] || "Unknown"}
+                    c={c}
+                    onChange={(val) => {
+                      const updated = { ...compatibility, [item.key]: val };
+                      setCompatibility(updated);
+                      api.updateCompatibility(petId, updated);
+                    }}
+                  />
+                </div>
+              ))}
             </div>
 
             <div style={{ margin: "12px 16px", display: "flex", gap: 8, alignItems: "center" }}>
@@ -2292,8 +2357,208 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 // ─── App Root ────────────────────────────────────────────────────────────────
 // URL params drive the QR code flow: ?type=cat&location=holding-4:0
 // Each kennel has a QR code that encodes petType + location in the URL.
+const PLACEHOLDER_HOME = "/DogSHADOW.png";
+
+// ─── Home Screen ─────────────────────────────────────────────────────────────
+function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
+  const r = useResponsive();
+  const [animals, setAnimals] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    api.getAllAnimals().then((result) => {
+      if (result === null) { setLoadError(true); setAnimals([]); }
+      else setAnimals(result);
+    });
+  }, []);
+
+  // Client-side filter matching name, ACR, ID, location, breed
+  const filtered = animals
+    ? animals.filter((a) => {
+        if (!searchQuery.trim()) return true;
+        const q = searchQuery.toLowerCase();
+        return (
+          a.name.toLowerCase().includes(q) ||
+          (a.rescueId && a.rescueId.toLowerCase().includes(q)) ||
+          String(a.id).includes(q) ||
+          a.location.toLowerCase().includes(q) ||
+          (a.breed && a.breed.toLowerCase().includes(q))
+        );
+      })
+    : [];
+
+  // Highlight matched text in a string
+  const highlight = (text) => {
+    if (!searchQuery.trim() || !text) return text;
+    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === searchQuery.toLowerCase()
+        ? <mark key={i} style={{ backgroundColor: "#FFEB3B", padding: "0 1px", borderRadius: 2, fontWeight: 700 }}>{part}</mark>
+        : part
+    );
+  };
+
+  // Desktop: 2-col grid. Mobile: single column
+  const isDesktop = r.width >= 768;
+  const cardImg = 56;
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
+      {/* Top bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <UserDropdown user={user} onLogout={onLogout} c={c} />
+        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+      </div>
+
+      <div style={{ maxWidth: isDesktop ? 1200 : 700, margin: "0 auto", padding: isDesktop ? "24px 28px 0" : "20px 16px 0" }}>
+        {/* Title */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+          <h2 style={{ fontSize: isDesktop ? 26 : 22, fontWeight: 700, color: c.textPrimary, margin: 0 }}>All Animals</h2>
+          {animals && (
+            <span style={{ fontSize: 14, color: c.warmGray }}>
+              {filtered.length === animals.length ? `${animals.length} animals` : `${filtered.length} of ${animals.length}`}
+            </span>
+          )}
+        </div>
+        <p style={{ fontSize: 14, color: c.textSecondary, margin: "0 0 16px" }}>All animals currently at Oakland Animal Services</p>
+
+        {/* Search bar */}
+        <div style={{ position: "relative", marginBottom: 20, maxWidth: isDesktop ? 500 : "100%" }}>
+          <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }}>
+            <Icons.search size={16} color={c.warmGray} />
+          </div>
+          <input
+            style={{
+              width: "100%", padding: "12px 16px 12px 38px", borderRadius: 10,
+              border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg,
+              color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font,
+              boxSizing: "border-box", transition: "border-color 0.2s",
+            }}
+            placeholder="Search by name, ACR, ID, breed, or kennel..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
+            onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
+            aria-label="Search animals"
+          />
+        </div>
+      </div>
+
+      {/* Animal list / grid */}
+      <div style={{
+        maxWidth: isDesktop ? 1200 : 700, margin: "0 auto",
+        padding: isDesktop ? "0 28px" : "0 16px",
+        display: isDesktop ? "grid" : "flex",
+        gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : undefined,
+        flexDirection: isDesktop ? undefined : "column",
+        gap: 10,
+      }}>
+        {/* Loading skeletons */}
+        {animals === null && Array.from({ length: isDesktop ? 6 : 5 }).map((_, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, padding: 14, backgroundColor: c.cardBg, borderRadius: 14, border: `1px solid ${c.cardBorder}` }}>
+            <Skeleton width={cardImg} height={cardImg} borderRadius={8} />
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+              <Skeleton width="40%" height={14} />
+              <Skeleton width="60%" height={12} />
+            </div>
+          </div>
+        ))}
+
+        {/* Error */}
+        {loadError && (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 48, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            Could not load animals. Please check your connection and try again.
+          </div>
+        )}
+
+        {/* Empty search */}
+        {animals && !loadError && filtered.length === 0 && searchQuery.trim() && (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 48, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            No animals matching "{searchQuery}"
+          </div>
+        )}
+
+        {/* Cards */}
+        {filtered.map((animal) => {
+          const handlerColor = HANDLER_LEVEL_COLORS[animal.handlerLevel] || HANDLER_LEVEL_COLORS.green;
+          const isHold = animal.status && animal.status.toLowerCase() !== "available";
+          const imgSrc = animal.image || PLACEHOLDER_HOME;
+          return (
+            <button
+              key={animal.id}
+              onClick={() => {
+                const species = animal.species.toLowerCase();
+                const loc = animal.location.replace(new RegExp(`^${animal.species}\\s+`, 'i'), '').toLowerCase();
+                if (loc && loc !== "unknown" && loc !== "in foster") {
+                  window.location.href = `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`;
+                } else {
+                  window.location.href = `/?petId=${animal.id}`;
+                }
+              }}
+              style={{
+                display: "flex", alignItems: "center", gap: 12, padding: 14,
+                backgroundColor: c.cardBg, borderRadius: 14, border: `1px solid ${c.cardBorder}`,
+                cursor: "pointer", fontFamily: font, textAlign: "left", width: "100%",
+                boxShadow: c.shadow, transition: "transform 0.15s, box-shadow 0.15s", minHeight: 44,
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px rgba(0,0,0,0.13)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = c.shadow; }}
+              aria-label={`View ${animal.name}'s profile`}
+            >
+              <img
+                src={imgSrc}
+                alt={animal.name}
+                style={{ width: cardImg, height: cardImg, borderRadius: 8, objectFit: "cover", border: `1px solid ${c.cardBorder}`, flexShrink: 0 }}
+                onError={(e) => { e.target.src = PLACEHOLDER_HOME; }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", backgroundColor: handlerColor, flexShrink: 0, boxShadow: `0 0 0 2px ${handlerColor}33` }} />
+                  <span style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {highlight(animal.name)}
+                  </span>
+                </div>
+                <div style={{ fontSize: 12, color: c.textSecondary }}>
+                  {highlight(animal.species)}{animal.breed ? <> · {highlight(animal.breed)}</> : ""} · {highlight(animal.location)}
+                </div>
+              </div>
+              <span style={{
+                fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, flexShrink: 0,
+                color: isHold ? "#c0392b" : c.statusResolved,
+                backgroundColor: isHold ? "#fdecea" : `${c.statusResolved}15`,
+                border: `1px solid ${isHold ? "#e74c3c30" : `${c.statusResolved}30`}`,
+                textTransform: "capitalize",
+              }}>
+                {animal.status}
+              </span>
+              <Icons.arrowRight size={16} color={c.warmGray} />
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Dark mode toggle */}
+      <button
+        onClick={() => setDarkMode(!darkMode)}
+        style={{
+          position: "fixed", bottom: 24, right: 24,
+          width: 44, height: 44, borderRadius: "50%",
+          background: c.cardBg, border: `1px solid ${c.cardBorder}`,
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+        }}
+        aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+      </button>
+    </main>
+  );
+}
+
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user] = useState({ displayName: "Staff", role: "staff", email: "", department: "" });
   const [animals, setAnimals] = useState([]);
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -2308,43 +2573,44 @@ export default function App() {
   const petType = urlParams.get("type");
   const kennelLocation = urlParams.get("location");
 
+  const hasUrlParams = !!(urlPetId || (petType && kennelLocation));
+
   useEffect(() => {
-    if (user) {
-      // Direct pet ID link - skip location fetch and go straight to that pet
-      if (urlPetId) {
-        setSelectedPetId(urlPetId);
-        return;
-      }
-      // QR code link - fetch pets at this kennel location from backend
-      setLocationError(null);
-      api.getPetsByLocation(petType, kennelLocation)
-        .then((pets) => {
-          setAnimals(pets);
-          // If only 1 animal at this location, skip selection and go straight to portal
-          if (pets.length === 1) setSelectedPetId(pets[0].petId);
-        })
-        .catch((err) => {
-          setLocationError(err.message);
-        });
+    if (!hasUrlParams) return;
+    // Direct pet ID link - skip location fetch and go straight to that pet
+    if (urlPetId) {
+      setSelectedPetId(urlPetId);
+      return;
     }
-  }, [user, urlPetId, petType, kennelLocation]);
+    // QR code / location link - fetch pets at this kennel location from backend
+    setLocationError(null);
+    api.getPetsByLocation(petType, kennelLocation)
+      .then((pets) => {
+        setAnimals(pets);
+        if (pets.length === 1) setSelectedPetId(pets[0].petId);
+      })
+      .catch((err) => {
+        setLocationError(err.message);
+      });
+  }, [urlPetId, petType, kennelLocation]);
 
-  const handleLogout = () => { setUser(null); setSelectedPetId(null); setAnimals([]); setLocationError(null); };
+  const handleLogout = () => { setSelectedPetId(null); setAnimals([]); setLocationError(null); };
 
-  if (!user) return <LoginScreen onLogin={setUser} />;
+  // No URL params → show home screen with all animals
+  if (!hasUrlParams && !selectedPetId) {
+    return <HomeScreen user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} c={c} />;
+  }
 
-  // Show error screen if location fetch failed
   if (locationError) {
     return <ErrorScreen error={locationError} onLogout={handleLogout} c={c} />;
   }
 
-  // Only show selection screen when multiple animals share the same kennel
   if (!selectedPetId && animals.length > 1) {
-    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} c={c} />;
+    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={setDarkMode} c={c} />;
   }
 
   if (selectedPetId) {
-    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : null} darkMode={darkMode} setDarkMode={setDarkMode} />;
+    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => setSelectedPetId(null)} darkMode={darkMode} setDarkMode={setDarkMode} />;
   }
 
   return (

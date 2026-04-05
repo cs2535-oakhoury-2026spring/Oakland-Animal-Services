@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   getPetById,
   searchByLocation,
+  getAllAnimals,
 } from "../db/pets.js";
 
 /**
@@ -52,4 +53,14 @@ export async function getPetByLocation(req: Request, res: Response) {
   }
 
   res.json({ success: true, pets: pet });
+}
+
+export async function getAllAnimalsHandler(req: Request, res: Response) {
+  try {
+    const animals = await getAllAnimals();
+    res.json({ success: true, animals });
+  } catch (err) {
+    console.error("getAllAnimals failed", err);
+    res.status(500).json({ success: false, error: "Failed to fetch animals" });
+  }
 }

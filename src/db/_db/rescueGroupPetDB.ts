@@ -353,4 +353,80 @@ export class RescueGroupPetRepository implements PetRepository {
   ): Promise<PetLocation[] | undefined> {
     return this.searchByLocationInternal(petType, location);
   }
+
+  async getAllAnimals(): Promise<AllAnimalEntry[]> {
+    const statuses = ["Available", "Foster"];
+    const allFields = [
+      "animalID",
+      "animalName",
+      "animalSpecies",
+      "animalStatus",
+      "animalSummary",
+      "animalThumbnailUrl",
+      "animalPictures",
+      "animalOthernames",
+      "animalGeneralAge",
+      "animalPrimaryBreed",
+      "animalRescueID",
+    ];
+
+    const results: AllAnimalEntry[] = [];
+
+    for (const status of statuses) {
+      try {
+        const payload = {
+          objectType: "animals",
+          objectAction: "search",
+          search: {
+            resultStart: 0,
+            resultLimit: 200,
+            resultSort: "animalName",
+            resultOrder: "asc",
+            filters: [
+              { fieldName: "animalStatus", operation: "equals", criteria: status },
+              { fieldName: "animalSummary", operation: "contains", criteria: "Oakland Animal Services" },
+            ],
+            fields: allFields,
+          },
+        };
+
+        const response = await rescueGroupsClient.post("", payload);
+        const pets: Record<string, any> = response?.data?.data || {};
+
+        for (const key in pets) {
+          const record = pets[key];
+          const pictures = extractPictures(record);
+          results.push({
+            id: parseInt(record.animalID, 10),
+            name: record.animalName || `Animal #${record.animalID}`,
+            species: record.animalSpecies || "Unknown",
+            status: record.animalStatus || "Unknown",
+            location: parseLocationFromSummary(record.animalSummary) || "Unknown",
+            image: record.animalThumbnailUrl || pictures?.[0] || undefined,
+            handlerLevel: (record.animalOthernames || "green").toLowerCase(),
+            breed: record.animalPrimaryBreed || undefined,
+            generalAge: record.animalGeneralAge || undefined,
+            rescueId: record.animalRescueID || undefined,
+          });
+        }
+      } catch (err) {
+        console.error(`getAllAnimals failed for status ${status}`, err);
+      }
+    }
+
+    return results.sort((a, b) => a.name.localeCompare(b.name));
+  }
+}
+
+export interface AllAnimalEntry {
+  id: number;
+  name: string;
+  species: string;
+  status: string;
+  location: string;
+  image?: string;
+  handlerLevel: string;
+  breed?: string;
+  generalAge?: string;
+  rescueId?: string;
 }

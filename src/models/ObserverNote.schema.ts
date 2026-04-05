@@ -4,12 +4,14 @@ export const ObserverNoteSchema = z.object({
   id: z.number().int(),
   status: z.string().optional(),
   timestamp: z.instanceof(Date),
+  title: z.string().optional(),
   content: z.string().min(1),
   author: z.string().min(1),
   petId: z.number().int(),
 });
 
 export const ObserverNoteCreateSchema = z.object({
+  title: z.string().optional(),
   content: z.string().min(1),
   author: z.string().min(1),
   petId: z.number().int(),

@@ -161,11 +161,12 @@ export async function uploadObserverNote(req: Request, res: Response) {
     return res.status(400).json({ error: z.treeifyError(parseResult.error) });
   }
 
-  const { content, author, petId } = parseResult.data;
+  const { title, content, author, petId } = parseResult.data;
   const newObserverNote: ObserverNote = {
     id: 0, // set later.
     timestamp: new Date(),
     status: "RAISED",
+    title,
     content,
     author,
     petId,
