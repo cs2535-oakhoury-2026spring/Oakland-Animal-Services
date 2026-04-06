@@ -779,7 +779,7 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
           </button>
           <UserDropdown user={user} onLogout={onLogout} c={c} compact={!isDesktop} />
         </div>
-        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: isDesktop ? 40 : 32, objectFit: "contain" }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: isDesktop ? 40 : 32, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
           {setDarkMode && (
             <button
@@ -1395,7 +1395,7 @@ function DesktopPortal({
           )}
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
-        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
           <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
@@ -1978,7 +1978,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
           )}
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
-        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
       </div>
 
       {/* Pet Card */}
@@ -2353,7 +2353,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
         <div style={{ flex: 1 }}>
           <UserDropdown user={user} onLogout={onLogout} c={c} />
         </div>
-        <img src="/oas-logo.jpg" alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
           {setDarkMode && (
             <button
