@@ -616,11 +616,24 @@ const HANDLER_LEVEL_COLORS = {
   pink: "#E91E63",
 };
 
+// ─── Levenshtein Distance ─────────────────────────────────────────────────────
+// Used by both HighlightedText (fuzzy highlighting) and fuzzyMatchText (local filter).
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : 0));
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return dp[m][n];
+}
+
 // ─── Highlighted Text Component ──────────────────────────────────────────────
-// Renders text with <b> tags from backend search as bold styled spans.
-// Also supports client-side highlighting by wrapping query matches.
+// Priority 1: backend <b> tags (exact positions from NLP fuzzy search)
+// Priority 2: client-side fuzzy word highlighting (tolerates typos via Levenshtein)
+// Priority 3: plain text
 function HighlightedText({ text, searchQuery, highlightColor = "#FFEB3B" }) {
-  // If text has <b> tags from backend search, render those
+  // Backend returned pre-highlighted content with <b> tags — render those
   if (text && text.includes("<b>")) {
     const parts = text.split(/(<b>.*?<\/b>)/g);
     return (
@@ -635,37 +648,37 @@ function HighlightedText({ text, searchQuery, highlightColor = "#FFEB3B" }) {
       </span>
     );
   }
-  // Client-side highlighting for local search (behavior notes)
+
+  // Client-side fuzzy highlighting: split text into word/non-word tokens,
+  // highlight any word that fuzzy-matches a query word (handles typos).
   if (searchQuery && searchQuery.trim() && text) {
-    const escaped = searchQuery.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const parts = text.split(new RegExp(`(${escaped})`, "gi"));
+    const queryWords = searchQuery.toLowerCase().split(/\W+/).filter(Boolean);
+    // Split text into alternating [word, non-word] segments preserving original case
+    const segments = text.split(/(\w+)/);
     return (
       <span>
-        {parts.map((part, i) =>
-          part.toLowerCase() === searchQuery.toLowerCase()
-            ? <mark key={i} style={{ backgroundColor: highlightColor, padding: "0 1px", borderRadius: 2 }}>{part}</mark>
-            : <span key={i}>{part}</span>
-        )}
+        {segments.map((seg, i) => {
+          if (!/\w+/.test(seg)) return <span key={i}>{seg}</span>;
+          const segLower = seg.toLowerCase();
+          const isMatch = queryWords.some((qw) => {
+            if (segLower.includes(qw) || qw.includes(segLower)) return true;
+            const maxDist = Math.max(1, Math.floor(Math.max(qw.length, segLower.length) * 0.25));
+            // Only fuzzy-match if lengths are close enough to be plausible typos
+            if (Math.abs(qw.length - segLower.length) > maxDist) return false;
+            return levenshtein(segLower, qw) <= maxDist;
+          });
+          return isMatch
+            ? <mark key={i} style={{ backgroundColor: highlightColor, padding: "0 1px", borderRadius: 2 }}>{seg}</mark>
+            : <span key={i}>{seg}</span>;
+        })}
       </span>
     );
   }
+
   return <span>{text}</span>;
 }
 
-// ─── Fuzzy Search Helpers ────────────────────────────────────────────────────
-// Used for the client-side fallback when backend search is unavailable.
-// Implements Levenshtein distance to tolerate typos (e.g. "Kimping" → "Limping").
-
-function levenshtein(a, b) {
-  const m = a.length, n = b.length;
-  const dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : 0));
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++)
-    for (let j = 1; j <= n; j++)
-      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-  return dp[m][n];
-}
-
+// ─── Fuzzy Match Helper ───────────────────────────────────────────────────────
 // Returns true if every query word either appears as a substring or is within
 // ~25% edit distance of any word in the text (tolerates 1 typo in short words).
 function fuzzyMatchText(text, query) {
