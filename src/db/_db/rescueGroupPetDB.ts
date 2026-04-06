@@ -72,6 +72,8 @@ const LOCATION_FIELDS = [
   "animalThumbnailUrl",
   "animalID",
   "animalPictures",
+  "animalStatus",
+  "animalSpecies",
 ];
 
 /**
@@ -165,6 +167,8 @@ function parsePetLocation(record: any): PetLocation | undefined {
     name: record.animalName,
     summary: record.animalSummary || "",
     image: record.animalThumbnailUrl || pictures?.[0] || undefined,
+    status: record.animalStatus || undefined,
+    species: record.animalSpecies || undefined,
   };
   return petLocation;
 }
@@ -262,42 +266,30 @@ export class RescueGroupPetRepository implements PetRepository {
     }
   }
 
-  /**
-   * Internal method for searching pets by species and location.
-   * 
-   * Performs a location-based search against the Rescue Groups API,
-   * filtering results to match the exact location string in pet summaries.
-   * 
-   * @private
-   * @param {string} species - The pet species to search for.
-   * @param {string} location - The location string to match in pet summaries.
-   * @returns {Promise<PetLocation[] | undefined>} Array of matching pet locations or undefined if none found.
-   */
   private async searchByLocationInternal(
     species: string,
     location: string,
+    status?: string,
   ): Promise<PetLocation[] | undefined> {
-    location = location.toLowerCase().replace(/-/g, " ");
+    const normalizedLocation = location.toLowerCase().replace(/-/g, " ");
+
+    const filters: any[] = [
+      { fieldName: "animalSpecies", operation: "equals", criteria: species },
+      { fieldName: "animalSummary", operation: "contains", criteria: normalizedLocation },
+    ];
+    if (status) {
+      filters.push({ fieldName: "animalStatus", operation: "equals", criteria: status });
+    }
+
     const payload = {
       objectType: "animals",
       objectAction: "search",
       search: {
         resultStart: 0,
-        resultLimit: 10,
+        resultLimit: 20,
         resultSort: "animalUpdatedDate",
         resultOrder: "desc",
-        filters: [
-          {
-            fieldName: "animalSpecies",
-            operation: "equals",
-            criteria: species,
-          },
-          {
-            fieldName: "animalSummary",
-            operation: "contains",
-            criteria: location,
-          },
-        ],
+        filters,
         fields: LOCATION_FIELDS,
       },
     };
@@ -310,18 +302,13 @@ export class RescueGroupPetRepository implements PetRepository {
       for (const key in pets) {
         const pet = pets[key];
         const summary: string = pet.animalSummary;
-        let locationInSummary =
-          parseLocationFromSummary(summary)?.toLowerCase() || "";
-        locationInSummary = locationInSummary.replace(
-          `${species.toLowerCase()} `,
-          "",
-        );
-        // console.log(
-        //   `Checking pet ${pet.animalID} with location "${locationInSummary}" against search location "${location}"`,
-        // );
-        if (locationInSummary === location) {
+        let locationInSummary = parseLocationFromSummary(summary)?.toLowerCase() || "";
+        locationInSummary = locationInSummary.replace(`${species.toLowerCase()} `, "");
+        if (locationInSummary === normalizedLocation) {
           const parsed = parsePetLocation(pet);
           if (parsed) {
+            // If API didn't return animalStatus, stamp the status we searched for
+            if (status && !parsed.status) parsed.status = status;
             parsedPets.push(parsed);
           }
         }
@@ -329,29 +316,30 @@ export class RescueGroupPetRepository implements PetRepository {
 
       return parsedPets.length > 0 ? parsedPets : undefined;
     } catch (err) {
-      console.error(
-        `RG repo searchByLocation failed (${species} @ ${location})`,
-        err,
-      );
+      console.error(`RG repo searchByLocation failed (${species} @ ${normalizedLocation} status=${status ?? "any"})`, err);
       return undefined;
     }
   }
 
-  /**
-   * Searches for pets by species and location.
-   * 
-   * Public method that delegates to the internal search implementation.
-   * Returns pets matching the specified species and location criteria.
-   * 
-   * @param {string} petType - The pet species to search for.
-   * @param {string} location - The location string to match.
-   * @returns {Promise<PetLocation[] | undefined>} Array of matching pet locations or undefined if none found.
-   */
+  // Run one search per status so each animal is definitively tagged current or past.
+  // RescueGroups does not reliably return animalStatus in generic search responses.
   async searchByLocation(
     petType: string,
     location: string,
   ): Promise<PetLocation[] | undefined> {
-    return this.searchByLocationInternal(petType, location);
+    const statuses = ["Available", "Foster", "Not Available", "Adopted", "Hold", "Stray Hold", "Deceased", "Transferred"];
+
+    const results = new Map<number, PetLocation>();
+
+    await Promise.all(
+      statuses.map((s) =>
+        this.searchByLocationInternal(petType, location, s).then((found) => {
+          if (found) found.forEach((p) => { if (!results.has(p.id)) results.set(p.id, p); });
+        })
+      )
+    );
+
+    return results.size > 0 ? Array.from(results.values()) : undefined;
   }
 
   async getAllAnimals(): Promise<AllAnimalEntry[]> {

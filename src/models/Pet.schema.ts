@@ -39,6 +39,8 @@ export const PetLocationSchema = z.object({
   name: z.string().min(1),
   image: z.string().optional(),
   summary: z.string().min(1),
+  status: z.string().optional(),
+  species: z.string().optional(),
 });
 
 export type Pet = z.infer<typeof PetSchema>;
