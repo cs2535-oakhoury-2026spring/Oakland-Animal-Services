@@ -56,8 +56,10 @@ const NORMALIZATION_EXCLUSIONS = new Set([
 
 export type NoteData = {
   tokens: Array<{ text: string; lower: string }>;
+  titleTokens: Array<{ text: string; lower: string }>;
   normalizations: Map<string, string>;
   lowerContent: string;
+  lowerTitle: string;
 };
 
 /**
@@ -299,10 +301,19 @@ export function findSimilarNotes(
       }
     });
 
+    // Also tokenize the title for title-specific fuzzy matching
+    const titleText = (note.title || "").trim();
+    const titleTokens: Array<{ text: string; lower: string }> = [];
+    (titleText.match(/\w+/g) || []).forEach((word) => {
+      titleTokens.push({ text: word, lower: word.toLowerCase() });
+    });
+
     noteDataMap.set(noteKey, {
       tokens,
+      titleTokens,
       normalizations,
       lowerContent: note.content.toLowerCase(),
+      lowerTitle: titleText.toLowerCase(),
     });
   });
 
@@ -326,6 +337,7 @@ export function findSimilarNotes(
         }
       >;
       matchedIndices: Set<number>;
+      matchedTitleIndices: Set<number>;
     }
   >();
   const startFindTime = performance.now();
@@ -342,7 +354,15 @@ export function findSimilarNotes(
         noteData.lowerContent,
       );
 
-      if (positions.length === 0) return;
+      // Also search the title with the same fuzzy logic
+      const titlePositions = findMatchIndices(
+        noteData.titleTokens,
+        keyword,
+        noteData.normalizations,
+        noteData.lowerTitle,
+      );
+
+      if (positions.length === 0 && titlePositions.length === 0) return;
 
       if (!noteMatches.has(noteKey)) {
         noteMatches.set(noteKey, {
@@ -350,6 +370,7 @@ export function findSimilarNotes(
           matchCount: 0,
           matchedKeywords: new Map(),
           matchedIndices: new Set(),
+          matchedTitleIndices: new Set(),
         });
       }
 
@@ -365,6 +386,12 @@ export function findSimilarNotes(
         positions.forEach((pos) => {
           for (let i = pos.start; i < pos.end; i++) {
             noteMatch.matchedIndices.add(i);
+          }
+        });
+
+        titlePositions.forEach((pos) => {
+          for (let i = pos.start; i < pos.end; i++) {
+            noteMatch.matchedTitleIndices.add(i);
           }
         });
       }
@@ -396,6 +423,10 @@ export function findSimilarNotes(
         match.note.content,
         match.matchedIndices,
       );
+      const highlightedTitle = highlightMatches(
+        match.note.title || "",
+        match.matchedTitleIndices,
+      );
       return {
         observerNote: match.note,
         matchCount: uniqueKeywords.length,
@@ -403,7 +434,8 @@ export function findSimilarNotes(
           keyword: kw.keyword,
           positions: kw.positions,
         })),
-        highlightedContent: highlightedContent,
+        highlightedContent,
+        highlightedTitle,
       };
     })
     .sort((a, b) => {

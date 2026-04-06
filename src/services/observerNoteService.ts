@@ -22,6 +22,7 @@ export type SimilarNoteResult = {
     positions: Array<{ start: number; end: number }>;
   }>;
   highlightedContent: string;
+  highlightedTitle: string;
 };
 
 export async function getAllObserverNotes(

@@ -652,6 +652,34 @@ function HighlightedText({ text, searchQuery, highlightColor = "#FFEB3B" }) {
   return <span>{text}</span>;
 }
 
+// ─── Fuzzy Search Helpers ────────────────────────────────────────────────────
+// Used for the client-side fallback when backend search is unavailable.
+// Implements Levenshtein distance to tolerate typos (e.g. "Kimping" → "Limping").
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, (_, i) => Array.from({ length: n + 1 }, (_, j) => j === 0 ? i : 0));
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+  return dp[m][n];
+}
+
+// Returns true if every query word either appears as a substring or is within
+// ~25% edit distance of any word in the text (tolerates 1 typo in short words).
+function fuzzyMatchText(text, query) {
+  if (!text || !query) return false;
+  const textLower = text.toLowerCase();
+  const textWords = textLower.split(/\W+/).filter(Boolean);
+  const queryWords = query.toLowerCase().split(/\W+/).filter(Boolean);
+  return queryWords.every((qw) => {
+    if (textLower.includes(qw)) return true;
+    const maxDist = Math.max(1, Math.floor(qw.length * 0.25));
+    return textWords.some((tw) => levenshtein(tw, qw) <= maxDist);
+  });
+}
+
 // ─── Error Screen ────────────────────────────────────────────────────────────
 // Shown when a kennel location URL is invalid or returns no animals
 function ErrorScreen({ error, onLogout, c }) {
@@ -1067,7 +1095,7 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
         <div style={{ flex: 1 }}>
           <h4 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: "0 0 6px 0", lineHeight: 1.3 }}>
-            {note.case}
+            <HighlightedText text={note.highlightedCase || note.case} searchQuery={searchQuery} />
           </h4>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, color: c.warmGray, fontWeight: 500 }}>
@@ -1811,6 +1839,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               case: existing?.case || backendNote.case,
               status: existing?.status || backendNote.status,
               highlightedBody: r.highlightedContent || "",
+              highlightedCase: r.highlightedTitle || "",
               matchCount: r.matchCount || 0,
             };
           });
@@ -1843,13 +1872,14 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     }
   };
 
-  // Use backend search results when available, otherwise local filter as fallback
+  // Use backend search results when available, otherwise fuzzy local filter as fallback
   const filteredNotes = searchResults !== null
     ? searchResults
     : notes.filter((n) => {
         if (!searchQuery.trim()) return true;
-        const q = searchQuery.toLowerCase();
-        return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
+        return fuzzyMatchText(n.body || "", searchQuery) ||
+               fuzzyMatchText(n.case || "", searchQuery) ||
+               fuzzyMatchText(n.by || "", searchQuery);
       });
   
   // Client-side filtering + highlighting for behavior notes
