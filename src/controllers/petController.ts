@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { getPetById, searchByLocation, getAllAnimals } from "../db/pets.js";
 import { PetLocation } from "../models/Pet.schema.js";
+import config from "../config/index.js";
 
-const PET_LOCATION_CACHE_TTL = 10 * 60 * 1000;
+const PET_LOCATION_CACHE_TTL = config.PET_LOCATION_CACHE_TTL;
 const petLocationCache: Map<string, PetLocation[]> = new Map();
 
 /**
