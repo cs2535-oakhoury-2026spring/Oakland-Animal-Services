@@ -61,6 +61,8 @@
   - `petType` (`dog` or `cat`, required)
   - `location` (string, required)
     - Spaces in location name should use `-` to seperate ex: `holding-a:2`
+- Query params:
+  - `refresh` (boolean, optional) - If true, bypass cache and fetch fresh data
 - Success: `200` with `{ success: true, pets: LocationPet[] }`
 - Error: `400` for invalid petType/location or missing params, `404` if not found
 
