@@ -205,6 +205,13 @@ const Icons = {
       <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
   ),
+  refresh: ({ size = 20, color = "#1a1a1a", spinning = false }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+      style={spinning ? { animation: "spin 0.8s linear infinite" } : {}}>
+      <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </svg>
+  ),
 };
 
 // ─── Placeholder Image ───────────────────────────────────────────────────────
@@ -379,11 +386,11 @@ const api = {
   },
 
   // REAL — connected to GET /api/location/:petType/:location (QR code driven)
-  getPetsByLocation: async (petType, location) => {
+  getPetsByLocation: async (petType, location, refresh = false) => {
     if (!petType || !location) {
       throw new Error("Invalid location parameters");
     }
-    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}`);
+    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`);
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || "Location not found");
@@ -749,7 +756,7 @@ const isCurrentAnimal = (pet) => {
 };
 
 // If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
-function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c }) {
+function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c, onRefresh, refreshing = false }) {
   const r = useResponsive();
   const isDesktop = r.width >= 768;
   const location = animals[0]?.location || "";
@@ -761,6 +768,7 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
   const displayed = tab === "current" ? currentAnimals : pastAnimals;
 
   const imgSize = isDesktop ? 72 : 64;
+  const [showRefreshTip, setShowRefreshTip] = useState(false);
 
   return (
     <main id="main-content" style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg }}>
@@ -802,10 +810,54 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
         {/* Heading */}
         <div style={{ marginBottom: isDesktop ? 20 : 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: c.warmGray, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Location</div>
-          <h2 style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>
-            Select an Animal: <span style={{ color: c.headerGreen }}>{location}</span>
-          </h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <h2 style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>
+              Select an Animal: <span style={{ color: c.headerGreen }}>{location}</span>
+            </h2>
+            {onRefresh && (
+              <div style={{ position: "relative", flexShrink: 0 }}>
+                <button
+                  onClick={onRefresh}
+                  disabled={refreshing}
+                  style={{
+                    background: "none", border: `1px solid ${c.cardBorder}`,
+                    cursor: refreshing ? "default" : "pointer", padding: isDesktop ? "8px 14px" : "7px 10px",
+                    borderRadius: 8, display: "flex", alignItems: "center", gap: 6,
+                    minHeight: 40, minWidth: 40, transition: "all 0.15s",
+                    color: c.textSecondary, fontSize: 13, fontFamily: font, fontWeight: 500,
+                    opacity: refreshing ? 0.6 : 1,
+                  }}
+                  onMouseEnter={(e) => { setShowRefreshTip(true); if (!refreshing) e.currentTarget.style.backgroundColor = c.inputBg; }}
+                  onMouseLeave={(e) => { setShowRefreshTip(false); e.currentTarget.style.backgroundColor = "transparent"; }}
+                  onFocus={() => setShowRefreshTip(true)}
+                  onBlur={() => setShowRefreshTip(false)}
+                  aria-label="Refresh animal list"
+                >
+                  <Icons.refresh size={isDesktop ? 16 : 15} color={c.textSecondary} spinning={refreshing} />
+                  {isDesktop && <span>{refreshing ? "Refreshing…" : "Refresh"}</span>}
+                </button>
+                {showRefreshTip && (
+                  <div role="tooltip" style={{
+                    position: "absolute", top: "calc(100% + 8px)", right: 0,
+                    backgroundColor: c.textPrimary, color: c.bg,
+                    fontSize: 12, fontWeight: 500, lineHeight: 1.4,
+                    padding: "6px 10px", borderRadius: 6, whiteSpace: "nowrap",
+                    pointerEvents: "none", zIndex: 100,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                  }}>
+                    {refreshing ? "Refreshing…" : "Click to refresh to get the most up-to-date list of animals at this location."}
+                    <div style={{
+                      position: "absolute", bottom: "100%", right: 12,
+                      borderWidth: "0 5px 5px", borderStyle: "solid",
+                      borderColor: `transparent transparent ${c.textPrimary} transparent`,
+                    }} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
 
         {/* Current / Past tabs — same style as Medical/Behavior tabs */}
         <nav style={{ display: "flex", marginBottom: isDesktop ? 24 : 16, backgroundColor: c.cardBg, borderRadius: 12, padding: 3, border: `1px solid ${c.cardBorder}` }}>
@@ -2527,6 +2579,7 @@ export default function App() {
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [locationError, setLocationError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
 
@@ -2560,6 +2613,15 @@ export default function App() {
 
   const handleLogout = () => { setSelectedPetId(null); setAnimals([]); setLocationError(null); };
 
+  const handleRefresh = () => {
+    if (!petType || !kennelLocation || refreshing) return;
+    setRefreshing(true);
+    api.getPetsByLocation(petType, kennelLocation, true)
+      .then((pets) => { setAnimals(pets); })
+      .catch((err) => { setLocationError(err.message); })
+      .finally(() => { setRefreshing(false); });
+  };
+
   // No URL params → show home screen with all animals
   if (!hasUrlParams && !selectedPetId) {
     return <HomeScreen user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} c={c} />;
@@ -2570,7 +2632,7 @@ export default function App() {
   }
 
   if (!selectedPetId && animals.length > 1) {
-    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={setDarkMode} c={c} />;
+    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={setDarkMode} c={c} onRefresh={handleRefresh} refreshing={refreshing} />;
   }
 
   if (selectedPetId) {
