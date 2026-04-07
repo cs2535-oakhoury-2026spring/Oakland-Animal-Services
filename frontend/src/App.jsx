@@ -354,11 +354,11 @@ const api = {
           petId: String(p.id),
           name: p.name,
           species: p.species || "Unknown",
-          location: parseLocationFromSummary(p.summary) || "",
+          location: parseLocationFromSummary(p.locationSummary) || "",
           imageUrl: p.image || (p.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
-          summary: p.summary || "",
-          arn: p.rescueId || "N/A",
-          handlerLevel: (p.otherNames || "green").toLowerCase(),
+          summary: p.locationSummary || "",
+          arn: p.arn || "N/A",
+          handlerLevel: (p.handlerLevel || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
           age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
@@ -393,7 +393,7 @@ const api = {
         species: pet.species || (petType === "cat" ? "Cat" : "Dog"),
         location: location,
         imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
-        summary: pet.summary || "",
+        summary: pet.locationSummary || "",
         status: pet.status || "Unknown",
       }));
     }
@@ -2322,7 +2322,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
         const q = searchQuery.toLowerCase();
         return (
           a.name.toLowerCase().includes(q) ||
-          (a.rescueId && a.rescueId.toLowerCase().includes(q)) ||
+          (a.arn && a.arn.toLowerCase().includes(q)) ||
           String(a.id).includes(q) ||
           a.location.toLowerCase().includes(q) ||
           (a.breed && a.breed.toLowerCase().includes(q))

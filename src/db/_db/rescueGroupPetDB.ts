@@ -165,7 +165,7 @@ function parsePetLocation(record: any): PetLocation | undefined {
   const petLocation: PetLocation = {
     id: parseInt(record.animalID, 10),
     name: record.animalName,
-    summary: record.animalSummary || "",
+    locationSummary: record.animalSummary || "",
     image: record.animalThumbnailUrl || pictures?.[0] || undefined,
     status: record.animalStatus || undefined,
     species: record.animalSpecies || undefined,
@@ -192,17 +192,17 @@ function parsePet(record: any): Pet | undefined {
     species: record.animalSpecies,
     sex: record.animalSex,
     description: record.animalDescription || undefined,
-    summary: record.animalSummary || record.animalDescription || "",
+    locationSummary: record.animalSummary || record.animalDescription || "",
     breed: record.animalPrimaryBreed || record.animalBreed || undefined,
     status: record.animalStatus,
-    rescueId: record.animalRescueID,
+    arn: record.animalRescueID,
     availableDate: record.animalAvailableDate,
-    otherNames: record.animalOthernames,
-    distinguishingMarks: record.animalDistinguishingMarks,
+    handlerLevel: record.animalOthernames,
+    dogDogCategory: record.animalDistinguishingMarks,
     generalAge: record.animalGeneralAge,
     generalSize: record.animalGeneralSizePotential,
     colorDetails: record.animalColorDetails,
-    specialNeeds: record.animalSpecialneedsDescription,
+    handlingDescription: record.animalSpecialneedsDescription,
     birthdate: record.animalBirthdate,
     altered: record.animalAltered || undefined,
     okWithCats: record.animalOKWithCats || undefined,
@@ -394,7 +394,7 @@ export class RescueGroupPetRepository implements PetRepository {
             handlerLevel: (record.animalOthernames || "green").toLowerCase(),
             breed: record.animalPrimaryBreed || undefined,
             generalAge: record.animalGeneralAge || undefined,
-            rescueId: record.animalRescueID || undefined,
+            arn: record.animalRescueID || undefined,
           });
         }
       } catch (err) {
@@ -416,5 +416,5 @@ export interface AllAnimalEntry {
   handlerLevel: string;
   breed?: string;
   generalAge?: string;
-  rescueId?: string;
+  arn?: string;
 }

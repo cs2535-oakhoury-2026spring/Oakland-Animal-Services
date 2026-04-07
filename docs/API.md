@@ -11,24 +11,24 @@
 - `sex: string`
 - `species: string`
 - `image: string | null`
-- `description: string | null` -> EMBED HTML
-- `summary: string` -> LOCATION
+- `description: string | null`
+- `locationSummary: string`
 - `breed: string | null`
 - `status: string | null`
-- `rescueId: string | null` -> ARN
+- `arn: string | null`
 - `availableDate: string | null`
-- `otherNames: string | null` -> HANDLING COLOR
-- `distinguishingMarks: string | null`
+- `handlerLevel: string | null`
+- `dogDogCategory: string | null`
 - `generalAge: string | null`
 - `generalSize: string | null`
 - `colorDetails: string | null`
-- `specialNeeds: string | null` -> ANOTHER DESCRIPTION
+- `handlingDescription: string | null`
 
 --------------------------
 ### LocationPet
 - `id: number`
 - `name: string`
-- `summary: string`
+- `locationSummary: string`
 - `image?: string | null`
 
 --------------------------
@@ -72,7 +72,7 @@ Example:
     {
       "id": 22254131,
       "name": "Nala",
-      "summary": "I am at Oakland Animal Services in kennel E:1",
+      "locationSummary": "I am at Oakland Animal Services in kennel E:1",
       "image": "https://example.com/pet.jpg"
     }
   ]

@@ -14,7 +14,7 @@ function mapper(pet: any): PetLocation {
 
     image: pet.image,
 
-    summary: pet.summary,
+    locationSummary: pet.locationSummary,
 
   };
 
@@ -54,19 +54,17 @@ export class MockPetRepository implements PetRepository {
 
       description: `<div class="rgDescription">Marley is a young white male, about 2 years old. Found wandering the streets near the Inner Harbor. EXTREMELY friendly.  FELV/FIV negative, shots, neutered.  Marley is currently in the adoption cage at Bethany Centennial Animal Hospital.  Call for hours and directions (and to make sure he's still there before you visit).  410-750-2322.</div>`,
 
-      summary: `I am at Oakland Animal Services in kennel Cat W:5`,
+      locationSummary: `I am at Oakland Animal Services in kennel Cat W:5`,
 
       breed: "Domestic Short Hair",
 
       status: "Adopted",
 
-      rescueId: "736727",
+      arn: "736727",
 
       availableDate: "",
 
-      otherNames: undefined,
-
-      distinguishingMarks: "White fur, green eyes",
+      dogDogCategory: "White fur, green eyes",
 
       microchip: "123456789101213",
 
@@ -78,7 +76,7 @@ export class MockPetRepository implements PetRepository {
 
       colorDetails: "White",
 
-      specialNeeds: "",
+      handlingDescription: "",
 
     } as any);
 
@@ -104,19 +102,17 @@ export class MockPetRepository implements PetRepository {
 
       description: `<div class="rgDescription">Nala is a beautiful tabby cat looking for a loving home. She's independent but enjoys attention on her own terms.</div>`,
 
-      summary: "I am at Oakland Animal Services in kennel Cat W:5",
+      locationSummary: "I am at Oakland Animal Services in kennel Cat W:5",
 
       breed: "Domestic Short Hair",
 
       status: "Available",
 
-      rescueId: "736729",
+      arn: "736729",
 
       availableDate: "2024-05-20",
 
-      otherNames: undefined,
-
-      distinguishingMarks: "Tabby stripes, white paws",
+      dogDogCategory: "Tabby stripes, white paws",
 
       microchip: "111222333444555",
 
@@ -128,7 +124,7 @@ export class MockPetRepository implements PetRepository {
 
       colorDetails: "Brown Tabby",
 
-      specialNeeds: "",
+      handlingDescription: "",
 
     } as any);
 
@@ -154,19 +150,17 @@ export class MockPetRepository implements PetRepository {
 
       description: `<div class="rgDescription">Buddy is a friendly Labrador mix who loves to play fetch. Great with kids and other dogs.</div>`,
 
-      summary: "I am at Oakland Animal Services in kennel E:1",
+      locationSummary: "I am at Oakland Animal Services in kennel E:1",
 
       breed: "Labrador Mix",
 
       status: "Available",
 
-      rescueId: "736730",
+      arn: "736730",
 
       availableDate: "2024-06-01",
 
-      otherNames: undefined,
-
-      distinguishingMarks: "Black spot on left ear",
+      dogDogCategory: "Black spot on left ear",
 
       microchip: "222333444555666",
 
@@ -178,7 +172,7 @@ export class MockPetRepository implements PetRepository {
 
       colorDetails: "Golden",
 
-      specialNeeds: "",
+      handlingDescription: "",
 
     } as any);
 
