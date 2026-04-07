@@ -19,6 +19,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { findSimilarNotes } from "./utils/noteSearcher.js";
+
+const noteDataCache = new Map();
 
 // ─── Focus Trap Hook for Modals (WCAG 2.1 AA) ─────────────────────────────────
 function useFocusTrap(isOpen) {
@@ -1193,7 +1196,7 @@ function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
         <div style={{ flex: 1 }}>
           <h4 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: "0 0 6px 0", lineHeight: 1.3 }}>
-            {note.case}
+            <HighlightedText text={note.highlightedCase || note.case} searchQuery={searchQuery} />
           </h4>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, color: c.warmGray, fontWeight: 500 }}>
@@ -1209,7 +1212,7 @@ function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery 
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
-          <HighlightedText text={note.body} searchQuery={searchQuery} />
+          <HighlightedText text={note.highlightedBody || note.body} searchQuery={searchQuery} />
         </p>
         {canEdit && (
           <button 
@@ -1355,7 +1358,7 @@ function DesktopPortal({
   filteredNotes, filteredBehaviorNotes,
   activeTab, setActiveTab,
   searchQuery, handleMedicalSearch,
-  behaviorSearchQuery, setBehaviorSearchQuery,
+  behaviorSearchQuery, handleBehaviorSearch,
   isSearching,
   aiQuery, setAiQuery, aiResponse, handleAiQuery,
   medicalNotesVisible, setMedicalNotesVisible,
@@ -1651,7 +1654,7 @@ function DesktopPortal({
                     }}
                     placeholder="Search behavior notes..."
                     value={behaviorSearchQuery}
-                    onChange={(e) => setBehaviorSearchQuery(e.target.value)}
+                    onChange={(e) => handleBehaviorSearch(e.target.value)}
                     aria-label="Search behavior notes"
                     onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
                     onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
@@ -1793,7 +1796,8 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [showQR, setShowQR] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [behaviorSearchQuery, setBehaviorSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState(null); // Backend search results with highlighting
+  const [searchResults, setSearchResults] = useState(null);
+  const [behaviorSearchResults, setBehaviorSearchResults] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
@@ -1822,7 +1826,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     })();
   }, [petId]);
 
-  // Backend-powered search for medical notes with keyword highlighting
+  // Client-side search for medical notes with keyword highlighting
   const handleMedicalSearch = useCallback((query) => {
     setSearchQuery(query);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
@@ -1832,41 +1836,62 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       return;
     }
     setIsSearching(true);
-    searchTimerRef.current = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/search", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, petId: parseInt(petId, 10) || 0, maxResults: 50 }),
-        });
-        if (!res.ok) throw new Error("Search failed");
-        const data = await res.json();
-        if (data.success && Array.isArray(data.results)) {
-          // Map backend results, cross-referencing existing notes to preserve case titles
-          const mapped = data.results.map((r) => {
-            const backendNote = transformObserverNote(r.observerNote, 0);
-            // Find the original note in state to keep frontend-only fields (case, status)
-            const existing = notes.find((n) => n.id === backendNote.id);
-            return {
-              ...backendNote,
-              case: existing?.case || backendNote.case,
-              status: existing?.status || backendNote.status,
-              highlightedBody: r.highlightedContent || "",
-              highlightedCase: r.highlightedTitle || "",
-              matchCount: r.matchCount || 0,
-            };
-          });
-          // If backend NLP returned no results, fall back to local substring filter
-          // so partial queries like "energ" still match "energetic"
-          setSearchResults(mapped.length > 0 ? mapped : null);
-        }
-      } catch (err) {
-        console.warn("Backend search failed, falling back to local filter", err);
-        setSearchResults(null);
-      }
+    searchTimerRef.current = setTimeout(() => {
+      const mapped = notes.map((n) => ({
+        id: n.id,
+        petId: n.petId,
+        title: n.case,
+        content: n.body,
+        author: n.by,
+        timestamp: new Date(n.createdAt),
+        status: n.status,
+        type: n.type,
+      }));
+      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
+      const enriched = results.map((r) => {
+        const existing = notes.find((n) => n.id === r.observerNote.id);
+        return {
+          ...existing,
+          highlightedBody: r.highlightedContent || "",
+          highlightedCase: r.highlightedTitle || "",
+          matchCount: r.matchCount || 0,
+        };
+      });
+      setSearchResults(enriched.length > 0 ? enriched : null);
       setIsSearching(false);
     }, 300);
-  }, [petId, notes]);
+  }, [notes]);
+
+  const behaviorSearchTimerRef = useRef(null);
+  const handleBehaviorSearch = useCallback((query) => {
+    setBehaviorSearchQuery(query);
+    if (behaviorSearchTimerRef.current) clearTimeout(behaviorSearchTimerRef.current);
+    if (!query.trim()) {
+      setBehaviorSearchResults(null);
+      return;
+    }
+    behaviorSearchTimerRef.current = setTimeout(() => {
+      const mapped = behaviorNotes.map((n) => ({
+        id: n.id,
+        petId: n.petId,
+        title: n.case,
+        content: n.body,
+        author: n.by,
+        timestamp: new Date(n.createdAt),
+      }));
+      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
+      const enriched = results.map((r) => {
+        const existing = behaviorNotes.find((n) => n.id === r.observerNote.id);
+        return {
+          ...existing,
+          highlightedBody: r.highlightedContent || "",
+          highlightedCase: r.highlightedTitle || "",
+          matchCount: r.matchCount || 0,
+        };
+      });
+      setBehaviorSearchResults(enriched.length > 0 ? enriched : null);
+    }, 300);
+  }, [behaviorNotes]);
 
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
   const handleNoteEdited = (n) => setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
@@ -1895,12 +1920,9 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                fuzzyMatchText(n.by || "", searchQuery);
       });
   
-  // Client-side filtering + highlighting for behavior notes
-  const filteredBehaviorNotes = behaviorNotes.filter((n) => {
-    if (!behaviorSearchQuery.trim()) return true;
-    const q = behaviorSearchQuery.toLowerCase();
-    return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
-  });
+  const filteredBehaviorNotes = behaviorSearchResults !== null
+    ? behaviorSearchResults
+    : behaviorNotes;
 
   if (loading || !pet) {
     return (
@@ -1947,7 +1969,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
       activeTab={activeTab} setActiveTab={setActiveTab}
       searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
-      behaviorSearchQuery={behaviorSearchQuery} setBehaviorSearchQuery={setBehaviorSearchQuery}
+      behaviorSearchQuery={behaviorSearchQuery} handleBehaviorSearch={handleBehaviorSearch}
       isSearching={isSearching}
       aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
       medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
@@ -2145,7 +2167,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                 setActiveTab(tab.key); 
                 setSearchQuery("");
                 setSearchResults(null);
-                setBehaviorSearchQuery("");
+                handleBehaviorSearch("");
                 setMedicalNotesVisible(NOTES_PER_PAGE);
                 setBehaviorNotesVisible(NOTES_PER_PAGE);
               }}>
@@ -2226,7 +2248,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <div style={{ flex: 1, position: "relative" }}>
                 <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icons.search size={16} color={c.warmGray} /></div>
                 <input style={{ width: "100%", padding: "10px 14px 10px 34px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font, boxSizing: "border-box" }}
-                  placeholder="Search behavior notes..." value={behaviorSearchQuery} onChange={(e) => setBehaviorSearchQuery(e.target.value)} aria-label="Search behavior notes" />
+                  placeholder="Search behavior notes..." value={behaviorSearchQuery} onChange={(e) => handleBehaviorSearch(e.target.value)} aria-label="Search behavior notes" />
               </div>
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateBehaviorModal(true)} aria-label="New behavior note"><Icons.plus size={18} /></button>

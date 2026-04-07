@@ -64,5 +64,6 @@ package-lock.json
 .eslintcache
 *v8.log
 dist/
+frontend/build/
 .env
 .env.*

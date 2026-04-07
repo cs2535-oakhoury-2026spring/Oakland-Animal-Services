@@ -1,9 +1,4 @@
 import { levenshtein as levenshteinDistance } from "./levenshtein.js";
-import {
-  type ObserverNote,
-  type SimilarNoteResult,
-} from "../services/observerNoteService.js";
-
 // Common words to exclude from keyword extraction
 const TOKENS_TO_EXCLUDE = new Set([
   // articles / determiners
@@ -123,8 +118,7 @@ const TOKENS_TO_EXCLUDE = new Set([
   "might",
   "must",
 ]);
-
-function toSingular(word: string): string {
+function toSingular(word) {
   if (word.endsWith("ies") && word.length > 4) return word.slice(0, -3) + "y";
   if (word.endsWith("ves") && word.length > 4) return word.slice(0, -3) + "f";
   if (
@@ -139,7 +133,6 @@ function toSingular(word: string): string {
   if (word.endsWith("s") && word.length > 3) return word.slice(0, -1);
   return word;
 }
-
 // Words to exclude from normalization to avoid incorrect matches (e.g. "left" vs "leave")
 const NORMALIZATION_EXCLUSIONS = new Set([
   "left",
@@ -149,49 +142,31 @@ const NORMALIZATION_EXCLUSIONS = new Set([
   "hind",
   "fore",
 ]);
-
-export type NoteData = {
-  tokens: Array<{ text: string; lower: string }>;
-  titleTokens: Array<{ text: string; lower: string }>;
-  normalizations: Map<string, string>;
-  lowerContent: string;
-  lowerTitle: string;
-};
-
 /**
  *  Extracts keywords from the given text.
  * @param text The input text to extract keywords from.
  * @param nameToExclude An optional name to exclude from the keywords (e.g. animal name).
  * @returns An array of extracted keywords.
  */
-export function extractKeywords(
-  text: string,
-  nameToExclude?: string,
-): string[] {
-  const seen = new Set<string>();
-  const keywords: string[] = [];
+export function extractKeywords(text, nameToExclude) {
+  const seen = new Set();
+  const keywords = [];
   nameToExclude = nameToExclude ? nameToExclude.toLowerCase() : undefined;
-
-  function addKeyword(token: string) {
+  function addKeyword(token) {
     if (token.length >= 2 && !seen.has(token)) {
       seen.add(token);
       keywords.push(token);
     }
   }
-
   const words = text.match(/\w+/g) || [];
   words.forEach((word) => {
     const lower = word.toLowerCase();
-
     if (nameToExclude && lower === nameToExclude) return;
     if (TOKENS_TO_EXCLUDE.has(lower)) return;
-
     addKeyword(lower);
-
     // singular form
     const singular = toSingular(lower);
     if (singular !== lower) addKeyword(singular);
-
     // stem -ing / -ed
     if (lower.endsWith("ing") && lower.length > 4) {
       addKeyword(lower.slice(0, -3));
@@ -199,10 +174,8 @@ export function extractKeywords(
       addKeyword(lower.slice(0, -2));
     }
   });
-
   return keywords;
 }
-
 /**
  *  Finds matching indices in the note content for a given keyword, allowing for fuzzy matches based on Levenshtein distance.
  * @param tokens The preprocessed tokens of the note content.
@@ -211,21 +184,14 @@ export function extractKeywords(
  * @param lowerText The lowercase version of the note content.
  * @returns An array of matching indices.
  */
-function findMatchIndices(
-  tokens: Array<{ text: string; lower: string }>,
-  keyword: string,
-  normalizations: Map<string, string>,
-  lowerText: string,
-): Array<{ start: number; end: number }> {
-  const indices: Array<{ start: number; end: number }> = [];
+function findMatchIndices(tokens, keyword, normalizations, lowerText) {
+  const indices = [];
   const lowerKeyword = keyword.toLowerCase();
   const maxDistance = Math.max(1, Math.ceil(keyword.length * 0.2));
   let searchPos = 0;
-
   tokens.forEach((token) => {
     const normalizedToken = normalizations.get(token.lower) || token.lower;
     const distance = levenshteinDistance(normalizedToken, lowerKeyword);
-
     if (distance <= maxDistance) {
       const tokenStart = lowerText.indexOf(token.lower, searchPos);
       if (tokenStart !== -1) {
@@ -242,25 +208,18 @@ function findMatchIndices(
       }
     }
   });
-
   return indices;
 }
-
 /**
  *  Highlights matched keywords in the note content by wrapping them in <b> tags.
  * @param content   The original note content.
  * @param matchedIndices  A set of character indices that are part of matched keywords.
  * @returns The note content with matched keywords highlighted.
  */
-function highlightMatches(
-  content: string,
-  matchedIndices: Set<number>,
-): string {
+function highlightMatches(content, matchedIndices) {
   if (matchedIndices.size === 0) return content;
-
-  const ranges: Array<{ start: number; end: number }> = [];
+  const ranges = [];
   let rangeStart = -1;
-
   for (let i = 0; i < content.length; i++) {
     if (matchedIndices.has(i)) {
       if (rangeStart === -1) rangeStart = i;
@@ -271,24 +230,19 @@ function highlightMatches(
       }
     }
   }
-
   if (rangeStart !== -1) {
     ranges.push({ start: rangeStart, end: content.length });
   }
-
   let result = "";
   let lastEnd = 0;
-
   for (const range of ranges) {
     result += content.slice(lastEnd, range.start);
     result += "<b>" + content.slice(range.start, range.end) + "</b>";
     lastEnd = range.end;
   }
   result += content.slice(lastEnd);
-
   return result;
 }
-
 /**
  *  Finds notes similar to the search note based on extracted keywords and fuzzy matching.
  * @param searchNote The note content to search for similar notes.
@@ -296,15 +250,7 @@ function highlightMatches(
  * @param options Additional options for the search such as caching and result limits.
  * @returns A list of similar notes.
  */
-export function findSimilarNotes(
-  searchNote: string,
-  allNotes: ObserverNote[],
-  options: {
-    nameToExclude?: string;
-    maxResults?: number;
-    noteDataCache?: Map<string, NoteData>;
-  } = {},
-): SimilarNoteResult[] {
+export function findSimilarNotes(searchNote, allNotes, options = {}) {
   const startOverallTime = performance.now();
   const { nameToExclude, maxResults, noteDataCache } = options;
   console.log(
@@ -322,24 +268,19 @@ export function findSimilarNotes(
     `[NoteSearch] keywords (${keywords.length}) in ${(endExtractTime - startExtractTime).toFixed(2)} ms: [${keywords.join(", ")}]`,
   );
   if (keywords.length === 0) return [];
-
-  const noteDataMap = noteDataCache || new Map<string, NoteData>();
+  const noteDataMap = noteDataCache || new Map();
   const sizeBeforePreprocess = noteDataMap.size;
   const startTime = performance.now();
-
   // Preprocess all notes to extract tokens and normalizations, using cache if available
   allNotes.forEach((note) => {
     const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
     if (noteDataMap.has(noteKey)) return;
-
-    const normalizations = new Map<string, string>();
-    const tokens: Array<{ text: string; lower: string }> = [];
-
+    const normalizations = new Map();
+    const tokens = [];
     const words = note.content.match(/\w+/g) || [];
     words.forEach((word) => {
       const lower = word.toLowerCase();
       tokens.push({ text: word, lower });
-
       if (!normalizations.has(lower) && !NORMALIZATION_EXCLUSIONS.has(lower)) {
         const singular = toSingular(lower);
         if (singular !== lower) {
@@ -351,10 +292,9 @@ export function findSimilarNotes(
         }
       }
     });
-
     // Also tokenize the title and add its normalizations to the same map
     const titleText = (note.title || "").trim();
-    const titleTokens: Array<{ text: string; lower: string }> = [];
+    const titleTokens = [];
     (titleText.match(/\w+/g) || []).forEach((word) => {
       const lower = word.toLowerCase();
       titleTokens.push({ text: word, lower });
@@ -369,7 +309,6 @@ export function findSimilarNotes(
         }
       }
     });
-
     noteDataMap.set(noteKey, {
       tokens,
       titleTokens,
@@ -378,36 +317,18 @@ export function findSimilarNotes(
       lowerTitle: titleText.toLowerCase(),
     });
   });
-
   const endTime = performance.now();
   const freshCount = noteDataMap.size - sizeBeforePreprocess;
   console.log(
     `[NoteSearch] preprocess: ${(endTime - startTime).toFixed(2)} ms` +
-    ` — ${allNotes.length - freshCount} from cache, ${freshCount} freshly built`,
+      ` — ${allNotes.length - freshCount} from cache, ${freshCount} freshly built`,
   );
-
-  const noteMatches = new Map<
-    string,
-    {
-      note: ObserverNote;
-      matchCount: number;
-      matchedKeywords: Map<
-        string,
-        {
-          keyword: string;
-          positions: Array<{ start: number; end: number }>;
-        }
-      >;
-      matchedIndices: Set<number>;
-      matchedTitleIndices: Set<number>;
-    }
-  >();
+  const noteMatches = new Map();
   const startFindTime = performance.now();
   // Find matches for each keyword in each note
   allNotes.forEach((note) => {
     const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
-    const noteData = noteDataMap.get(noteKey)!;
-
+    const noteData = noteDataMap.get(noteKey);
     keywords.forEach((keyword) => {
       const positions = findMatchIndices(
         noteData.tokens,
@@ -415,7 +336,6 @@ export function findSimilarNotes(
         noteData.normalizations,
         noteData.lowerContent,
       );
-
       // Also search the title with the same fuzzy logic
       const titlePositions = findMatchIndices(
         noteData.titleTokens,
@@ -423,9 +343,7 @@ export function findSimilarNotes(
         noteData.normalizations,
         noteData.lowerTitle,
       );
-
       if (positions.length === 0 && titlePositions.length === 0) return;
-
       if (!noteMatches.has(noteKey)) {
         noteMatches.set(noteKey, {
           note: note,
@@ -435,22 +353,18 @@ export function findSimilarNotes(
           matchedTitleIndices: new Set(),
         });
       }
-
-      const noteMatch = noteMatches.get(noteKey)!;
-
+      const noteMatch = noteMatches.get(noteKey);
       if (!noteMatch.matchedKeywords.has(keyword)) {
         noteMatch.matchCount += 1;
         noteMatch.matchedKeywords.set(keyword, {
           keyword: keyword,
           positions,
         });
-
         positions.forEach((pos) => {
           for (let i = pos.start; i < pos.end; i++) {
             noteMatch.matchedIndices.add(i);
           }
         });
-
         titlePositions.forEach((pos) => {
           for (let i = pos.start; i < pos.end; i++) {
             noteMatch.matchedTitleIndices.add(i);
@@ -462,13 +376,12 @@ export function findSimilarNotes(
   const endFindTime = performance.now();
   console.log(
     `[NoteSearch] matching: ${(endFindTime - startFindTime).toFixed(2)} ms` +
-    ` — ${noteMatches.size}/${allNotes.length} notes matched across ${keywords.length} keywords`,
+      ` — ${noteMatches.size}/${allNotes.length} notes matched across ${keywords.length} keywords`,
   );
-
   // Compile results with highlighted content and sort by relevance and recency
-  const results: SimilarNoteResult[] = Array.from(noteMatches.values())
+  const results = Array.from(noteMatches.values())
     .map((match) => {
-      const seenPositions = new Set<string>();
+      const seenPositions = new Set();
       const uniqueKeywords = Array.from(match.matchedKeywords.values()).filter(
         (kw) => {
           const posKey = kw.positions
@@ -481,7 +394,6 @@ export function findSimilarNotes(
           return true;
         },
       );
-
       const highlightedContent = highlightMatches(
         match.note.content,
         match.matchedIndices,
@@ -503,25 +415,22 @@ export function findSimilarNotes(
     })
     .sort((a, b) => {
       const matchDiff = b.matchCount - a.matchCount;
-
       if (Math.abs(matchDiff) <= 2) {
         const dateA = a.observerNote.timestamp.getTime();
         const dateB = b.observerNote.timestamp.getTime();
         return dateB - dateA;
       }
-
       return matchDiff;
     });
-
   const endOverallTime = performance.now();
   const returned = maxResults ? results.slice(0, maxResults) : results;
   console.log(
     `[NoteSearch] ── DONE ───────────────────────────────\n` +
-    `  total time : ${(endOverallTime - startOverallTime).toFixed(2)} ms\n` +
-    `  results    : ${returned.length} returned (${results.length} total matches)\n` +
-    (returned.length > 0
-      ? `  top result : "${returned[0].observerNote.title}" — ${returned[0].matchCount} keyword(s) matched`
-      : `  top result : none`),
+      `  total time : ${(endOverallTime - startOverallTime).toFixed(2)} ms\n` +
+      `  results    : ${returned.length} returned (${results.length} total matches)\n` +
+      (returned.length > 0
+        ? `  top result : "${returned[0].observerNote.title}" — ${returned[0].matchCount} keyword(s) matched`
+        : `  top result : none`),
   );
   return maxResults ? results.slice(0, maxResults) : results;
 }
