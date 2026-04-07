@@ -6,8 +6,14 @@ RUN npm ci
 
 COPY . .
 RUN npm run build
-RUN  npm prune --omit=dev
+
+# Build the React frontend
+WORKDIR /app/site
+RUN npm ci && npm run build
+
+WORKDIR /app
+RUN npm prune --omit=dev
 
 EXPOSE 3000
 
-CMD  ["node","dist/server.js"] 
+CMD ["node","dist/server.js"]
