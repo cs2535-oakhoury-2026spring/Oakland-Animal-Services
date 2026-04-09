@@ -12,7 +12,7 @@ export const BehaviorNoteSchema = z.object({
 export const BehaviorNoteCreateSchema = z.object({
   title: z.string().optional(),
   content: z.string().min(1),
-  author: z.string().min(1),
+  author: z.string().optional(), 
   petId: z.number().int(),
 });
 
