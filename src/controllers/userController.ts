@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import { createUser, getUserById, updateUser, deleteUser, listUsers } from "../db/_db/usersDB.js";
 import { deleteAllRefreshTokensForUser } from "../db/_db/refreshTokensDB.js";
+import { logActivity } from "../utils/logActivity.js";
 
 const SALT_ROUNDS = 12;
 
@@ -56,6 +57,7 @@ export async function createUserHandler(req: Request, res: Response): Promise<vo
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     try {
         const user = await createUser({ username, passwordHash, role, deviceName, expiresAt });
+        logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_CREATED", jsonData: { username, role } });
         res.status(201).json({ success: true, user });
     } catch (err: any) {
         if (err.message === "USERNAME_TAKEN") {
@@ -95,6 +97,7 @@ export async function resetPasswordHandler(req: Request, res: Response): Promise
     await updateUser(userId, { passwordHash, mustChangePassword: true });
     await deleteAllRefreshTokensForUser(userId);
 
+    logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_PASSWORD_RESET", jsonData: { targetUserId: userId, targetUsername: target.username } });
     res.json({ success: true });
 }
 
@@ -122,6 +125,7 @@ export async function updateUserHandler(req: Request, res: Response): Promise<vo
     const updated = await getUserById(userId);
     const { passwordHash: _, ...safeUser } = updated!;
 
+    logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_UPDATED", jsonData: { targetUserId: userId, ...parsed.data } });
     res.json({ success: true, user: safeUser });
 }
 
@@ -143,5 +147,6 @@ export async function deleteUserHandler(req: Request, res: Response): Promise<vo
     await deleteAllRefreshTokensForUser(userId);
     await deleteUser(userId);
 
+    logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_DELETED", jsonData: { targetUserId: userId, targetUsername: target.username, role: target.role } });
     res.json({ success: true });
 }

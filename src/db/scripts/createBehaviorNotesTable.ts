@@ -1,70 +1,38 @@
-import { CreateTableCommand, DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import config from "../../config/index.js";
-
-const client = new DynamoDBClient({
-    region: config.aws.region,
-    endpoint: config.aws.endpoint,
-    credentials: {
-        accessKeyId: config.aws.accessKeyId,
-        secretAccessKey: config.aws.secretAccessKey,
-    },
-});
+import { CreateTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
+import { dynamoClient } from "../../config/index.js";
+import { fileURLToPath } from "url";
 
 export const main = async () => {
     try {
-        await client.send(new DescribeTableCommand({ TableName: "BehaviorNotes" }));
+        await dynamoClient.send(new DescribeTableCommand({ TableName: "BehaviorNotes" }));
         console.log("Table 'BehaviorNotes' already exists. Skipping creation.");
         return;
     } catch (err: any) {
-        if (err.name !== "ResourceNotFoundException") {
-            throw err;
-        }
+        if (err.name !== "ResourceNotFoundException") throw err;
     }
-    const command = new CreateTableCommand({
+
+    await dynamoClient.send(new CreateTableCommand({
         TableName: "BehaviorNotes",
         AttributeDefinitions: [
-            {
-                AttributeName: "petId",
-                AttributeType: "N",
-            },
-            {
-                AttributeName: "timestamp",
-                AttributeType: "S",
-            },
-            {
-                AttributeName : "id",
-                AttributeType : "N"
-            }
+            { AttributeName: "petId", AttributeType: "N" },
+            { AttributeName: "timestamp", AttributeType: "S" },
+            { AttributeName: "id", AttributeType: "N" },
         ],
         KeySchema: [
-            {
-                AttributeName: "petId",
-                KeyType: "HASH",
-            },
-            {
-                AttributeName: "timestamp",
-                KeyType: "RANGE",
-            },
+            { AttributeName: "petId", KeyType: "HASH" },
+            { AttributeName: "timestamp", KeyType: "RANGE" },
         ],
         GlobalSecondaryIndexes: [
             {
                 IndexName: "id-index",
-                KeySchema: [
-                    {
-                        AttributeName: "id",
-                        KeyType: "HASH",
-                    },
-                ],
-                Projection: {
-                    ProjectionType: "ALL",
-                },
+                KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+                Projection: { ProjectionType: "ALL" },
             },
         ],
         BillingMode: "PAY_PER_REQUEST",
-    });
+    }));
 
-    const response = await client.send(command);
-    console.log(response);
+    console.log("Table 'BehaviorNotes' created.");
 };
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

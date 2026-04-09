@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { z } from "zod";
 import { login, refresh, logout, changePassword } from "../services/auth.js";
+import { logActivity } from "../utils/logActivity.js";
 
 const REFRESH_TOKEN_COOKIE = "refreshToken";
 const COOKIE_OPTIONS = {
@@ -86,6 +87,8 @@ export async function changePasswordHandler(req: Request, res: Response): Promis
         res.status(401).json({ error: "Current password is incorrect" });
         return;
     }
+
+    logActivity({ tag: "authEvent", actor: req.user!.username, action: "PASSWORD_CHANGED" });
 
     // Password changed — clear the refresh token cookie (all sessions already invalidated in changePassword)
     res.clearCookie(REFRESH_TOKEN_COOKIE);

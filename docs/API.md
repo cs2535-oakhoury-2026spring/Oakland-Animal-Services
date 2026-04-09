@@ -342,6 +342,48 @@ Example:
 }
 ```
 
+## Activity Log
+
+### GET `/api/activity`
+
+- Access: **Level 2** (staff, admin)
+- Description: Paginated activity feed of note and auth events. Staff can only query note tags; admin can query all tags including `authEvent`.
+- Query params:
+  - `tags` (string, optional) — comma-separated: `behaviorNote`, `observerNote`, `authEvent`
+  - `actor` (string, optional) — filter by username
+  - `action` (string, optional) — filter by action name
+  - `from` (string, optional) — ISO date string, inclusive lower bound on timestamp
+  - `to` (string, optional) — ISO date string, inclusive upper bound on timestamp
+  - `limit` (number, optional, default 20)
+  - `page` (number, optional, default 1)
+- Success: `200` with `{ success: true, logs: ActivityLog[] }`
+- Error: `400` for invalid tags/pagination, `403` if staff requests `authEvent` tag
+
+#### ActivityLog object
+- `logId: string` — UUID
+- `date: string` — YYYY-MM-DD
+- `timestamp: string` — ISO string (newest first)
+- `tag: "behaviorNote" | "observerNote" | "authEvent"`
+- `actor: string` — username of who performed the action
+- `action: string`
+- `jsonData?: object` — event-specific data
+
+#### Actions logged per tag
+| Tag | Action | jsonData fields |
+|-----|--------|----------------|
+| `behaviorNote` | `CREATED` | `petId`, `content` |
+| `behaviorNote` | `DELETED` | `noteId` |
+| `behaviorNote` | `BULK_DELETED` | `petId` |
+| `observerNote` | `CREATED` | `petId`, `content` |
+| `observerNote` | `DELETED` | `noteId` |
+| `observerNote` | `BULK_DELETED` | `petId` |
+| `observerNote` | `STATUS_CHANGED` | `noteId`, `status` |
+| `authEvent` | `PASSWORD_CHANGED` | — |
+| `authEvent` | `USER_CREATED` | `username`, `role` |
+| `authEvent` | `USER_UPDATED` | `targetUserId`, `expiresAt` |
+| `authEvent` | `USER_DELETED` | `targetUserId`, `targetUsername`, `role` |
+
+--------------------------
 ## Behavior Notes
 
 ### GET `/api/behavior-notes?limit=10&page=1`
