@@ -8,6 +8,12 @@ services:
     volumes:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8000/shell || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   dynamodb-admin:
     image: aaronshaf/dynamodb-admin
@@ -35,4 +41,5 @@ services:
     volumes:
       - ./.env:/app/.env
     depends_on:
-      - dynamodb-local
+      dynamodb-local:
+        condition: service_healthy
