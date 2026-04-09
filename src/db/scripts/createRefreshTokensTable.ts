@@ -1,29 +1,17 @@
-import { CreateTableCommand, DescribeTableCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import config from "../../config/index.js";
-
-const client = new DynamoDBClient({
-    region: config.aws.region,
-    ...(process.env.AWS_ENDPOINT && {
-        endpoint: config.aws.endpoint,
-        credentials: {
-            accessKeyId: config.aws.accessKeyId,
-            secretAccessKey: config.aws.secretAccessKey,
-        },
-    }),
-});
+import { CreateTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
+import { dynamoClient } from "../../config/index.js";
+import { fileURLToPath } from "url";
 
 export const main = async () => {
     try {
-        await client.send(new DescribeTableCommand({ TableName: "RefreshTokens" }));
+        await dynamoClient.send(new DescribeTableCommand({ TableName: "RefreshTokens" }));
         console.log("Table 'RefreshTokens' already exists. Skipping creation.");
         return;
     } catch (err: any) {
-        if (err.name !== "ResourceNotFoundException") {
-            throw err;
-        }
+        if (err.name !== "ResourceNotFoundException") throw err;
     }
 
-    const command = new CreateTableCommand({
+    await dynamoClient.send(new CreateTableCommand({
         TableName: "RefreshTokens",
         AttributeDefinitions: [
             { AttributeName: "tokenId", AttributeType: "S" },
@@ -35,17 +23,14 @@ export const main = async () => {
         GlobalSecondaryIndexes: [
             {
                 IndexName: "userId-index",
-                KeySchema: [
-                    { AttributeName: "userId", KeyType: "HASH" },
-                ],
+                KeySchema: [{ AttributeName: "userId", KeyType: "HASH" }],
                 Projection: { ProjectionType: "ALL" },
             },
         ],
         BillingMode: "PAY_PER_REQUEST",
-    });
+    }));
 
-    const response = await client.send(command);
-    console.log("Created 'RefreshTokens' table:", response);
+    console.log("Table 'RefreshTokens' created.");
 };
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

@@ -4,25 +4,27 @@ import { fileURLToPath } from "url";
 
 export const main = async () => {
     try {
-        await dynamoClient.send(new DescribeTableCommand({ TableName: "PetCompatibility" }));
-        console.log("Table 'PetCompatibility' already exists. Skipping creation.");
+        await dynamoClient.send(new DescribeTableCommand({ TableName: "ActivityLog" }));
+        console.log("Table 'ActivityLog' already exists. Skipping creation.");
         return;
     } catch (err: any) {
         if (err.name !== "ResourceNotFoundException") throw err;
     }
 
     await dynamoClient.send(new CreateTableCommand({
-        TableName: "PetCompatibility",
+        TableName: "ActivityLog",
         AttributeDefinitions: [
-            { AttributeName: "petId", AttributeType: "N" },
+            { AttributeName: "pk", AttributeType: "S" },
+            { AttributeName: "sk", AttributeType: "S" },
         ],
         KeySchema: [
-            { AttributeName: "petId", KeyType: "HASH" },
+            { AttributeName: "pk", KeyType: "HASH" },
+            { AttributeName: "sk", KeyType: "RANGE" },
         ],
         BillingMode: "PAY_PER_REQUEST",
     }));
 
-    console.log("Table 'PetCompatibility' created.");
+    console.log("Table 'ActivityLog' created.");
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();
