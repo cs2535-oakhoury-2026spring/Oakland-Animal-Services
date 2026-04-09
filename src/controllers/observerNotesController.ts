@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { z } from "zod";
+import { resolveAuthor } from "../utils/resolveAuthor.js";
 import {
   getAllObserverNotes,
   addObserverNote,
@@ -171,6 +172,12 @@ export async function uploadObserverNote(req: Request, res: Response) {
   }
 
   const { title, content, author, petId } = parseResult.data;
+
+  const resolvedAuthor = resolveAuthor(req, author);
+  if (resolvedAuthor === null) {
+    return res.status(400).json({ error: "Device accounts must provide an author name of at least 2 characters" });
+  }
+
   const newObserverNote: ObserverNote = {
     id: 0, // set later.
     // noteType is assigned in the repository layer.
@@ -178,7 +185,7 @@ export async function uploadObserverNote(req: Request, res: Response) {
     status: "RAISED",
     title,
     content,
-    author,
+    author: resolvedAuthor,
     petId,
   };
 
