@@ -19,9 +19,6 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { findSimilarNotes } from "./utils/noteSearcher.js";
-
-const noteDataCache = new Map();
 
 // ─── Focus Trap Hook for Modals (WCAG 2.1 AA) ─────────────────────────────────
 function useFocusTrap(isOpen) {
@@ -205,13 +202,6 @@ const Icons = {
       <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
     </svg>
   ),
-  refresh: ({ size = 20, color = "#1a1a1a", spinning = false }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
-      style={spinning ? { animation: "spin 0.8s linear infinite" } : {}}>
-      <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
-      <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-    </svg>
-  ),
 };
 
 // ─── Placeholder Image ───────────────────────────────────────────────────────
@@ -364,11 +354,11 @@ const api = {
           petId: String(p.id),
           name: p.name,
           species: p.species || "Unknown",
-          location: parseLocationFromSummary(p.locationSummary) || "",
+          location: parseLocationFromSummary(p.summary) || "",
           imageUrl: p.image || (p.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
-          summary: p.locationSummary || "",
-          arn: p.arn || "N/A",
-          handlerLevel: (p.handlerLevel || "green").toLowerCase(),
+          summary: p.summary || "",
+          arn: p.rescueId || "N/A",
+          handlerLevel: (p.otherNames || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
           age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
@@ -386,11 +376,11 @@ const api = {
   },
 
   // REAL — connected to GET /api/location/:petType/:location (QR code driven)
-  getPetsByLocation: async (petType, location, refresh = false) => {
+  getPetsByLocation: async (petType, location) => {
     if (!petType || !location) {
       throw new Error("Invalid location parameters");
     }
-    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`);
+    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}`);
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || "Location not found");
@@ -403,7 +393,7 @@ const api = {
         species: pet.species || (petType === "cat" ? "Cat" : "Dog"),
         location: location,
         imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
-        summary: pet.locationSummary || "",
+        summary: pet.summary || "",
         status: pet.status || "Unknown",
       }));
     }
@@ -756,7 +746,7 @@ const isCurrentAnimal = (pet) => {
 };
 
 // If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
-function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c, onRefresh, refreshing = false }) {
+function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c }) {
   const r = useResponsive();
   const isDesktop = r.width >= 768;
   const location = animals[0]?.location || "";
@@ -768,7 +758,6 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
   const displayed = tab === "current" ? currentAnimals : pastAnimals;
 
   const imgSize = isDesktop ? 72 : 64;
-  const [showRefreshTip, setShowRefreshTip] = useState(false);
 
   return (
     <main id="main-content" style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg }}>
@@ -810,54 +799,10 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
         {/* Heading */}
         <div style={{ marginBottom: isDesktop ? 20 : 14 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: c.warmGray, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Location</div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <h2 style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>
-              Select an Animal: <span style={{ color: c.headerGreen }}>{location}</span>
-            </h2>
-            {onRefresh && (
-              <div style={{ position: "relative", flexShrink: 0 }}>
-                <button
-                  onClick={onRefresh}
-                  disabled={refreshing}
-                  style={{
-                    background: "none", border: `1px solid ${c.cardBorder}`,
-                    cursor: refreshing ? "default" : "pointer", padding: isDesktop ? "8px 14px" : "7px 10px",
-                    borderRadius: 8, display: "flex", alignItems: "center", gap: 6,
-                    minHeight: 40, minWidth: 40, transition: "all 0.15s",
-                    color: c.textSecondary, fontSize: 13, fontFamily: font, fontWeight: 500,
-                    opacity: refreshing ? 0.6 : 1,
-                  }}
-                  onMouseEnter={(e) => { setShowRefreshTip(true); if (!refreshing) e.currentTarget.style.backgroundColor = c.inputBg; }}
-                  onMouseLeave={(e) => { setShowRefreshTip(false); e.currentTarget.style.backgroundColor = "transparent"; }}
-                  onFocus={() => setShowRefreshTip(true)}
-                  onBlur={() => setShowRefreshTip(false)}
-                  aria-label="Refresh animal list"
-                >
-                  <Icons.refresh size={isDesktop ? 16 : 15} color={c.textSecondary} spinning={refreshing} />
-                  {isDesktop && <span>{refreshing ? "Refreshing…" : "Refresh"}</span>}
-                </button>
-                {showRefreshTip && (
-                  <div role="tooltip" style={{
-                    position: "absolute", top: "calc(100% + 8px)", right: 0,
-                    backgroundColor: c.textPrimary, color: c.bg,
-                    fontSize: 12, fontWeight: 500, lineHeight: 1.4,
-                    padding: "6px 10px", borderRadius: 6, whiteSpace: "nowrap",
-                    pointerEvents: "none", zIndex: 100,
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-                  }}>
-                    {refreshing ? "Refreshing…" : "Click to refresh to get the most up-to-date list of animals at this location."}
-                    <div style={{
-                      position: "absolute", bottom: "100%", right: 12,
-                      borderWidth: "0 5px 5px", borderStyle: "solid",
-                      borderColor: `transparent transparent ${c.textPrimary} transparent`,
-                    }} />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <h2 style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>
+            Select an Animal: <span style={{ color: c.headerGreen }}>{location}</span>
+          </h2>
         </div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
 
         {/* Current / Past tabs — same style as Medical/Behavior tabs */}
         <nav style={{ display: "flex", marginBottom: isDesktop ? 24 : 16, backgroundColor: c.cardBg, borderRadius: 12, padding: 3, border: `1px solid ${c.cardBorder}` }}>
@@ -1248,7 +1193,7 @@ function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10, gap: 12 }}>
         <div style={{ flex: 1 }}>
           <h4 style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary, margin: "0 0 6px 0", lineHeight: 1.3 }}>
-            <HighlightedText text={note.highlightedCase || note.case} searchQuery={searchQuery} />
+            {note.case}
           </h4>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <span style={{ fontSize: 12, color: c.warmGray, fontWeight: 500 }}>
@@ -1264,7 +1209,7 @@ function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery 
       
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textSecondary, flex: 1, margin: 0 }}>
-          <HighlightedText text={note.highlightedBody || note.body} searchQuery={searchQuery} />
+          <HighlightedText text={note.body} searchQuery={searchQuery} />
         </p>
         {canEdit && (
           <button 
@@ -1410,7 +1355,7 @@ function DesktopPortal({
   filteredNotes, filteredBehaviorNotes,
   activeTab, setActiveTab,
   searchQuery, handleMedicalSearch,
-  behaviorSearchQuery, handleBehaviorSearch,
+  behaviorSearchQuery, setBehaviorSearchQuery,
   isSearching,
   aiQuery, setAiQuery, aiResponse, handleAiQuery,
   medicalNotesVisible, setMedicalNotesVisible,
@@ -1706,7 +1651,7 @@ function DesktopPortal({
                     }}
                     placeholder="Search behavior notes..."
                     value={behaviorSearchQuery}
-                    onChange={(e) => handleBehaviorSearch(e.target.value)}
+                    onChange={(e) => setBehaviorSearchQuery(e.target.value)}
                     aria-label="Search behavior notes"
                     onFocus={(e) => e.currentTarget.style.borderColor = c.headerGreen}
                     onBlur={(e) => e.currentTarget.style.borderColor = c.inputBorder}
@@ -1848,8 +1793,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   const [showQR, setShowQR] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [behaviorSearchQuery, setBehaviorSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
-  const [behaviorSearchResults, setBehaviorSearchResults] = useState(null);
+  const [searchResults, setSearchResults] = useState(null); // Backend search results with highlighting
   const [isSearching, setIsSearching] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
@@ -1878,7 +1822,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     })();
   }, [petId]);
 
-  // Client-side search for medical notes with keyword highlighting
+  // Backend-powered search for medical notes with keyword highlighting
   const handleMedicalSearch = useCallback((query) => {
     setSearchQuery(query);
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
@@ -1888,62 +1832,41 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       return;
     }
     setIsSearching(true);
-    searchTimerRef.current = setTimeout(() => {
-      const mapped = notes.map((n) => ({
-        id: n.id,
-        petId: n.petId,
-        title: n.case,
-        content: n.body,
-        author: n.by,
-        timestamp: new Date(n.createdAt),
-        status: n.status,
-        type: n.type,
-      }));
-      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
-      const enriched = results.map((r) => {
-        const existing = notes.find((n) => n.id === r.observerNote.id);
-        return {
-          ...existing,
-          highlightedBody: r.highlightedContent || "",
-          highlightedCase: r.highlightedTitle || "",
-          matchCount: r.matchCount || 0,
-        };
-      });
-      setSearchResults(enriched.length > 0 ? enriched : null);
+    searchTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/search", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, petId: parseInt(petId, 10) || 0, maxResults: 50 }),
+        });
+        if (!res.ok) throw new Error("Search failed");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.results)) {
+          // Map backend results, cross-referencing existing notes to preserve case titles
+          const mapped = data.results.map((r) => {
+            const backendNote = transformObserverNote(r.observerNote, 0);
+            // Find the original note in state to keep frontend-only fields (case, status)
+            const existing = notes.find((n) => n.id === backendNote.id);
+            return {
+              ...backendNote,
+              case: existing?.case || backendNote.case,
+              status: existing?.status || backendNote.status,
+              highlightedBody: r.highlightedContent || "",
+              highlightedCase: r.highlightedTitle || "",
+              matchCount: r.matchCount || 0,
+            };
+          });
+          // If backend NLP returned no results, fall back to local substring filter
+          // so partial queries like "energ" still match "energetic"
+          setSearchResults(mapped.length > 0 ? mapped : null);
+        }
+      } catch (err) {
+        console.warn("Backend search failed, falling back to local filter", err);
+        setSearchResults(null);
+      }
       setIsSearching(false);
     }, 300);
-  }, [notes]);
-
-  const behaviorSearchTimerRef = useRef(null);
-  const handleBehaviorSearch = useCallback((query) => {
-    setBehaviorSearchQuery(query);
-    if (behaviorSearchTimerRef.current) clearTimeout(behaviorSearchTimerRef.current);
-    if (!query.trim()) {
-      setBehaviorSearchResults(null);
-      return;
-    }
-    behaviorSearchTimerRef.current = setTimeout(() => {
-      const mapped = behaviorNotes.map((n) => ({
-        id: n.id,
-        petId: n.petId,
-        title: n.case,
-        content: n.body,
-        author: n.by,
-        timestamp: new Date(n.createdAt),
-      }));
-      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
-      const enriched = results.map((r) => {
-        const existing = behaviorNotes.find((n) => n.id === r.observerNote.id);
-        return {
-          ...existing,
-          highlightedBody: r.highlightedContent || "",
-          highlightedCase: r.highlightedTitle || "",
-          matchCount: r.matchCount || 0,
-        };
-      });
-      setBehaviorSearchResults(enriched.length > 0 ? enriched : null);
-    }, 300);
-  }, [behaviorNotes]);
+  }, [petId, notes]);
 
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
   const handleNoteEdited = (n) => setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
@@ -1972,9 +1895,12 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                fuzzyMatchText(n.by || "", searchQuery);
       });
   
-  const filteredBehaviorNotes = behaviorSearchResults !== null
-    ? behaviorSearchResults
-    : behaviorNotes;
+  // Client-side filtering + highlighting for behavior notes
+  const filteredBehaviorNotes = behaviorNotes.filter((n) => {
+    if (!behaviorSearchQuery.trim()) return true;
+    const q = behaviorSearchQuery.toLowerCase();
+    return (n.body || "").toLowerCase().includes(q) || (n.case || "").toLowerCase().includes(q) || (n.by || "").toLowerCase().includes(q);
+  });
 
   if (loading || !pet) {
     return (
@@ -2021,7 +1947,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
       activeTab={activeTab} setActiveTab={setActiveTab}
       searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
-      behaviorSearchQuery={behaviorSearchQuery} handleBehaviorSearch={handleBehaviorSearch}
+      behaviorSearchQuery={behaviorSearchQuery} setBehaviorSearchQuery={setBehaviorSearchQuery}
       isSearching={isSearching}
       aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
       medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
@@ -2219,7 +2145,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
                 setActiveTab(tab.key); 
                 setSearchQuery("");
                 setSearchResults(null);
-                handleBehaviorSearch("");
+                setBehaviorSearchQuery("");
                 setMedicalNotesVisible(NOTES_PER_PAGE);
                 setBehaviorNotesVisible(NOTES_PER_PAGE);
               }}>
@@ -2300,7 +2226,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <div style={{ flex: 1, position: "relative" }}>
                 <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icons.search size={16} color={c.warmGray} /></div>
                 <input style={{ width: "100%", padding: "10px 14px 10px 34px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.cardBg, color: c.textPrimary, fontSize: 15, outline: "none", fontFamily: font, boxSizing: "border-box" }}
-                  placeholder="Search behavior notes..." value={behaviorSearchQuery} onChange={(e) => handleBehaviorSearch(e.target.value)} aria-label="Search behavior notes" />
+                  placeholder="Search behavior notes..." value={behaviorSearchQuery} onChange={(e) => setBehaviorSearchQuery(e.target.value)} aria-label="Search behavior notes" />
               </div>
               <button style={{ width: 44, height: 44, borderRadius: "50%", border: "none", backgroundColor: c.headerGreen, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
                 onClick={() => setShowCreateBehaviorModal(true)} aria-label="New behavior note"><Icons.plus size={18} /></button>
@@ -2396,7 +2322,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
         const q = searchQuery.toLowerCase();
         return (
           a.name.toLowerCase().includes(q) ||
-          (a.arn && a.arn.toLowerCase().includes(q)) ||
+          (a.rescueId && a.rescueId.toLowerCase().includes(q)) ||
           String(a.id).includes(q) ||
           a.location.toLowerCase().includes(q) ||
           (a.breed && a.breed.toLowerCase().includes(q))
@@ -2577,9 +2503,14 @@ export default function App() {
   const [user] = useState({ displayName: "Staff", role: "staff", email: "", department: "" });
   const [animals, setAnimals] = useState([]);
   const [selectedPetId, setSelectedPetId] = useState(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
+
+  // Persist dark mode preference across page reloads and navigation
+  const toggleDarkMode = (val) => {
+    localStorage.setItem("darkMode", val);
+    setDarkMode(val);
+  };
   const [locationError, setLocationError] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
 
@@ -2613,18 +2544,9 @@ export default function App() {
 
   const handleLogout = () => { setSelectedPetId(null); setAnimals([]); setLocationError(null); };
 
-  const handleRefresh = () => {
-    if (!petType || !kennelLocation || refreshing) return;
-    setRefreshing(true);
-    api.getPetsByLocation(petType, kennelLocation, true)
-      .then((pets) => { setAnimals(pets); })
-      .catch((err) => { setLocationError(err.message); })
-      .finally(() => { setRefreshing(false); });
-  };
-
   // No URL params → show home screen with all animals
   if (!hasUrlParams && !selectedPetId) {
-    return <HomeScreen user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={setDarkMode} c={c} />;
+    return <HomeScreen user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
   }
 
   if (locationError) {
@@ -2632,11 +2554,11 @@ export default function App() {
   }
 
   if (!selectedPetId && animals.length > 1) {
-    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={setDarkMode} c={c} onRefresh={handleRefresh} refreshing={refreshing} />;
+    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
   }
 
   if (selectedPetId) {
-    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => setSelectedPetId(null)} darkMode={darkMode} setDarkMode={setDarkMode} />;
+    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => setSelectedPetId(null)} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
   }
 
   return (

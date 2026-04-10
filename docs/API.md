@@ -11,24 +11,24 @@
 - `sex: string`
 - `species: string`
 - `image: string | null`
-- `description: string | null`
-- `locationSummary: string`
+- `description: string | null` -> EMBED HTML
+- `summary: string` -> LOCATION
 - `breed: string | null`
 - `status: string | null`
-- `arn: string | null`
+- `rescueId: string | null` -> ARN
 - `availableDate: string | null`
-- `handlerLevel: string | null`
-- `dogDogCategory: string | null`
+- `otherNames: string | null` -> HANDLING COLOR
+- `distinguishingMarks: string | null`
 - `generalAge: string | null`
 - `generalSize: string | null`
 - `colorDetails: string | null`
-- `handlingDescription: string | null`
+- `specialNeeds: string | null` -> ANOTHER DESCRIPTION
 
 --------------------------
 ### LocationPet
 - `id: number`
 - `name: string`
-- `locationSummary: string`
+- `summary: string`
 - `image?: string | null`
 
 --------------------------
@@ -61,8 +61,6 @@
   - `petType` (`dog` or `cat`, required)
   - `location` (string, required)
     - Spaces in location name should use `-` to seperate ex: `holding-a:2`
-- Query params:
-  - `refresh` (boolean, optional) - If true, bypass cache and fetch fresh data
 - Success: `200` with `{ success: true, pets: LocationPet[] }`
 - Error: `400` for invalid petType/location or missing params, `404` if not found
 
@@ -74,7 +72,7 @@ Example:
     {
       "id": 22254131,
       "name": "Nala",
-      "locationSummary": "I am at Oakland Animal Services in kennel E:1",
+      "summary": "I am at Oakland Animal Services in kennel E:1",
       "image": "https://example.com/pet.jpg"
     }
   ]

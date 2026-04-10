@@ -1,102 +1,22 @@
-import { levenshtein as levenshteinDistance } from "./levenshtein.js";
+import nlp from "compromise";
+import { distance } from "fastest-levenshtein";
 import {
   type ObserverNote,
   type SimilarNoteResult,
 } from "../services/observerNoteService.js";
 
+function levenshteinDistance(str1: string, str2: string): number {
+  return distance(str1, str2);
+}
+
 // Common words to exclude from keyword extraction
 const TOKENS_TO_EXCLUDE = new Set([
-  // articles / determiners
   "the",
   "a",
   "an",
-  "this",
-  "that",
-  "these",
-  "those",
-  "my",
-  "your",
-  "his",
-  "her",
-  "its",
-  "our",
-  "their",
-  "some",
-  "any",
-  "each",
-  "every",
-  "both",
-  "all",
-  "few",
-  "more",
-  "most",
-  "other",
-  "such",
-  "no",
-  "nor",
-  "not",
-  // prepositions
-  "in",
-  "on",
-  "at",
-  "to",
-  "for",
-  "of",
-  "with",
-  "by",
-  "from",
-  "up",
-  "about",
-  "into",
-  "through",
-  "during",
-  "before",
-  "after",
-  "above",
-  "below",
-  "between",
-  "out",
-  "off",
-  "over",
-  "under",
-  "again",
-  "then",
-  "once",
-  "as",
-  "per",
-  // conjunctions
   "and",
   "or",
   "but",
-  "so",
-  "yet",
-  "if",
-  "than",
-  "because",
-  "while",
-  "although",
-  "though",
-  "since",
-  "until",
-  "unless",
-  "when",
-  "where",
-  // pronouns
-  "i",
-  "me",
-  "we",
-  "us",
-  "he",
-  "him",
-  "she",
-  "it",
-  "they",
-  "them",
-  "who",
-  "whom",
-  "which",
-  "what",
-  // auxiliary verbs
   "be",
   "am",
   "is",
@@ -123,22 +43,6 @@ const TOKENS_TO_EXCLUDE = new Set([
   "might",
   "must",
 ]);
-
-function toSingular(word: string): string {
-  if (word.endsWith("ies") && word.length > 4) return word.slice(0, -3) + "y";
-  if (word.endsWith("ves") && word.length > 4) return word.slice(0, -3) + "f";
-  if (
-    word.endsWith("ses") ||
-    word.endsWith("xes") ||
-    word.endsWith("zes") ||
-    word.endsWith("ches") ||
-    word.endsWith("shes")
-  ) {
-    return word.slice(0, -2);
-  }
-  if (word.endsWith("s") && word.length > 3) return word.slice(0, -1);
-  return word;
-}
 
 // Words to exclude from normalization to avoid incorrect matches (e.g. "left" vs "leave")
 const NORMALIZATION_EXCLUSIONS = new Set([
@@ -168,6 +72,7 @@ export function extractKeywords(
   text: string,
   nameToExclude?: string,
 ): string[] {
+  const doc = nlp(text.toLowerCase());
   const seen = new Set<string>();
   const keywords: string[] = [];
   nameToExclude = nameToExclude ? nameToExclude.toLowerCase() : undefined;
@@ -179,24 +84,53 @@ export function extractKeywords(
     }
   }
 
+  doc.terms().forEach((term: any) => {
+    const token = term.text();
+
+    if (nameToExclude && token === nameToExclude.toLowerCase()) return;
+
+    if (TOKENS_TO_EXCLUDE.has(token)) return;
+
+    if (
+      term.has("#Determiner") ||
+      term.has("#Preposition") ||
+      term.has("#Conjunction") ||
+      term.has("#Pronoun")
+    ) {
+      return;
+    }
+
+    addKeyword(token);
+  });
+
+  doc.verbs().forEach((verb: any) => {
+    const infinitive = verb.toInfinitive().text();
+    console.log(`Verb: "${verb.text()}" -> Infinitive: "${infinitive}"`);
+    if (TOKENS_TO_EXCLUDE.has(infinitive)) {
+      return;
+    }
+    addKeyword(infinitive);
+  });
+
+  doc.nouns().forEach((noun: any) => {
+    const singular = noun.toSingular().text();
+    if (nameToExclude && singular === nameToExclude) {
+      return;
+    }
+    addKeyword(singular);
+  });
+
   const words = text.match(/\w+/g) || [];
   words.forEach((word) => {
     const lower = word.toLowerCase();
-
-    if (nameToExclude && lower === nameToExclude) return;
-    if (TOKENS_TO_EXCLUDE.has(lower)) return;
-
-    addKeyword(lower);
-
-    // singular form
-    const singular = toSingular(lower);
-    if (singular !== lower) addKeyword(singular);
-
-    // stem -ing / -ed
+    let base;
     if (lower.endsWith("ing") && lower.length > 4) {
-      addKeyword(lower.slice(0, -3));
+      base = lower.slice(0, -3);
     } else if (lower.endsWith("ed") && lower.length > 3) {
-      addKeyword(lower.slice(0, -2));
+      base = lower.slice(0, -2);
+    }
+    if (base) {
+      addKeyword(base);
     }
   });
 
@@ -305,34 +239,48 @@ export function findSimilarNotes(
     noteDataCache?: Map<string, NoteData>;
   } = {},
 ): SimilarNoteResult[] {
+  console.log(
+    `___Starting search for similar notes...\nSearch Note: "${searchNote}"\nTotal Notes: ${allNotes.length}\n`,
+  );
   const startOverallTime = performance.now();
   const { nameToExclude, maxResults, noteDataCache } = options;
-  console.log(
-    `[NoteSearch] ── START ──────────────────────────────\n` +
-      `  query      : "${searchNote}"\n` +
-      `  notes      : ${allNotes.length}\n` +
-      `  maxResults : ${maxResults ?? "unlimited"}\n` +
-      `  exclude    : ${nameToExclude ?? "none"}\n` +
-      `  cache size : ${noteDataCache?.size ?? 0} entries`,
-  );
   const startExtractTime = performance.now();
   const keywords = extractKeywords(searchNote, nameToExclude);
   const endExtractTime = performance.now();
   console.log(
-    `[NoteSearch] keywords (${keywords.length}) in ${(endExtractTime - startExtractTime).toFixed(2)} ms: [${keywords.join(", ")}]`,
+    `Extracted ${keywords.length} keywords in ${(endExtractTime - startExtractTime).toFixed(2)} ms\n`,
   );
   if (keywords.length === 0) return [];
 
   const noteDataMap = noteDataCache || new Map<string, NoteData>();
-  const sizeBeforePreprocess = noteDataMap.size;
   const startTime = performance.now();
 
   // Preprocess all notes to extract tokens and normalizations, using cache if available
   allNotes.forEach((note) => {
-    const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
+    const noteKey = `${note.author}|${note.timestamp}|${note.content}`;
     if (noteDataMap.has(noteKey)) return;
 
+    const doc = nlp(note.content);
     const normalizations = new Map<string, string>();
+
+    doc.verbs().forEach((verb: any) => {
+      const original = verb.text().toLowerCase();
+      const infinitive = verb.toInfinitive().text().toLowerCase();
+
+      if (!NORMALIZATION_EXCLUSIONS.has(original) && original !== infinitive) {
+        normalizations.set(original, infinitive);
+      }
+    });
+
+    doc.nouns().forEach((noun: any) => {
+      const original = noun.text().toLowerCase();
+      const singular = noun.toSingular().text().toLowerCase();
+
+      if (!NORMALIZATION_EXCLUSIONS.has(original) && original !== singular) {
+        normalizations.set(original, singular);
+      }
+    });
+
     const tokens: Array<{ text: string; lower: string }> = [];
 
     const words = note.content.match(/\w+/g) || [];
@@ -341,33 +289,23 @@ export function findSimilarNotes(
       tokens.push({ text: word, lower });
 
       if (!normalizations.has(lower) && !NORMALIZATION_EXCLUSIONS.has(lower)) {
-        const singular = toSingular(lower);
-        if (singular !== lower) {
-          normalizations.set(lower, singular);
-        } else if (lower.endsWith("ing") && lower.length > 4) {
-          normalizations.set(lower, lower.slice(0, -3));
+        let base;
+        if (lower.endsWith("ing") && lower.length > 4) {
+          base = lower.slice(0, -3);
         } else if (lower.endsWith("ed") && lower.length > 3) {
-          normalizations.set(lower, lower.slice(0, -2));
+          base = lower.slice(0, -2);
+        }
+        if (base) {
+          normalizations.set(lower, base);
         }
       }
     });
 
-    // Also tokenize the title and add its normalizations to the same map
+    // Also tokenize the title for title-specific fuzzy matching
     const titleText = (note.title || "").trim();
     const titleTokens: Array<{ text: string; lower: string }> = [];
     (titleText.match(/\w+/g) || []).forEach((word) => {
-      const lower = word.toLowerCase();
-      titleTokens.push({ text: word, lower });
-      if (!normalizations.has(lower) && !NORMALIZATION_EXCLUSIONS.has(lower)) {
-        const singular = toSingular(lower);
-        if (singular !== lower) {
-          normalizations.set(lower, singular);
-        } else if (lower.endsWith("ing") && lower.length > 4) {
-          normalizations.set(lower, lower.slice(0, -3));
-        } else if (lower.endsWith("ed") && lower.length > 3) {
-          normalizations.set(lower, lower.slice(0, -2));
-        }
-      }
+      titleTokens.push({ text: word, lower: word.toLowerCase() });
     });
 
     noteDataMap.set(noteKey, {
@@ -380,10 +318,10 @@ export function findSimilarNotes(
   });
 
   const endTime = performance.now();
-  const freshCount = noteDataMap.size - sizeBeforePreprocess;
   console.log(
-    `[NoteSearch] preprocess: ${(endTime - startTime).toFixed(2)} ms` +
-    ` — ${allNotes.length - freshCount} from cache, ${freshCount} freshly built`,
+    `Preprocessed ${allNotes.length} notes in ${(endTime - startTime).toFixed(
+      2,
+    )} ms\n`,
   );
 
   const noteMatches = new Map<
@@ -405,7 +343,7 @@ export function findSimilarNotes(
   const startFindTime = performance.now();
   // Find matches for each keyword in each note
   allNotes.forEach((note) => {
-    const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
+    const noteKey = `${note.author}|${note.timestamp}|${note.content}`;
     const noteData = noteDataMap.get(noteKey)!;
 
     keywords.forEach((keyword) => {
@@ -461,8 +399,7 @@ export function findSimilarNotes(
   });
   const endFindTime = performance.now();
   console.log(
-    `[NoteSearch] matching: ${(endFindTime - startFindTime).toFixed(2)} ms` +
-    ` — ${noteMatches.size}/${allNotes.length} notes matched across ${keywords.length} keywords`,
+    `Found matches for ${keywords.length} keywords in ${(endFindTime - startFindTime).toFixed(2)} ms\n`,
   );
 
   // Compile results with highlighted content and sort by relevance and recency
@@ -514,14 +451,8 @@ export function findSimilarNotes(
     });
 
   const endOverallTime = performance.now();
-  const returned = maxResults ? results.slice(0, maxResults) : results;
   console.log(
-    `[NoteSearch] ── DONE ───────────────────────────────\n` +
-    `  total time : ${(endOverallTime - startOverallTime).toFixed(2)} ms\n` +
-    `  results    : ${returned.length} returned (${results.length} total matches)\n` +
-    (returned.length > 0
-      ? `  top result : "${returned[0].observerNote.title}" — ${returned[0].matchCount} keyword(s) matched`
-      : `  top result : none`),
+    `Total search time: ${(endOverallTime - startOverallTime).toFixed(2)} ms\n`,
   );
   return maxResults ? results.slice(0, maxResults) : results;
 }
