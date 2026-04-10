@@ -811,7 +811,7 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
             return (
               <button key={key} onClick={() => setTab(key)} style={{
                 flex: 1, padding: "10px 6px", fontSize: 13, fontWeight: active ? 700 : 500,
-                color: active ? c.headerGreen : c.warmGray,
+                color: active ? (darkMode ? "#8eff8e" : c.headerGreen) : c.warmGray,
                 backgroundColor: active ? c.tabActiveBg : "transparent",
                 border: "none", borderRadius: 10, cursor: "pointer",
                 transition: "all 0.2s ease", fontFamily: font, minHeight: 44,
