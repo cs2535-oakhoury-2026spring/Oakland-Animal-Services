@@ -2512,7 +2512,6 @@ export default function App() {
   };
   const [locationError, setLocationError] = useState(null);
   const c = darkMode ? themes.dark : themes.light;
-  const r = useResponsive();
 
   // Read pet type and location from URL query params (set by QR code on kennel)
   // Also support direct pet ID links: ?petId=12345
@@ -2562,7 +2561,7 @@ export default function App() {
   }
 
   return (
-    <div style={{ fontFamily: font, maxWidth: r.containerWidth, margin: "0 auto", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+    <div style={{ fontFamily: font, width: "100vw", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
       <div style={{ width: 48, height: 48, border: `4px solid ${c.cardBorder}`, borderTop: `4px solid ${c.headerGreen}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
       <div style={{ color: c.warmGray, fontSize: 15 }}>Loading animals...</div>
       <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
