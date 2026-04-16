@@ -5,8 +5,16 @@ import { BehaviorNoteRepository } from "../../types/index.js";
 import { ScanCommand, QueryCommand, PutCommand, DeleteCommand} from "@aws-sdk/lib-dynamodb";
 import { docClient } from "../../config/index.js";
 
-const TABLE_NAME = "BehaviorNotes";
+const TABLE_NAME = "Notes";
+const NOTE_TYPE = "BEHAVIOR";
 
+/**
+ * Repository for behavior notes stored in the merged Notes table.
+ *
+ * All reads and writes are constrained to items whose noteType is BEHAVIOR.
+ * The API layer does not provide noteType; it is assigned here to keep
+ * behavior note storage isolated from observer notes in the shared table.
+ */
 export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
   /**
    * Retrieves all behavior notes with optional pagination.
@@ -25,6 +33,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
         const result : any = await docClient.send(new ScanCommand({
           TableName: TABLE_NAME,
           Limit: resolvedLimit,
+          FilterExpression: "noteType = :noteType",
+          ExpressionAttributeValues: {
+            ":noteType": NOTE_TYPE,
+          },
           ExclusiveStartKey: lastKey,
         }));
         lastKey = result.LastEvaluatedKey;
@@ -34,6 +46,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
       const pageResult = await docClient.send(new ScanCommand({
         TableName: TABLE_NAME,
         Limit: resolvedLimit,
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues: {
+          ":noteType": NOTE_TYPE,
+        },
         ExclusiveStartKey: lastKey,
       }));
       
@@ -44,7 +60,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
   }
 
   /**
-   * Retrieves all behavior notes associated with a specific pet.
+    * Retrieves all behavior notes associated with a specific pet from Notes.
+    *
+    * Results are filtered to the BEHAVIOR noteType so observer notes are not
+    * returned even though both note kinds share the same table.
    * @param petId - The integer ID of the pet.
    * @returns A promise resolving to an array of BehaviorNote objects for that pet.
    */
@@ -53,8 +72,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
       const result = await docClient.send(new QueryCommand({
         TableName: TABLE_NAME,
         KeyConditionExpression: "petId = :petId",
+        FilterExpression: "noteType = :noteType",
         ExpressionAttributeValues: {
-          ":petId": petId
+          ":petId": petId,
+          ":noteType": NOTE_TYPE,
         }
       }));
       
@@ -66,8 +87,11 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
   }
 
   /**
-   * Inserts a new behavior note into the database.
-   * @param note - The BehaviorNote object to add, including content, author, petId, and timestamp.
+    * Inserts a new behavior note into the merged Notes table.
+    *
+    * The repository assigns noteType = BEHAVIOR before persistence so callers
+    * do not need to know about the storage layout.
+    * @param note - The BehaviorNote object to add, including content, author, petId, and timestamp.
    * @returns A promise resolving to true if the insert succeeded, false otherwise.
    */
   async addBehaviorNote(note: BehaviorNote): Promise<boolean> {
@@ -79,6 +103,7 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
       const item = {
         ...note,
         id: uniqueId,
+        noteType: NOTE_TYPE,
         timestamp: note.timestamp.toISOString(), // Convert Date to ISO string for DynamoDB
       };
 
@@ -96,7 +121,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
   }
 
   /**
-   * Deletes a single behavior note by its ID.
+    * Deletes a single behavior note by its ID from the merged Notes table.
+    *
+    * The lookup uses the id-index and filters on noteType so an observer note
+    * with the same id cannot be removed accidentally.
    * @param uniqueId - The unique ID of the behavior note to remove.
    * @returns A promise resolving to true if the deletion succeeded, false otherwise.
    */
@@ -111,8 +139,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
             TableName: TABLE_NAME,
             IndexName: "id-index",
             KeyConditionExpression: "id = :id",
+            FilterExpression: "noteType = :noteType",
             ExpressionAttributeValues: {
-              ":id": uniqueId
+              ":id": uniqueId,
+              ":noteType": NOTE_TYPE,
             }
           }
         ));
@@ -137,7 +167,9 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
   }
 
   /**
-   * Deletes all behavior notes associated with a specific pet.
+    * Deletes all behavior notes associated with a specific pet from Notes.
+    *
+    * Only items tagged BEHAVIOR are deleted.
    * @param petId - The integer ID of the pet whose notes should be removed.
    * @returns A promise resolving to true if the deletions succeeded, false otherwise.
    */
@@ -148,7 +180,11 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
       const command = new QueryCommand({
         TableName : TABLE_NAME,
         KeyConditionExpression : "petId = :petId",
-        ExpressionAttributeValues : {":petId" : petId}
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues : {
+          ":petId" : petId,
+          ":noteType": NOTE_TYPE,
+        }
       })
 
       const result = await docClient.send(command);

@@ -4,8 +4,16 @@ import {
 import { ObserverNoteRepository } from "../../types/index.js";
 import { PutCommand, QueryCommand, ScanCommand, UpdateCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { docClient } from "../../config/index.js";
-const TABLE_NAME = "ObserverNotes";
+const TABLE_NAME = "Notes";
+const NOTE_TYPE = "OBSERVER";
 
+/**
+ * Repository for observer notes stored in the merged Notes table.
+ *
+ * All reads and writes are constrained to items whose noteType is OBSERVER.
+ * The API layer does not provide noteType; it is assigned here so observer
+ * notes stay isolated from behavior notes inside the shared table.
+ */
 
 export class ObserverNoteDBRepository implements ObserverNoteRepository {
   /**
@@ -25,6 +33,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
         const result : any = await docClient.send(new ScanCommand({
           TableName: TABLE_NAME,
           Limit: resolvedLimit,
+          FilterExpression: "noteType = :noteType",
+          ExpressionAttributeValues: {
+            ":noteType": NOTE_TYPE,
+          },
           ExclusiveStartKey: lastKey,
         }));
         lastKey = result.LastEvaluatedKey;
@@ -34,6 +46,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
       const pageResult = await docClient.send(new ScanCommand({
         TableName: TABLE_NAME,
         Limit: resolvedLimit,
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues: {
+          ":noteType": NOTE_TYPE,
+        },
         ExclusiveStartKey: lastKey,
       }));
       
@@ -44,7 +60,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
   }
 
   /**
-   * Retrieves all observer notes associated with a specific pet.
+    * Retrieves all observer notes associated with a specific pet from Notes.
+    *
+    * Results are filtered to the OBSERVER noteType so behavior notes are not
+    * returned even though both note kinds share the same table.
    * @param petId - The integer ID of the pet.
    * @returns A promise resolving to an array of ObserverNote objects for that pet.
    */
@@ -54,8 +73,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
         {
           TableName: TABLE_NAME,
           KeyConditionExpression: "petId = :petId",
+          FilterExpression: "noteType = :noteType",
           ExpressionAttributeValues: {
-            ":petId": petId
+            ":petId": petId,
+            ":noteType": NOTE_TYPE,
           }
         }
       )
@@ -70,8 +91,11 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
   }
 
   /**
-   * Inserts a new observer note into the database.
-   * @param note - The ObserverNote object to add, including content, author, petId, timestamp, and optional status.
+    * Inserts a new observer note into the merged Notes table.
+    *
+    * The repository assigns noteType = OBSERVER before persistence so callers
+    * do not need to know about the storage layout.
+    * @param note - The ObserverNote object to add, including content, author, petId, timestamp, and optional status.
    * @returns A promise resolving to true if the insert succeeded, false otherwise.
    */
   async addObserverNote(note: ObserverNote): Promise<boolean> {
@@ -83,6 +107,7 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
       const item = {
         ...note,
         id: uniqueId,
+        noteType: NOTE_TYPE,
         timestamp: note.timestamp.toISOString(), // Convert Date to ISO string for DynamoDB
         status: note.status ?? "RAISED", // Default status if not provided
       };
@@ -101,7 +126,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
   }
 
   /**
-   * Deletes a single observer note by its ID.
+    * Deletes a single observer note by its ID from the merged Notes table.
+    *
+    * The lookup uses the id-index and filters on noteType so an unrelated note
+    * with the same id cannot be removed accidentally.
    * @param uniqueId - The unique ID of the observer note to remove.
    * @returns A promise resolving to true if the deletion succeeded, false otherwise.
    */
@@ -116,8 +144,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
             TableName: TABLE_NAME,
             IndexName: "id-index",
             KeyConditionExpression: "id = :id",
+            FilterExpression: "noteType = :noteType",
             ExpressionAttributeValues: {
-              ":id": uniqueId
+              ":id": uniqueId,
+              ":noteType": NOTE_TYPE,
             }
           }
         ));
@@ -142,7 +172,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
   }
 
   /**
-   * Updates the status field of a specific observer note.
+    * Updates the status field of a specific observer note in Notes.
+    *
+    * The note is first resolved through the id-index and filtered to OBSERVER so
+    * only observer notes can be updated here.
    * @param uniqueId - The unique ID of the observer note to update.
    * @param status - The new status string to set on the note.
    * @returns A promise resolving to true if the update succeeded, false otherwise.
@@ -154,8 +187,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
         TableName: TABLE_NAME,
         IndexName: "id-index",
         KeyConditionExpression: "id = :id",
+        FilterExpression: "noteType = :noteType",
         ExpressionAttributeValues: {
-          ":id": uniqueId
+          ":id": uniqueId,
+          ":noteType": NOTE_TYPE,
         }
       });
       
@@ -188,7 +223,9 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
   }
 
   /**
-   * Deletes all observer notes associated with a specific pet.
+    * Deletes all observer notes associated with a specific pet from Notes.
+    *
+    * Only items tagged OBSERVER are deleted.
    * @param petId - The integer ID of the pet whose notes should be removed.
    * @returns A promise resolving to true if the deletions succeeded, false otherwise.
    */
@@ -199,7 +236,11 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
       const command = new QueryCommand({
         TableName : TABLE_NAME,
         KeyConditionExpression : "petId = :petId",
-        ExpressionAttributeValues : {":petId" : petId}
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues : {
+          ":petId" : petId,
+          ":noteType": NOTE_TYPE,
+        }
       })
 
       const result = await docClient.send(command);

@@ -10,11 +10,14 @@ import {
 import { addBehaviorNote, getAllBehaviorNotes, removeBehaviorNoteById, removeNotesByPetId,getBehaviorNotesByPetId as _getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
 
 /**
- * Retrieves a paginated list of all behavior notes.
+ * Retrieves a paginated list of behavior notes.
  * 
  * Supports optional query parameters for pagination:
  * - limit: Maximum number of notes to return (default: 10)
  * - page: Page number (default: 1)
+ *
+ * The request body does not include noteType; that value is assigned by the
+ * behavior notes repository when the note is persisted.
  * 
  * @param req - Express request object with optional query parameters
  * @param res - Express response object
@@ -77,6 +80,9 @@ export async function deleteBehaviorNote(req: Request, res: Response) {
 
 /**
  * Retrieves all behavior notes associated with a specific pet.
+ *
+ * Results come from the shared Notes table but are filtered to behavior notes
+ * by the repository layer.
  * 
  * @param req - Express request object with petId parameter in route params
  * @param res - Express response object
@@ -98,6 +104,8 @@ export async function getBehaviorNotesByPetId(req: Request, res: Response) {
 
 /**
  * Deletes all behavior notes associated with a specific pet.
+ *
+ * Only behavior notes are removed from the merged table.
  * 
  * @param req - Express request object with petId parameter in route params
  * @param res - Express response object
@@ -125,6 +133,7 @@ export async function deleteBehaviorNotesByPetId(req: Request, res: Response) {
  * 
  * Validates the request body against BehaviorNoteCreateSchema before creating the note.
  * The note is automatically timestamped with the current date/time.
+ * noteType is not accepted from the request and is assigned in the repository.
  * 
  * @param req - Express request object with behavior note data in body
  * @param res - Express response object
@@ -140,6 +149,7 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
   const { title, content, author, petId } = parseResult.data;
   const newBehaviorNote: BehaviorNote = {
     id: 0, // set later.
+    // noteType is assigned in the repository layer.
     timestamp: new Date(),
     title,
     content,
