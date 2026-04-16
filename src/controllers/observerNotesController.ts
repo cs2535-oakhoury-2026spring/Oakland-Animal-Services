@@ -15,12 +15,15 @@ import {
 } from "../models/ObserverNote.schema.js";
 
 /**
- * Retrieves a paginated list of all observer notes.
+ * Retrieves a paginated list of observer notes.
  * 
  * @param req - Express request object containing optional query parameters:
  *              `limit` (number of notes per page) and `page` (page number).
  * @param res - Express response object.
  * @returns A JSON response with success status and the list of observer notes.
+ *
+ * noteType is not exposed in the API and is set inside the observer notes
+ * repository before persistence.
  */
 export async function listObserverNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
@@ -108,6 +111,9 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
 
 /**
  * Retrieves all observer notes associated with a specific pet ID.
+ *
+ * Results come from the shared Notes table but are filtered to observer notes
+ * by the repository layer.
  * 
  * @param req - Express request object containing the `petId` in path parameters.
  * @param res - Express response object.
@@ -128,6 +134,8 @@ export async function getObserverNotesByPetId(req: Request, res: Response) {
 
 /**
  * Deletes all observer notes associated with a specific pet ID.
+ *
+ * Only observer notes are removed from the merged table.
  * 
  * @param req - Express request object containing the `petId` in path parameters.
  * @param res - Express response object.
@@ -153,6 +161,7 @@ export async function deleteObserverNotesByPetId(req: Request, res: Response) {
  * 
  * @param req - Express request object containing `content`, `author`, and `petId` in the body.
  * @param res - Express response object.
+ * noteType is not accepted from the request and is assigned in the repository.
  * @returns A JSON response with the created observer note or validation errors.
  */
 export async function uploadObserverNote(req: Request, res: Response) {
@@ -164,6 +173,7 @@ export async function uploadObserverNote(req: Request, res: Response) {
   const { title, content, author, petId } = parseResult.data;
   const newObserverNote: ObserverNote = {
     id: 0, // set later.
+    // noteType is assigned in the repository layer.
     timestamp: new Date(),
     status: "RAISED",
     title,
