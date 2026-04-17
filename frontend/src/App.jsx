@@ -20,6 +20,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { findSimilarNotes } from "./utils/noteSearcher.js";
+import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
 
 const noteDataCache = new Map();
 
@@ -2776,6 +2778,15 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
   const r = useResponsive();
   const [locations, setLocations] = useState(null);
   const [loadError, setLoadError] = useState(false);
+  const [selectedSpecies, setSelectedSpecies] = useState([]);
+  const [selectedKennels, setSelectedKennels] = useState([]);
+  const [qrSizePx, setQrSizePx] = useState(180);
+  const [paperSize, setPaperSize] = useState("letter");
+  const [includeLocationText, setIncludeLocationText] = useState(true);
+  const [includeAnimalTypeText, setIncludeAnimalTypeText] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+  const [previewQrMap, setPreviewQrMap] = useState({});
 
   useEffect(() => {
     setLoadError(false);
@@ -2817,11 +2828,184 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
         if (x.species !== y.species) return x.species.localeCompare(y.species);
         return x.location.localeCompare(y.location);
       });
+
+      const speciesOptions = Array.from(new Set(sorted.map((s) => s.species))).sort();
       setLocations(sorted);
+      setSelectedSpecies(speciesOptions);
+      setSelectedKennels(sorted.map((s) => `${s.species}|${s.location}`));
     });
   }, []);
 
   const isDesktop = r.width >= 768;
+  const speciesOptions = locations ? Array.from(new Set(locations.map((s) => s.species))).sort() : [];
+  const speciesFilterSet = new Set(selectedSpecies);
+  const visibleLocations = locations
+    ? locations.filter((loc) => selectedSpecies.length === 0 || speciesFilterSet.has(loc.species))
+    : [];
+  const visibleKeys = visibleLocations.map((loc) => `${loc.species}|${loc.location}`);
+  const selectedKennelSet = new Set(selectedKennels);
+  const selectedExportLocations = visibleLocations.filter((loc) =>
+    selectedKennelSet.has(`${loc.species}|${loc.location}`)
+  );
+
+  const computePdfLayout = () => {
+    const qrWidth = Math.max(96, Math.min(512, Number(qrSizePx) || 180));
+    const qrSizePt = Math.round(qrWidth * 0.75);
+    const size = paperSize === "a4" ? "a4" : "letter";
+    const sizeProbe = new jsPDF({ orientation: "portrait", unit: "pt", format: size });
+    const pageWidth = sizeProbe.internal.pageSize.getWidth();
+    const pageHeight = sizeProbe.internal.pageSize.getHeight();
+    const margin = 32;
+    const gutter = 16;
+    const labelHeight = includeLocationText ? 28 : 0;
+    const cellHeight = qrSizePt + labelHeight + 16;
+    const cols = Math.max(1, Math.floor((pageWidth - margin * 2 + gutter) / (qrSizePt + gutter)));
+    const rowsPerPage = Math.max(1, Math.floor((pageHeight - margin * 2) / cellHeight));
+    const itemsPerPage = Math.max(1, cols * rowsPerPage);
+
+    return {
+      format: size,
+      qrSizePt,
+      pageWidth,
+      pageHeight,
+      margin,
+      gutter,
+      labelHeight,
+      cellHeight,
+      cols,
+      rowsPerPage,
+      itemsPerPage,
+    };
+  };
+
+  const previewLayout = computePdfLayout();
+  const previewItems = selectedExportLocations.slice(0, previewLayout.itemsPerPage);
+  const totalPdfPages = Math.max(1, Math.ceil(selectedExportLocations.length / previewLayout.itemsPerPage));
+
+  useEffect(() => {
+    let canceled = false;
+
+    const generatePreviewQrs = async () => {
+      if (previewItems.length === 0) {
+        if (!canceled) setPreviewQrMap({});
+        return;
+      }
+
+      const entries = await Promise.all(
+        previewItems.map(async (loc) => {
+          const key = `${loc.species}|${loc.location}`;
+          try {
+            const previewPayload = `${window.location.origin}/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+            const url = await QRCode.toDataURL(previewPayload, { width: 256, margin: 1 });
+            return [key, url];
+          } catch {
+            return [key, ""];
+          }
+        })
+      );
+
+      if (!canceled) {
+        setPreviewQrMap(Object.fromEntries(entries));
+      }
+    };
+
+    generatePreviewQrs();
+    return () => {
+      canceled = true;
+    };
+  }, [
+    selectedExportLocations.map((loc) => `${loc.species}|${loc.location}`).join(";"),
+    previewLayout.itemsPerPage,
+    includeLocationText,
+    paperSize,
+    qrSizePx,
+  ]);
+
+  const toggleSpecies = (species) => {
+    setSelectedSpecies((prev) =>
+      prev.includes(species) ? prev.filter((s) => s !== species) : [...prev, species]
+    );
+  };
+
+  const selectAllVisibleKennels = () => {
+    setSelectedKennels((prev) => Array.from(new Set([...prev, ...visibleKeys])));
+  };
+
+  const clearVisibleKennels = () => {
+    const visibleSet = new Set(visibleKeys);
+    setSelectedKennels((prev) => prev.filter((k) => !visibleSet.has(k)));
+  };
+
+  const toggleKennel = (key) => {
+    setSelectedKennels((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const exportSelectedToPdf = async () => {
+    if (!locations || locations.length === 0 || selectedKennels.length === 0 || exportingPdf) return;
+
+    const selectedSet = new Set(selectedKennels);
+    const toExport = visibleLocations.filter((loc) => selectedSet.has(`${loc.species}|${loc.location}`));
+    if (toExport.length === 0) return;
+
+    setExportingPdf(true);
+    try {
+      const baseUrl = window.location.origin;
+      const layout = computePdfLayout();
+      const qrWidth = Math.max(96, Math.min(512, Number(qrSizePx) || 180));
+      const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: layout.format });
+
+      let col = 0;
+      let y = layout.margin;
+
+      doc.setFontSize(12);
+      doc.text("Oakland Animal Services Kennel QR Codes", layout.margin, 20);
+
+      for (let i = 0; i < toExport.length; i++) {
+        const loc = toExport[i];
+        const key = `${loc.species}|${loc.location}`;
+        const targetUrl = `${baseUrl}/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+        const qrDataUrl = await QRCode.toDataURL(targetUrl, { width: qrWidth, margin: 1 });
+
+        if (y + layout.cellHeight > layout.pageHeight - layout.margin) {
+          doc.addPage();
+          y = layout.margin;
+          col = 0;
+        }
+
+        const drawX = layout.margin + col * (layout.qrSizePt + layout.gutter);
+        doc.addImage(qrDataUrl, "PNG", drawX, y, layout.qrSizePt, layout.qrSizePt);
+
+        if (includeLocationText) {
+          const label = includeAnimalTypeText
+            ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
+            : loc.location.toUpperCase();
+          doc.setFontSize(9);
+          doc.text(label, drawX + layout.qrSizePt / 2, y + layout.qrSizePt + 12, {
+            align: "center",
+            maxWidth: layout.qrSizePt,
+          });
+        }
+
+        col += 1;
+        if (col >= layout.cols) {
+          col = 0;
+          y += layout.cellHeight;
+        }
+
+        if (!selectedSet.has(key)) continue;
+      }
+
+      const datePart = new Date().toISOString().slice(0, 10);
+      doc.save(`kennel-qr-codes-${datePart}.pdf`);
+    } catch (err) {
+      console.error("Failed to export locations PDF", err);
+      alert("Failed to export PDF. Please try again.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
     <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
@@ -2869,6 +3053,334 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
           </button>
         </div>
 
+        {locations && !loadError && locations.length > 0 && (
+          <div style={{ backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`, borderRadius: 12, padding: 14, marginBottom: 14 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: c.textPrimary, marginBottom: 10 }}>Export Locations To PDF</div>
+            <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "minmax(0, 1fr) 300px" : "1fr", gap: 14, alignItems: "start" }}>
+              <div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
+                  {speciesOptions.map((species) => {
+                    const on = selectedSpecies.includes(species);
+                    return (
+                      <button
+                        key={species}
+                        onClick={() => toggleSpecies(species)}
+                        style={{
+                          minHeight: 34,
+                          padding: "6px 10px",
+                          borderRadius: 999,
+                          border: `1px solid ${on ? c.headerGreen : c.cardBorder}`,
+                          backgroundColor: on ? `${c.headerGreen}20` : c.cardBg,
+                          color: c.textPrimary,
+                          cursor: "pointer",
+                          fontFamily: font,
+                          fontSize: 12,
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {species}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr", gap: 10, marginBottom: 10 }}>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, color: c.textSecondary }}>
+                    QR Size (px)
+                    <input
+                      type="number"
+                      min={96}
+                      max={512}
+                      step={8}
+                      value={qrSizePx}
+                      onChange={(e) => setQrSizePx(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        border: `1px solid ${c.inputBorder}`,
+                        backgroundColor: c.inputBg,
+                        color: c.textPrimary,
+                        fontFamily: font,
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </label>
+                  <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 12, color: c.textSecondary }}>
+                    Paper Size
+                    <select
+                      value={paperSize}
+                      onChange={(e) => setPaperSize(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 10px",
+                        borderRadius: 8,
+                        border: `1px solid ${c.inputBorder}`,
+                        backgroundColor: c.inputBg,
+                        color: c.textPrimary,
+                        fontFamily: font,
+                        boxSizing: "border-box",
+                      }}
+                    >
+                      <option value="letter">Letter (8.5 x 11 in)</option>
+                      <option value="a4">A4 (210 x 297 mm)</option>
+                    </select>
+                  </label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, justifyContent: "center" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: c.textSecondary }}>
+                      <input type="checkbox" checked={includeLocationText} onChange={(e) => setIncludeLocationText(e.target.checked)} />
+                      Add location text below QR
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: c.textSecondary }}>
+                      <input type="checkbox" checked={includeAnimalTypeText} onChange={(e) => setIncludeAnimalTypeText(e.target.checked)} disabled={!includeLocationText} />
+                      Include animal type in label
+                    </label>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+                  <button
+                    onClick={selectAllVisibleKennels}
+                    style={{
+                      minHeight: 34,
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: `1px solid ${c.cardBorder}`,
+                      backgroundColor: c.cardBg,
+                      color: c.textPrimary,
+                      cursor: "pointer",
+                      fontFamily: font,
+                      fontSize: 12,
+                    }}
+                  >
+                    Select Visible Kennels
+                  </button>
+                  <button
+                    onClick={clearVisibleKennels}
+                    style={{
+                      minHeight: 34,
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: `1px solid ${c.cardBorder}`,
+                      backgroundColor: c.cardBg,
+                      color: c.textPrimary,
+                      cursor: "pointer",
+                      fontFamily: font,
+                      fontSize: 12,
+                    }}
+                  >
+                    Clear Visible Kennels
+                  </button>
+                  <button
+                    onClick={exportSelectedToPdf}
+                    disabled={exportingPdf || selectedExportLocations.length === 0}
+                    style={{
+                      minHeight: 34,
+                      padding: "6px 12px",
+                      borderRadius: 8,
+                      border: "none",
+                      backgroundColor: c.headerGreen,
+                      color: "#fff",
+                      cursor: exportingPdf || selectedExportLocations.length === 0 ? "not-allowed" : "pointer",
+                      opacity: exportingPdf || selectedExportLocations.length === 0 ? 0.65 : 1,
+                      fontFamily: font,
+                      fontSize: 12,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {exportingPdf ? "Exporting..." : `Export ${selectedExportLocations.length} To PDF`}
+                  </button>
+                </div>
+                <div style={{ fontSize: 12, color: c.warmGray }}>
+                  Select which kennels to include, then export QR labels to a printable PDF.
+                </div>
+              </div>
+
+              <div>
+                <div style={{ fontSize: 12, color: c.textSecondary, marginBottom: 8 }}>
+                  PDF Preview (page 1 of {totalPdfPages}): {previewLayout.format.toUpperCase()} · {previewLayout.cols} cols x {previewLayout.rowsPerPage} rows
+                </div>
+
+                <button
+                  onClick={() => setPreviewExpanded(true)}
+                  disabled={previewItems.length === 0}
+                  style={{
+                    width: "100%",
+                    padding: 0,
+                    background: "none",
+                    border: "none",
+                    cursor: previewItems.length === 0 ? "not-allowed" : "zoom-in",
+                    textAlign: "left",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "100%",
+                      aspectRatio: `${previewLayout.pageWidth} / ${previewLayout.pageHeight}`,
+                      backgroundColor: "#fff",
+                      border: `1px solid ${c.cardBorder}`,
+                      borderRadius: 8,
+                      position: "relative",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {previewItems.map((loc, i) => {
+                      const col = i % previewLayout.cols;
+                      const row = Math.floor(i / previewLayout.cols);
+                      const scale = 300 / previewLayout.pageWidth;
+                      const x = (previewLayout.margin + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
+                      const y = (previewLayout.margin + row * previewLayout.cellHeight) * scale;
+                      const qrPx = previewLayout.qrSizePt * scale;
+                      const key = `${loc.species}|${loc.location}`;
+                      const label = includeAnimalTypeText
+                        ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
+                        : loc.location.toUpperCase();
+
+                      return (
+                        <div key={key} style={{ position: "absolute", left: x, top: y, width: qrPx, textAlign: "center" }}>
+                          {previewQrMap[key] ? (
+                            <img src={previewQrMap[key]} alt="Preview QR" style={{ width: qrPx, height: qrPx, display: "block" }} />
+                          ) : (
+                            <div style={{ width: qrPx, height: qrPx, backgroundColor: "#efefef", border: "1px solid #ddd" }} />
+                          )}
+                          {includeLocationText && (
+                            <div
+                              style={{
+                                fontSize: Math.max(6, Math.round(9 * scale)),
+                                color: "#111",
+                                lineHeight: 1.2,
+                                marginTop: 2,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {label}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </button>
+
+                <div style={{ fontSize: 11, color: c.warmGray, marginTop: 6 }}>
+                  Click preview to enlarge.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {previewExpanded && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.65)",
+              zIndex: 120,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 16,
+            }}
+            onClick={() => setPreviewExpanded(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: c.cardBg,
+                borderRadius: 12,
+                padding: 14,
+                border: `1px solid ${c.cardBorder}`,
+                width: "min(92vw, 880px)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: c.textPrimary }}>
+                  PDF Preview (page 1)
+                </div>
+                <button
+                  onClick={() => setPreviewExpanded(false)}
+                  style={{
+                    minHeight: 32,
+                    padding: "4px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${c.cardBorder}`,
+                    backgroundColor: c.cardBg,
+                    color: c.textPrimary,
+                    cursor: "pointer",
+                    fontFamily: font,
+                    fontSize: 12,
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div
+                style={{
+                  width: "100%",
+                  maxHeight: "76vh",
+                  overflow: "auto",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <div
+                  style={{
+                    width: "min(86vw, 760px)",
+                    aspectRatio: `${previewLayout.pageWidth} / ${previewLayout.pageHeight}`,
+                    backgroundColor: "#fff",
+                    border: `1px solid ${c.cardBorder}`,
+                    borderRadius: 8,
+                    position: "relative",
+                    overflow: "hidden",
+                  }}
+                >
+                  {previewItems.map((loc, i) => {
+                    const col = i % previewLayout.cols;
+                    const row = Math.floor(i / previewLayout.cols);
+                    const scale = Math.min(86 * window.innerWidth / 100, 760) / previewLayout.pageWidth;
+                    const x = (previewLayout.margin + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
+                    const y = (previewLayout.margin + row * previewLayout.cellHeight) * scale;
+                    const qrPx = previewLayout.qrSizePt * scale;
+                    const key = `${loc.species}|${loc.location}`;
+                    const label = includeAnimalTypeText
+                      ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
+                      : loc.location.toUpperCase();
+
+                    return (
+                      <div key={key} style={{ position: "absolute", left: x, top: y, width: qrPx, textAlign: "center" }}>
+                        {previewQrMap[key] ? (
+                          <img src={previewQrMap[key]} alt="Preview QR" style={{ width: qrPx, height: qrPx, display: "block" }} />
+                        ) : (
+                          <div style={{ width: qrPx, height: qrPx, backgroundColor: "#efefef", border: "1px solid #ddd" }} />
+                        )}
+                        {includeLocationText && (
+                          <div
+                            style={{
+                              fontSize: Math.max(8, Math.round(9 * scale)),
+                              color: "#111",
+                              lineHeight: 1.2,
+                              marginTop: 2,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {label}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {locations === null && (
           <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr", gap: 10 }}>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -2893,36 +3405,66 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
           </div>
         )}
 
-        {locations && !loadError && locations.length > 0 && (
+        {locations && !loadError && visibleLocations.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr", gap: 10 }}>
-            {locations.map((loc) => (
-              <button
+            {visibleLocations.map((loc) => (
+              <div
                 key={`${loc.species}|${loc.location}`}
-                onClick={() => {
-                  window.location.href = `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
-                }}
                 style={{
-                  display: "flex",
+                  display: "grid",
+                  gridTemplateColumns: "auto 1fr auto",
                   alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 10,
+                  gap: 12,
                   padding: 14,
                   backgroundColor: c.cardBg,
                   borderRadius: 12,
                   border: `1px solid ${c.cardBorder}`,
-                  cursor: "pointer",
                   textAlign: "left",
                   fontFamily: font,
                   boxShadow: c.shadow,
                 }}
               >
+                <input
+                  type="checkbox"
+                  checked={selectedKennelSet.has(`${loc.species}|${loc.location}`)}
+                  onChange={() => toggleKennel(`${loc.species}|${loc.location}`)}
+                  aria-label={`Select ${loc.label}`}
+                />
                 <div>
                   <div style={{ fontSize: 15, fontWeight: 700, color: c.textPrimary }}>{loc.label}</div>
                   <div style={{ fontSize: 12, color: c.textSecondary, marginTop: 2 }}>{loc.count} animals currently in this location</div>
                 </div>
-                <Icons.arrowRight size={16} color={c.warmGray} />
-              </button>
+                <button
+                  onClick={() => {
+                    window.location.href = `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+                  }}
+                  style={{
+                    minHeight: 34,
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${c.cardBorder}`,
+                    backgroundColor: c.cardBg,
+                    color: c.textPrimary,
+                    cursor: "pointer",
+                    fontFamily: font,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  Open
+                  <Icons.arrowRight size={14} color={c.warmGray} />
+                </button>
+              </div>
             ))}
+          </div>
+        )}
+
+        {locations && !loadError && locations.length > 0 && visibleLocations.length === 0 && (
+          <div style={{ textAlign: "center", padding: 24, color: c.warmGray, fontSize: 14, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            No kennels match the selected animal types.
           </div>
         )}
       </div>
