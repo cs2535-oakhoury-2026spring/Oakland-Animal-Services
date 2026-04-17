@@ -553,12 +553,20 @@ const api = {
     }
   },
 
-  getAllAnimals: async () => {
+  getAllAnimals: async (page = 1, limit = 50) => {
     try {
-      const res = await fetch("/api/animals/all");
+      const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`);
       if (!res.ok) throw new Error("Failed to fetch animals");
       const data = await res.json();
-      if (data.success && Array.isArray(data.animals)) return data.animals;
+      if (data.success && Array.isArray(data.animals)) {
+        return {
+          animals: data.animals,
+          page: data.page || page,
+          limit: data.limit || limit,
+          total: data.total || data.animals.length,
+          totalPages: data.totalPages || 1,
+        };
+      }
       throw new Error("Invalid response");
     } catch (err) {
       console.error("getAllAnimals error:", err);
@@ -2465,13 +2473,26 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
   const [animals, setAnimals] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadError, setLoadError] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalAnimals, setTotalAnimals] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const PAGE_SIZE = 50;
 
   useEffect(() => {
-    api.getAllAnimals().then((result) => {
-      if (result === null) { setLoadError(true); setAnimals([]); }
-      else setAnimals(result);
+    setLoadError(false);
+    api.getAllAnimals(page, PAGE_SIZE).then((result) => {
+      if (result === null) {
+        setLoadError(true);
+        setAnimals([]);
+        setTotalAnimals(0);
+        setTotalPages(1);
+      } else {
+        setAnimals(result.animals || []);
+        setTotalAnimals(result.total || 0);
+        setTotalPages(result.totalPages || 1);
+      }
     });
-  }, []);
+  }, [page]);
 
   const SHOWN_SPECIES = new Set(["dog", "cat", "rabbit"]);
 
@@ -2535,7 +2556,9 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
           <h2 style={{ fontSize: isDesktop ? 26 : 22, fontWeight: 700, color: c.textPrimary, margin: 0 }}>All Animals</h2>
           {animals && (
             <span style={{ fontSize: 14, color: c.warmGray }}>
-              {filtered.length === animals.length ? `${animals.length} animals` : `${filtered.length} of ${animals.length}`}
+              {searchQuery.trim()
+                ? `${filtered.length} matches on this page`
+                : `${totalAnimals} animals · page ${page} of ${totalPages}`}
             </span>
           )}
         </div>
@@ -2655,6 +2678,46 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
           );
         })}
       </div>
+
+      {animals && !loadError && totalPages > 1 && (
+        <div style={{ maxWidth: isDesktop ? 1200 : 700, margin: "14px auto 0", padding: isDesktop ? "0 28px" : "0 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            style={{
+              minHeight: 40,
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: `1px solid ${c.cardBorder}`,
+              backgroundColor: page <= 1 ? c.inputBg : c.cardBg,
+              color: page <= 1 ? c.warmGray : c.textPrimary,
+              cursor: page <= 1 ? "not-allowed" : "pointer",
+              fontFamily: font,
+            }}
+          >
+            Previous
+          </button>
+          <span style={{ fontSize: 14, color: c.textSecondary, minWidth: 110, textAlign: "center" }}>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            style={{
+              minHeight: 40,
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: `1px solid ${c.cardBorder}`,
+              backgroundColor: page >= totalPages ? c.inputBg : c.cardBg,
+              color: page >= totalPages ? c.warmGray : c.textPrimary,
+              cursor: page >= totalPages ? "not-allowed" : "pointer",
+              fontFamily: font,
+            }}
+          >
+            Next
+          </button>
+        </div>
+      )}
 
     </main>
   );

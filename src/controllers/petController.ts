@@ -8,7 +8,7 @@ const petLocationCache: Map<string, PetLocation[]> = new Map();
 
 /**
  * Retrieves a single pet by its unique identifier.
- * 
+ *
  * @param req - Express request object containing the `petId` in path parameters.
  * @param res - Express response object.
  * @returns A JSON response with the pet object or a 404 error if not found.
@@ -68,8 +68,17 @@ export async function getPetByLocation(req: Request, res: Response) {
 
 export async function getAllAnimalsHandler(req: Request, res: Response) {
   try {
-    const animals = await getAllAnimals();
-    res.json({ success: true, animals });
+    const pageRaw =
+      typeof req.query.page === "string" ? Number(req.query.page) : 1;
+    const limitRaw =
+      typeof req.query.limit === "string" ? Number(req.query.limit) : 50;
+    const page =
+      Number.isFinite(pageRaw) && pageRaw > 0 ? Math.floor(pageRaw) : 1;
+    const limit =
+      Number.isFinite(limitRaw) && limitRaw > 0 ? Math.floor(limitRaw) : 50;
+
+    const result = await getAllAnimals(page, limit);
+    res.json({ success: true, ...result });
   } catch (err) {
     console.error("getAllAnimals failed", err);
     res.status(500).json({ success: false, error: "Failed to fetch animals" });
