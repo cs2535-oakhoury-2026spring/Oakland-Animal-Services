@@ -573,6 +573,27 @@ const api = {
       return null;
     }
   },
+
+  getAllAnimalsAllPages: async (limit = 200) => {
+    const first = await api.getAllAnimals(1, limit);
+    if (!first) return null;
+
+    const totalPages = first.totalPages || 1;
+    if (totalPages <= 1) return first.animals || [];
+
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) => api.getAllAnimals(i + 2, limit))
+    );
+
+    const merged = [...(first.animals || [])];
+    rest.forEach((pageResult) => {
+      if (pageResult && Array.isArray(pageResult.animals)) {
+        merged.push(...pageResult.animals);
+      }
+    });
+
+    return merged;
+  },
 };
 
 /**
@@ -2505,12 +2526,9 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
     });
   }, [page]);
 
-  const SHOWN_SPECIES = new Set(["dog", "cat", "rabbit"]);
-
-  // Client-side filter: only show dogs, cats, rabbits; also apply search query
+  // Client-side filter: apply search query across all returned animals
   const filtered = animals
     ? animals.filter((a) => {
-        if (!SHOWN_SPECIES.has((a.species || "").toLowerCase())) return false;
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -2574,6 +2592,26 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
           )}
         </div>
         <p style={{ fontSize: 14, color: c.textSecondary, margin: "0 0 16px" }}>All animals currently at Oakland Animal Services</p>
+
+        <div style={{ marginBottom: 12 }}>
+          <button
+            onClick={() => { window.location.href = "/?view=locations"; }}
+            style={{
+              minHeight: 40,
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: `1px solid ${c.cardBorder}`,
+              backgroundColor: c.cardBg,
+              color: c.textPrimary,
+              cursor: "pointer",
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            View Kennel Locations
+          </button>
+        </div>
 
         {/* Search bar */}
         <div style={{ position: "relative", marginBottom: 20, maxWidth: isDesktop ? 500 : "100%" }}>
@@ -2734,6 +2772,164 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
   );
 }
 
+function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
+  const r = useResponsive();
+  const [locations, setLocations] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    setLoadError(false);
+    api.getAllAnimalsAllPages().then((animals) => {
+      if (!animals) {
+        setLoadError(true);
+        setLocations([]);
+        return;
+      }
+
+      const map = new Map();
+      animals.forEach((a) => {
+        const species = (a.species || "").toLowerCase();
+        const originalLocation = (a.location || "").trim();
+        if (!species || !originalLocation) return;
+
+        const normalized = originalLocation
+          .replace(new RegExp(`^${a.species}\\s+`, "i"), "")
+          .trim()
+          .toLowerCase();
+
+        if (!normalized || normalized === "unknown" || normalized === "in foster") return;
+
+        const key = `${species}|${normalized}`;
+        const curr = map.get(key);
+        if (curr) {
+          curr.count += 1;
+        } else {
+          map.set(key, {
+            species,
+            location: normalized,
+            label: `${species.toUpperCase()} ${normalized.toUpperCase()}`,
+            count: 1,
+          });
+        }
+      });
+
+      const sorted = Array.from(map.values()).sort((x, y) => {
+        if (x.species !== y.species) return x.species.localeCompare(y.species);
+        return x.location.localeCompare(y.location);
+      });
+      setLocations(sorted);
+    });
+  }, []);
+
+  const isDesktop = r.width >= 768;
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ flex: 1 }}>
+          <UserDropdown user={user} onLogout={onLogout} c={c} />
+        </div>
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          {setDarkMode && (
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40, transition: "all 0.15s" }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = c.inputBg; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; }}
+              aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}>
+              {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div style={{ maxWidth: isDesktop ? 1200 : 700, margin: "0 auto", padding: isDesktop ? "24px 28px 0" : "20px 16px 0" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+          <div>
+            <h2 style={{ fontSize: isDesktop ? 26 : 22, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Kennel Locations</h2>
+            <p style={{ fontSize: 14, color: c.textSecondary, margin: "6px 0 0" }}>Generated from all current animals</p>
+          </div>
+          <button
+            onClick={() => { window.location.href = "/"; }}
+            style={{
+              minHeight: 40,
+              padding: "8px 14px",
+              borderRadius: 8,
+              border: `1px solid ${c.cardBorder}`,
+              backgroundColor: c.cardBg,
+              color: c.textPrimary,
+              cursor: "pointer",
+              fontFamily: font,
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Back To Home
+          </button>
+        </div>
+
+        {locations === null && (
+          <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr", gap: 10 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{ padding: 14, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+                <Skeleton width="40%" height={14} />
+                <div style={{ height: 6 }} />
+                <Skeleton width="60%" height={12} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {loadError && (
+          <div style={{ textAlign: "center", padding: 48, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            Could not load locations. Please try again.
+          </div>
+        )}
+
+        {locations && !loadError && locations.length === 0 && (
+          <div style={{ textAlign: "center", padding: 48, color: c.warmGray, fontSize: 15, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            No kennel locations available right now.
+          </div>
+        )}
+
+        {locations && !loadError && locations.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr", gap: 10 }}>
+            {locations.map((loc) => (
+              <button
+                key={`${loc.species}|${loc.location}`}
+                onClick={() => {
+                  window.location.href = `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 10,
+                  padding: 14,
+                  backgroundColor: c.cardBg,
+                  borderRadius: 12,
+                  border: `1px solid ${c.cardBorder}`,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontFamily: font,
+                  boxShadow: c.shadow,
+                }}
+              >
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: c.textPrimary }}>{loc.label}</div>
+                  <div style={{ fontSize: 12, color: c.textSecondary, marginTop: 2 }}>{loc.count} animals currently in this location</div>
+                </div>
+                <Icons.arrowRight size={16} color={c.warmGray} />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
 export default function App() {
   const [user] = useState({ displayName: "Staff", role: "staff", email: "", department: "" });
   const [animals, setAnimals] = useState([]);
@@ -2755,6 +2951,7 @@ export default function App() {
   const urlPetId = urlParams.get("petId");
   const petType = urlParams.get("type");
   const kennelLocation = urlParams.get("location");
+  const view = urlParams.get("view");
   const homePageParam = Number(urlParams.get("page") || "1");
   const homePage = Number.isFinite(homePageParam) && homePageParam > 0 ? Math.floor(homePageParam) : 1;
 
@@ -2789,6 +2986,11 @@ export default function App() {
       .catch((err) => { setLocationError(err.message); })
       .finally(() => { setRefreshing(false); });
   };
+
+  // No URL params → show home screen with all animals
+  if (view === "locations") {
+    return <LocationsPage user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
+  }
 
   // No URL params → show home screen with all animals
   if (!hasUrlParams && !selectedPetId) {

@@ -186,13 +186,32 @@ function parsePet(record: any): Pet | undefined {
   if (!record) return undefined;
 
   const pictures = extractPictures(record);
+  const normalizedName =
+    typeof record.animalName === "string" && record.animalName.trim().length > 0
+      ? record.animalName.trim()
+      : `Animal #${record.animalID ?? "Unknown"}`;
+  const normalizedSpecies =
+    typeof record.animalSpecies === "string" &&
+    record.animalSpecies.trim().length > 0
+      ? record.animalSpecies.trim()
+      : "Unknown";
+  const normalizedSex =
+    typeof record.animalSex === "string" && record.animalSex.trim().length > 0
+      ? record.animalSex.trim()
+      : "Unknown";
+  const normalizedSummary =
+    (typeof record.animalSummary === "string" && record.animalSummary.trim()) ||
+    (typeof record.animalDescription === "string" &&
+      record.animalDescription.trim()) ||
+    `I am at Oakland Animal Services`;
+
   const pet: Pet = {
     id: parseInt(record.animalID, 10),
-    name: record.animalName,
-    species: record.animalSpecies,
-    sex: record.animalSex,
+    name: normalizedName,
+    species: normalizedSpecies,
+    sex: normalizedSex,
     description: record.animalDescription || undefined,
-    summary: record.animalSummary || record.animalDescription || "",
+    summary: normalizedSummary,
     breed: record.animalPrimaryBreed || record.animalBreed || undefined,
     status: record.animalStatus,
     rescueId: record.animalRescueID,
