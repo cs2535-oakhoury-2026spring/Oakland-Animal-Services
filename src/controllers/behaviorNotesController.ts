@@ -7,7 +7,13 @@ import {
   BehaviorNoteCreateSchema,
   BehaviorNoteSchema,
 } from "../models/BehaviorNote.schema.js";
-import { addBehaviorNote, getAllBehaviorNotes, removeBehaviorNoteById, removeNotesByPetId,getBehaviorNotesByPetId as _getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
+import {
+  addBehaviorNote,
+  getAllBehaviorNotes,
+  removeBehaviorNoteById,
+  removeNotesByPetId,
+  getBehaviorNotesByPetId as _getBehaviorNotesByPetId,
+} from "../services/behaviorNoteService.js";
 
 /**
  * Retrieves a paginated list of behavior notes.

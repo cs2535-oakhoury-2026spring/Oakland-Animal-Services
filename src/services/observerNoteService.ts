@@ -14,6 +14,12 @@ import {
 
 export type { ObserverNote };
 
+/**
+ * Similarity search output for observer notes.
+ *
+ * Contains the matched note, keyword-level match metadata, and pre-highlighted
+ * title/content strings that can be rendered directly in the UI.
+ */
 export type SimilarNoteResult = {
   observerNote: ObserverNote;
   matchCount: number;
@@ -25,6 +31,13 @@ export type SimilarNoteResult = {
   highlightedTitle: string;
 };
 
+/**
+ * Retrieves observer notes with optional pagination.
+ *
+ * @param limit - Maximum notes to return.
+ * @param page - 1-based page index.
+ * @returns Observer notes for the requested page.
+ */
 export async function getAllObserverNotes(
   limit?: number,
   page?: number,
@@ -32,20 +45,45 @@ export async function getAllObserverNotes(
   return _getAllObserverNotes(limit, page);
 }
 
+/**
+ * Retrieves all observer notes for a specific pet.
+ *
+ * @param petId - Numeric pet identifier.
+ * @returns Observer notes linked to the pet.
+ */
 export async function getObserverNotesByPetId(
   petId: number,
 ): Promise<ObserverNote[]> {
   return _getObserverNotesByPetId(petId);
 }
 
+/**
+ * Deletes a single observer note by its unique id.
+ *
+ * @param id - Unique note id.
+ * @returns True when a note is removed; false otherwise.
+ */
 export async function removeObserverNoteById(id: number): Promise<boolean> {
   return _removeObserverNoteById(id);
 }
 
+/**
+ * Deletes all observer notes for a specific pet.
+ *
+ * @param petId - Numeric pet identifier.
+ * @returns True when one or more notes are removed; false otherwise.
+ */
 export async function removeNotesByPetId(petId: number): Promise<boolean> {
   return _removeNotesByPetId(petId);
 }
 
+/**
+ * Updates the status of an observer note.
+ *
+ * @param id - Unique note id.
+ * @param status - New status string to persist.
+ * @returns True when the status update succeeds; false otherwise.
+ */
 export async function updateObserverNoteStatus(
   id: number,
   status: string,
@@ -53,10 +91,28 @@ export async function updateObserverNoteStatus(
   return _updateObserverNoteStatus(id, status);
 }
 
+/**
+ * Persists a new observer note.
+ *
+ * @param note - Observer note payload.
+ * @returns True when persistence succeeds; false otherwise.
+ */
 export async function addObserverNote(note: ObserverNote): Promise<boolean> {
   return _addObserverNote(note);
 }
 
+/**
+ * Performs fuzzy similarity search over observer notes.
+ *
+ * Behavior:
+ * - If `options.petId` is provided, search is scoped to that pet.
+ * - Otherwise, paged notes are fetched via `getAllObserverNotes`.
+ * - Matches are ranked and returned with highlight markup metadata.
+ *
+ * @param query - Free-form search text.
+ * @param options - Search scope and result controls.
+ * @returns Ranked similarity results, optionally truncated by `maxResults`.
+ */
 export async function findSimilarObserverNotes(
   query: string,
   options: {
