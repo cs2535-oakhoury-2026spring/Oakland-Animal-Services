@@ -2784,6 +2784,7 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
   const [paperSize, setPaperSize] = useState("letter");
   const [includeLocationText, setIncludeLocationText] = useState(true);
   const [includeAnimalTypeText, setIncludeAnimalTypeText] = useState(true);
+  const [centerAllQrs, setCenterAllQrs] = useState(true);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [previewExpanded, setPreviewExpanded] = useState(false);
   const [previewQrMap, setPreviewQrMap] = useState({});
@@ -2878,6 +2879,26 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
     };
   };
 
+  const getRowStartX = (layout, itemsOnPage, row) => {
+    const usedBeforeRow = row * layout.cols;
+    const rowItems = Math.max(0, Math.min(layout.cols, itemsOnPage - usedBeforeRow));
+    const rowWidth = rowItems > 0 ? rowItems * layout.qrSizePt + (rowItems - 1) * layout.gutter : 0;
+    const usableWidth = layout.pageWidth - 2 * layout.margin;
+    return centerAllQrs
+      ? layout.margin + Math.max(0, (usableWidth - rowWidth) / 2)
+      : layout.margin;
+  };
+
+  const getPageStartY = (layout, itemsOnPage) => {
+    const rowsUsed = Math.max(1, Math.ceil(itemsOnPage / layout.cols));
+    const lastRowContentHeight = layout.qrSizePt + (layout.labelHeight > 0 ? 12 : 0);
+    const blockHeight = (rowsUsed - 1) * layout.cellHeight + lastRowContentHeight;
+    const usableHeight = layout.pageHeight - 2 * layout.margin;
+    return centerAllQrs
+      ? layout.margin + Math.max(0, (usableHeight - blockHeight) / 2)
+      : layout.margin;
+  };
+
   const previewLayout = computePdfLayout();
   const previewItems = selectedExportLocations.slice(0, previewLayout.itemsPerPage);
   const totalPdfPages = Math.max(1, Math.ceil(selectedExportLocations.length / previewLayout.itemsPerPage));
@@ -2956,8 +2977,7 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
       const qrWidth = Math.max(96, Math.min(512, Number(qrSizePx) || 180));
       const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: layout.format });
 
-      let col = 0;
-      let y = layout.margin;
+      let currentPage = 0;
 
       doc.setFontSize(12);
       doc.text("Oakland Animal Services Kennel QR Codes", layout.margin, 20);
@@ -2968,13 +2988,21 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
         const targetUrl = `${baseUrl}/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
         const qrDataUrl = await QRCode.toDataURL(targetUrl, { width: qrWidth, margin: 1 });
 
-        if (y + layout.cellHeight > layout.pageHeight - layout.margin) {
+        const pageIndex = Math.floor(i / layout.itemsPerPage);
+        const indexInPage = i % layout.itemsPerPage;
+        const row = Math.floor(indexInPage / layout.cols);
+        const col = indexInPage % layout.cols;
+        const itemsOnPage = Math.min(layout.itemsPerPage, toExport.length - pageIndex * layout.itemsPerPage);
+
+        while (currentPage < pageIndex) {
           doc.addPage();
-          y = layout.margin;
-          col = 0;
+          currentPage += 1;
         }
 
-        const drawX = layout.margin + col * (layout.qrSizePt + layout.gutter);
+        const rowStartX = getRowStartX(layout, itemsOnPage, row);
+        const drawX = rowStartX + col * (layout.qrSizePt + layout.gutter);
+        const pageStartY = getPageStartY(layout, itemsOnPage);
+        const y = pageStartY + row * layout.cellHeight;
         doc.addImage(qrDataUrl, "PNG", drawX, y, layout.qrSizePt, layout.qrSizePt);
 
         if (includeLocationText) {
@@ -2986,12 +3014,6 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
             align: "center",
             maxWidth: layout.qrSizePt,
           });
-        }
-
-        col += 1;
-        if (col >= layout.cols) {
-          col = 0;
-          y += layout.cellHeight;
         }
 
         if (!selectedSet.has(key)) continue;
@@ -3135,6 +3157,10 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
                       <input type="checkbox" checked={includeAnimalTypeText} onChange={(e) => setIncludeAnimalTypeText(e.target.checked)} disabled={!includeLocationText} />
                       Include animal type in label
                     </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: c.textSecondary }}>
+                      <input type="checkbox" checked={centerAllQrs} onChange={(e) => setCenterAllQrs(e.target.checked)} />
+                      Center all QR codes
+                    </label>
                   </div>
                 </div>
 
@@ -3228,8 +3254,10 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
                       const col = i % previewLayout.cols;
                       const row = Math.floor(i / previewLayout.cols);
                       const scale = 300 / previewLayout.pageWidth;
-                      const x = (previewLayout.margin + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
-                      const y = (previewLayout.margin + row * previewLayout.cellHeight) * scale;
+                      const rowStartX = getRowStartX(previewLayout, previewItems.length, row);
+                      const pageStartY = getPageStartY(previewLayout, previewItems.length);
+                      const x = (rowStartX + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
+                      const y = (pageStartY + row * previewLayout.cellHeight) * scale;
                       const qrPx = previewLayout.qrSizePt * scale;
                       const key = `${loc.species}|${loc.location}`;
                       const label = includeAnimalTypeText
@@ -3342,8 +3370,10 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
                     const col = i % previewLayout.cols;
                     const row = Math.floor(i / previewLayout.cols);
                     const scale = Math.min(86 * window.innerWidth / 100, 760) / previewLayout.pageWidth;
-                    const x = (previewLayout.margin + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
-                    const y = (previewLayout.margin + row * previewLayout.cellHeight) * scale;
+                    const rowStartX = getRowStartX(previewLayout, previewItems.length, row);
+                    const pageStartY = getPageStartY(previewLayout, previewItems.length);
+                    const x = (rowStartX + col * (previewLayout.qrSizePt + previewLayout.gutter)) * scale;
+                    const y = (pageStartY + row * previewLayout.cellHeight) * scale;
                     const qrPx = previewLayout.qrSizePt * scale;
                     const key = `${loc.species}|${loc.location}`;
                     const label = includeAnimalTypeText
