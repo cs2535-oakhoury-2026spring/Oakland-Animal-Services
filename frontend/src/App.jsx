@@ -2470,13 +2470,24 @@ const PLACEHOLDER_HOME = "/DogSHADOW.png";
 // ─── Home Screen ─────────────────────────────────────────────────────────────
 function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
   const r = useResponsive();
+  const initialPageParam = Number(new URLSearchParams(window.location.search).get("page") || "1");
+  const initialPage = Number.isFinite(initialPageParam) && initialPageParam > 0 ? Math.floor(initialPageParam) : 1;
   const [animals, setAnimals] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadError, setLoadError] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const [totalAnimals, setTotalAnimals] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const PAGE_SIZE = 50;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (page > 1) params.set("page", String(page));
+    else params.delete("page");
+    const qs = params.toString();
+    const nextUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+    window.history.replaceState({}, "", nextUrl);
+  }, [page]);
 
   useEffect(() => {
     setLoadError(false);
@@ -2634,7 +2645,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
                 if (loc && loc !== "unknown" && loc !== "in foster") {
                   window.location.href = `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`;
                 } else {
-                  window.location.href = `/?petId=${animal.id}`;
+                  window.location.href = `/?petId=${animal.id}&page=${page}`;
                 }
               }}
               style={{
@@ -2744,6 +2755,8 @@ export default function App() {
   const urlPetId = urlParams.get("petId");
   const petType = urlParams.get("type");
   const kennelLocation = urlParams.get("location");
+  const homePageParam = Number(urlParams.get("page") || "1");
+  const homePage = Number.isFinite(homePageParam) && homePageParam > 0 ? Math.floor(homePageParam) : 1;
 
   const hasUrlParams = !!(urlPetId || (petType && kennelLocation));
 
@@ -2791,7 +2804,7 @@ export default function App() {
   }
 
   if (selectedPetId) {
-    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => setSelectedPetId(null)} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
+    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => { window.location.href = homePage > 1 ? `/?page=${homePage}` : "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
   }
 
   return (
