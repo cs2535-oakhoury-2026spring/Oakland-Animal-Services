@@ -268,6 +268,11 @@ const Icons = {
       <rect x="8" y="2" width="8" height="4" rx="1" /><line x1="9" y1="12" x2="15" y2="12" /><line x1="9" y1="16" x2="13" y2="16" />
     </svg>
   ),
+  calendar: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
 };
 
 // ─── Placeholder Image ───────────────────────────────────────────────────────
@@ -1167,7 +1172,7 @@ function AnimalSelection({ animals, onSelect, user, token, onLogout, onBack, dar
 }
 
 // ─── User Dropdown ───────────────────────────────────────────────────────────
-function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassword }) {
+function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassword, deviceUsername, onChangeDeviceUser }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
@@ -1176,6 +1181,11 @@ function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassw
   const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
   const canManageUsers = isStaffOrAdmin;
   const currentPath = window.location.search;
+  const isDevice = user?.role === "device";
+
+  const deviceDisplayName = isDevice
+    ? (user?.username || "").replace(/^device_/, "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : null;
 
   const navItem = (label, icon, href, isCurrent) => (
     <button
@@ -1192,14 +1202,30 @@ function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassw
     <div ref={ref} style={{ position: "relative" }}>
       <button onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: compact ? 0 : 6, fontSize: 14, color: c.textSecondary, background: "none", border: "none", cursor: "pointer", padding: "4px 0", fontFamily: font, minHeight: 44 }} aria-label="User menu" aria-expanded={open}>
         <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: c.cardBorder, display: "flex", alignItems: "center", justifyContent: "center" }}><Icons.user size={16} color={c.textSecondary} /></div>
-        {!compact && <span style={{ fontWeight: 500 }}>{user?.displayName || user?.username || "User"}</span>}
+        {!compact && isDevice ? (
+          <span style={{ fontWeight: 500 }}>
+            {deviceUsername || "—"}
+            {deviceDisplayName && <span style={{ fontWeight: 400, color: c.warmGray }}> · {deviceDisplayName}</span>}
+          </span>
+        ) : (
+          !compact && <span style={{ fontWeight: 500 }}>{user?.displayName || user?.username || "User"}</span>
+        )}
         {!compact && <Icons.chevron size={14} color={c.warmGray} down={!open} />}
       </button>
       {open && (
         <div role="menu" style={{ position: "absolute", top: 44, left: 0, backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`, borderRadius: 12, padding: 12, minWidth: 230, zIndex: 50, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", fontFamily: font }}>
           <div style={{ padding: "4px 10px 10px" }}>
-            <div style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary }}>{user?.displayName || user?.username}</div>
-            <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2, textTransform: "capitalize" }}>{user?.role}</div>
+            {isDevice ? (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary }}>{deviceUsername || "No name set"}</div>
+                <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2 }}>Device: {deviceDisplayName}</div>
+              </>
+            ) : (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary }}>{user?.displayName || user?.username}</div>
+                <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2, textTransform: "capitalize" }}>{user?.role}</div>
+              </>
+            )}
           </div>
           <div style={{ borderTop: `1px solid ${c.cardBorder}`, paddingTop: 6, marginBottom: 6 }}>
             {navItem("All Animals", <Icons.arrowRight size={14} color={c.warmGray} />, "/", !currentPath || currentPath === "?")}
@@ -1208,7 +1234,13 @@ function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassw
             {isAdmin && navItem("User Management", <Icons.users size={14} color={c.warmGray} />, "/?view=users", currentPath.includes("view=users"))}
           </div>
           <div style={{ borderTop: `1px solid ${c.cardBorder}`, paddingTop: 6 }}>
-            {onChangePassword && (
+            {isDevice && onChangeDeviceUser && (
+              <button role="menuitem" onClick={() => { setOpen(false); onChangeDeviceUser(); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 13, color: c.textSecondary, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: "8px 10px", borderRadius: 8, textAlign: "left", minHeight: 36 }}>
+                <Icons.user size={14} color={c.warmGray} />
+                Change Name
+              </button>
+            )}
+            {!isDevice && onChangePassword && (
               <button role="menuitem" onClick={() => { setOpen(false); onChangePassword(); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 13, color: c.textSecondary, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: "8px 10px", borderRadius: 8, textAlign: "left", minHeight: 36 }}>
                 <Icons.lock size={14} color={c.warmGray} />
                 Change Password
@@ -1803,6 +1835,7 @@ function DesktopPortal({
   handleBehaviorNoteCreated, handleBehaviorNoteEdited,
   onBack, onLogout, onChangePassword,
   darkMode, setDarkMode,
+  deviceUsername, onChangeDeviceUser,
   c,
 }) {
   const [descExpanded, setDescExpanded] = useState(false);
@@ -1827,7 +1860,7 @@ function DesktopPortal({
               <Icons.back size={22} color={c.textSecondary} />
             </button>
           )}
-          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword || (() => {})} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword || (() => {})} deviceUsername={deviceUsername} onChangeDeviceUser={onChangeDeviceUser} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
@@ -2198,9 +2231,9 @@ function DesktopPortal({
       </div>
 
       {/* Modals */}
-      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={_notes} c={c} />}
+      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={deviceUsername || user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={_notes} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
-      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={_behaviorNotes} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={deviceUsername || user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={_behaviorNotes} c={c} />}
       {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
     </main>
   );
@@ -2210,6 +2243,57 @@ function DesktopPortal({
 // The main animal detail view with tabs: Summary (AI), Medical Observations, Behavior Notes.
 // Medical search uses backend NLP-powered search with keyword highlighting.
 // Behavior search uses client-side filtering with text highlighting.
+
+// ─── Device Username Prompt ───────────────────────────────────────────────────
+function DeviceUsernamePrompt({ c, onConfirm }) {
+  const [name, setName] = useState("");
+  const focusTrapRef = useFocusTrap(true);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onConfirm(name.trim());
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }} role="dialog" aria-modal="true" aria-label="Enter your name">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 32, width: "100%", maxWidth: 360, fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.25)", textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: c.tabActiveBg, border: `2px solid ${c.headerGreen}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+          <Icons.user size={24} color={c.headerGreen} />
+        </div>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, marginBottom: 6 }}>Who are you?</h2>
+        <p style={{ fontSize: 14, color: c.warmGray, marginBottom: 20 }}>Enter your name so notes are attributed correctly. This will be saved on this device.</p>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your name"
+            autoFocus
+            style={{ width: "100%", padding: "11px 14px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font, marginBottom: 16 }}
+            aria-label="Your name"
+          />
+          <button
+            type="submit"
+            disabled={!name.trim()}
+            style={{ width: "100%", padding: "12px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: name.trim() ? "pointer" : "not-allowed", opacity: name.trim() ? 1 : 0.6, fontFamily: font, minHeight: 48 }}
+          >
+            Continue
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+const DEVICE_USER_COOKIE = "oas_device_user";
+function getDeviceUserCookie() {
+  const entry = document.cookie.split("; ").find((r) => r.startsWith(`${DEVICE_USER_COOKIE}=`));
+  return entry ? decodeURIComponent(entry.split("=")[1]) : "";
+}
+function setDeviceUserCookie(name) {
+  document.cookie = `${DEVICE_USER_COOKIE}=${encodeURIComponent(name)}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+}
 
 function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, onChangePassword }) {
   const c = darkMode ? themes.dark : themes.light;
@@ -2237,6 +2321,10 @@ function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, o
   const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
   const [expanded, setExpanded] = useState(false);
   const searchTimerRef = useRef(null);
+
+  const isDevice = user?.role === "device";
+  const [deviceUsername, setDeviceUsername] = useState(() => isDevice ? getDeviceUserCookie() : "");
+  const [showDevicePrompt, setShowDevicePrompt] = useState(() => isDevice && !getDeviceUserCookie());
   
   const NOTES_PER_PAGE = 5;
 
@@ -2390,29 +2478,44 @@ function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, o
     );
   }
 
+  const devicePromptModal = showDevicePrompt && (
+    <DeviceUsernamePrompt
+      c={c}
+      onConfirm={(name) => {
+        setDeviceUserCookie(name);
+        setDeviceUsername(name);
+        setShowDevicePrompt(false);
+      }}
+    />
+  );
+
   // Desktop/iPad two-column layout (width >= 768px)
   if (r.width >= 768) {
-    return <DesktopPortal
-      user={user} token={token} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
-      filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
-      activeTab={activeTab} setActiveTab={setActiveTab}
-      searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
-      behaviorSearchQuery={behaviorSearchQuery} handleBehaviorSearch={handleBehaviorSearch}
-      isSearching={isSearching}
-      aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
-      medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
-      behaviorNotesVisible={behaviorNotesVisible} setBehaviorNotesVisible={setBehaviorNotesVisible}
-      NOTES_PER_PAGE={NOTES_PER_PAGE}
-      showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
-      showCreateBehaviorModal={showCreateBehaviorModal} setShowCreateBehaviorModal={setShowCreateBehaviorModal}
-      editingNote={editingNote} setEditingNote={setEditingNote}
-      editingBehaviorNote={editingBehaviorNote} setEditingBehaviorNote={setEditingBehaviorNote}
-      handleNoteCreated={handleNoteCreated} handleNoteEdited={handleNoteEdited}
-      handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
-      onBack={onBack} onLogout={onLogout} onChangePassword={onChangePassword}
-      darkMode={darkMode} setDarkMode={setDarkMode}
-      c={c} r={r}
-    />;
+    return <>
+      <DesktopPortal
+        user={user} token={token} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
+        filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
+        activeTab={activeTab} setActiveTab={setActiveTab}
+        searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
+        behaviorSearchQuery={behaviorSearchQuery} handleBehaviorSearch={handleBehaviorSearch}
+        isSearching={isSearching}
+        aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
+        medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
+        behaviorNotesVisible={behaviorNotesVisible} setBehaviorNotesVisible={setBehaviorNotesVisible}
+        NOTES_PER_PAGE={NOTES_PER_PAGE}
+        showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
+        showCreateBehaviorModal={showCreateBehaviorModal} setShowCreateBehaviorModal={setShowCreateBehaviorModal}
+        editingNote={editingNote} setEditingNote={setEditingNote}
+        editingBehaviorNote={editingBehaviorNote} setEditingBehaviorNote={setEditingBehaviorNote}
+        handleNoteCreated={handleNoteCreated} handleNoteEdited={handleNoteEdited}
+        handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
+        onBack={onBack} onLogout={onLogout} onChangePassword={onChangePassword}
+        darkMode={darkMode} setDarkMode={setDarkMode}
+        deviceUsername={deviceUsername} onChangeDeviceUser={() => setShowDevicePrompt(true)}
+        c={c} r={r}
+      />
+      {devicePromptModal}
+    </>;
   }
 
   // Phone layout (< 768px) — unchanged
@@ -2426,7 +2529,7 @@ function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, o
               <Icons.back size={20} color={c.textSecondary} />
             </button>
           )}
-          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword} deviceUsername={deviceUsername} onChangeDeviceUser={() => setShowDevicePrompt(true)} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
       </div>
@@ -2734,11 +2837,12 @@ function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, o
         </button>
       )}
 
-      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={notes} c={c} />}
+      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={deviceUsername || user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={notes} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
-      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={deviceUsername || user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} c={c} />}
       {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
       {showQR && <QRCodeModal pet={pet} onClose={() => setShowQR(false)} c={c} />}
+      {devicePromptModal}
     </main>
   );
 }
@@ -4317,6 +4421,15 @@ function ActivityLogScreen({ user, token, onLogout, darkMode, setDarkMode, c }) 
                         by <strong>{log.actor}</strong> · {formatTimestamp(log.timestamp)}
                       </div>
                     </div>
+                    {log.jsonData?.petId && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); window.location.href = `/?petId=${log.jsonData.petId}`; }}
+                        style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 6, border: `1px solid ${c.cardBorder}`, backgroundColor: c.inputBg, color: c.textSecondary, fontSize: 12, cursor: "pointer", fontFamily: font, whiteSpace: "nowrap" }}
+                      >
+                        <Icons.arrowRight size={12} color={c.warmGray} />
+                        View Pet
+                      </button>
+                    )}
                     {hasData && (
                       <div style={{ flex: "0 0 auto" }}>
                         <Icons.chevron size={14} color={c.warmGray} down={!isExpanded} />
@@ -4365,6 +4478,7 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(null);
+  const [showEditExpiry, setShowEditExpiry] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -4537,7 +4651,7 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
         {!loading && activeTab !== "admin" && filteredUsers.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {filteredUsers.map((u) => {
-              const expStatus = getExpiryStatus(u.expiryDate);
+              const expStatus = getExpiryStatus(u.expiresAt);
               return (
                 <div key={u.userId} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", backgroundColor: c.cardBg, borderRadius: 10, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow, flexWrap: isDesktop ? "nowrap" : "wrap" }}>
                   {/* Avatar */}
@@ -4560,6 +4674,16 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
                   )}
                   {/* Actions */}
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    {u.role === "volunteer" && (
+                      <button
+                        onClick={() => { setActionError(""); setShowEditExpiry(u); }}
+                        title="Edit expiry"
+                        style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: c.textSecondary, fontFamily: font, minHeight: 32 }}
+                      >
+                        <Icons.calendar size={13} color={c.warmGray} />
+                        {isDesktop && "Expiry"}
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowResetModal(u)}
                       title="Reset password"
@@ -4592,6 +4716,17 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
           defaultRole={activeTab}
           onClose={() => setShowCreateModal(false)}
           onCreated={() => { setShowCreateModal(false); fetchUsers(); }}
+          c={c}
+        />
+      )}
+
+      {/* Edit Expiry Modal */}
+      {showEditExpiry && (
+        <EditExpiryModal
+          token={token}
+          targetUser={showEditExpiry}
+          onClose={() => setShowEditExpiry(null)}
+          onSaved={() => { setShowEditExpiry(null); fetchUsers(); }}
           c={c}
         />
       )}
@@ -4634,6 +4769,74 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
   );
 }
 
+// ─── Edit Expiry Modal ────────────────────────────────────────────────────────
+function EditExpiryModal({ token, targetUser, onClose, onSaved, c }) {
+  const [expiryDate, setExpiryDate] = useState(
+    targetUser.expiresAt ? new Date(targetUser.expiresAt).toISOString().split("T")[0] : ""
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    try {
+      await api.updateUser(token, targetUser.userId, { expiresAt: expiryDate || null });
+      onSaved();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: font };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 28, width: "100%", maxWidth: 360, fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Edit Expiry — {targetUser.username}</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} aria-label="Close"><Icons.xMark size={20} color={c.warmGray} /></button>
+        </div>
+        <form onSubmit={handleSave} noValidate>
+          {targetUser.expiresAt ? (
+            <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 14, padding: "8px 12px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
+              Currently expires: <strong style={{ color: c.textPrimary }}>{new Date(targetUser.expiresAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</strong>
+            </div>
+          ) : (
+            <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 14, padding: "8px 12px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
+              No expiry set — account does not expire.
+            </div>
+          )}
+          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Expiry Date <span style={{ fontWeight: 400 }}>(leave blank to remove)</span></label>
+          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 16 }} autoFocus aria-label="Expiry date" />
+          {error && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 14 }} role="alert">
+              <Icons.alertCircle size={15} color="#BE3A2B" />
+              <span style={{ fontSize: 13, color: "#BE3A2B" }}>{error}</span>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Cancel</button>
+            <button type="submit" disabled={loading} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.65 : 1, fontFamily: font, minHeight: 44 }}>
+              {loading ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function generateDevicePassword() {
+  const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
+  return Array.from({ length: 16 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
 // ─── Create User Modal ────────────────────────────────────────────────────────
 function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c }) {
   const [username, setUsername] = useState("");
@@ -4642,12 +4845,16 @@ function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c })
   const [expiryDate, setExpiryDate] = useState("");
   const [deviceName, setDeviceName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState(() => generateDevicePassword());
+  const [copiedPwd, setCopiedPwd] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
 
-  const canSubmit = username.trim() && password.length >= 8 && !loading;
+  const isDevice = role === "device";
+  const autoUsername = isDevice ? `device_${deviceName.trim().toLowerCase().replace(/[^a-z0-9]/g, "_")}` : username.trim();
+  const canSubmit = (isDevice ? deviceName.trim() : (username.trim() && password.length >= 8)) && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -4656,10 +4863,10 @@ function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c })
     setError("");
     try {
       await api.createUser(token, {
-        username: username.trim(),
-        password,
+        username: autoUsername,
+        password: isDevice ? generatedPassword : password,
         role,
-        ...(role === "volunteer" && expiryDate ? { expiryDate } : {}),
+        ...(role === "volunteer" && expiryDate ? { expiresAt: expiryDate } : {}),
         ...(role === "device" && deviceName ? { deviceName: deviceName.trim() } : {}),
       });
       onCreated();
@@ -4691,29 +4898,50 @@ function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c })
             </>
           )}
 
-          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Username</label>
-          <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" style={{ ...fieldStyle, marginBottom: 14 }} autoFocus autoComplete="off" aria-label="Username" />
+          {isDevice ? (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Device Name</label>
+              <input type="text" value={deviceName} onChange={(e) => { setDeviceName(e.target.value); setError(""); }} placeholder="e.g. Kiosk-1" style={{ ...fieldStyle, marginBottom: 14 }} autoFocus autoComplete="off" aria-label="Device name" />
+              {deviceName.trim() && (
+                <div style={{ fontSize: 12, color: c.warmGray, marginTop: -10, marginBottom: 14 }}>
+                  Login username: <strong>{`device_${deviceName.trim().toLowerCase().replace(/[^a-z0-9]/g, "_")}`}</strong>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Username</label>
+              <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" style={{ ...fieldStyle, marginBottom: 14 }} autoFocus autoComplete="off" aria-label="Username" />
+            </>
+          )}
 
-          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Temporary Password</label>
-          <div style={{ position: "relative", marginBottom: 14 }}>
-            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Min 8 characters" style={{ ...fieldStyle, paddingRight: 40 }} autoComplete="new-password" aria-label="Password" />
-            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showPassword ? "Hide" : "Show"}>
-              {showPassword ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
-            </button>
-          </div>
-          {password && password.length < 8 && <div style={{ fontSize: 12, color: "#BE3A2B", marginTop: -10, marginBottom: 10 }}>At least 8 characters</div>}
+          {isDevice ? (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Auto-generated Password <span style={{ fontWeight: 400 }}>(copy before closing)</span></label>
+              <div style={{ position: "relative", marginBottom: 14 }}>
+                <input type="text" readOnly value={generatedPassword} style={{ ...fieldStyle, paddingRight: 70, backgroundColor: c.inputBg, color: c.textPrimary, fontFamily: "monospace", letterSpacing: 1 }} aria-label="Generated password" />
+                <button type="button" onClick={() => { navigator.clipboard.writeText(generatedPassword); setCopiedPwd(true); setTimeout(() => setCopiedPwd(false), 2000); }} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: "3px 8px", borderRadius: 6, fontSize: 11, color: copiedPwd ? c.headerGreen : c.textSecondary, fontFamily: font }}>
+                  {copiedPwd ? "Copied!" : "Copy"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Temporary Password</label>
+              <div style={{ position: "relative", marginBottom: 14 }}>
+                <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Min 8 characters" style={{ ...fieldStyle, paddingRight: 40 }} autoComplete="new-password" aria-label="Password" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showPassword ? "Hide" : "Show"}>
+                  {showPassword ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
+                </button>
+              </div>
+              {password && password.length < 8 && <div style={{ fontSize: 12, color: "#BE3A2B", marginTop: -10, marginBottom: 10 }}>At least 8 characters</div>}
+            </>
+          )}
 
           {role === "volunteer" && (
             <>
               <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Expiry Date <span style={{ color: c.warmGray, fontWeight: 400 }}>(optional)</span></label>
               <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Expiry date" />
-            </>
-          )}
-
-          {role === "device" && (
-            <>
-              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Device Name</label>
-              <input type="text" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} placeholder="e.g. Kiosk-1" style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Device name" />
             </>
           )}
 
@@ -4850,6 +5078,7 @@ export default function App() {
       department: "",
     });
     setMustChangePassword(!!payload?.mustChangePassword);
+    setSessionLoading(false);
   };
 
   const handleLogin = (token) => applyToken(token);
