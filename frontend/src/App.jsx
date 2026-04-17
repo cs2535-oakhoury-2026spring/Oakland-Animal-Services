@@ -1006,21 +1006,42 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
 }
 
 // ─── Create Behavior Note Modal ─────────────────────────────────────────────
-function CreateBehaviorNoteModal({ petId, userName, onClose, onSubmit, c }) {
+function CreateBehaviorNoteModal({ petId, userName, onClose, onSubmit, existingNotes = [], c }) {
   const [caseName, setCaseName] = useState("");
   const [body, setBody] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [similarNotes, setSimilarNotes] = useState([]);
+  const searchTimerRef = useRef(null);
   const recognitionRef = useRef(null);
-  
+  const { width } = useResponsive();
+  const isDesktop = width >= 768;
+
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
+
+  const runSimilarSearch = (caseVal, bodyVal) => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    const query = `${caseVal} ${bodyVal}`.trim();
+    if (!query) { setSimilarNotes([]); return; }
+    searchTimerRef.current = setTimeout(() => {
+      const mapped = existingNotes.map((n) => ({
+        id: n.id, petId: n.petId, title: n.case, content: n.body,
+        author: n.by, timestamp: new Date(n.createdAt),
+      }));
+      const results = findSimilarNotes(query, mapped, { maxResults: 20 });
+      setSimilarNotes(results.map((r) => {
+        const orig = existingNotes.find((n) => n.id === r.observerNote.id);
+        return { ...orig, highlightedBody: r.highlightedContent, highlightedCase: r.highlightedTitle };
+      }));
+    }, 300);
+  };
 
   const toggleSpeech = () => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) { alert("Speech recognition not supported."); return; }
     if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const r = new SR(); r.continuous = true; r.interimResults = true;
-    r.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setBody(t); };
+    r.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setBody(t); runSimilarSearch(caseName, t); };
     r.onerror = () => setIsListening(false); r.onend = () => setIsListening(false);
     r.start(); recognitionRef.current = r; setIsListening(true);
   };
@@ -1033,24 +1054,37 @@ function CreateBehaviorNoteModal({ petId, userName, onClose, onSubmit, c }) {
 
   const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
   const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
+  const buttons = (
+    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+      <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
+      <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSubmit}>Submit</button>
+    </div>
+  );
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="New behavior note">
-      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>New Behavior Note</h2>
-        <label style={labelStyle}>Case Title</label>
-        <input style={fieldStyle} placeholder="e.g. Socialization Progress" value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
-        <label style={labelStyle}>
-          Observation Notes
-          <button style={{ width: 34, height: 34, marginLeft: 8, verticalAlign: "middle", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: isListening ? c.brickRed : c.inputBg, transition: "background-color 0.2s ease" }} onClick={toggleSpeech} aria-label={isListening ? "Stop speech to text" : "Start speech to text"}>
-            <Icons.microphone size={16} color={isListening ? "#fff" : c.textPrimary} />
-          </button>
-        </label>
-        <textarea style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} placeholder="Describe your observation..." value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
-          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSubmit}>Submit</button>
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: isDesktop && similarNotes.length > 0 ? 860 : 420, maxHeight: "85vh", display: "flex", flexDirection: isDesktop ? "row" : "column", gap: isDesktop ? 24 : 0, alignItems: "stretch", overflow: isDesktop ? "hidden" : "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
+        {/* Form */}
+        <div style={{ flex: "0 0 360px", minHeight: 0, overflowY: isDesktop ? "auto" : "visible" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>New Behavior Note</h2>
+          <label style={labelStyle}>Case Title</label>
+          <input style={fieldStyle} placeholder="e.g. Socialization Progress" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
+          <label style={labelStyle}>
+            Observation Notes
+            <button style={{ width: 34, height: 34, marginLeft: 8, verticalAlign: "middle", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: isListening ? c.brickRed : c.inputBg, transition: "background-color 0.2s ease" }} onClick={toggleSpeech} aria-label={isListening ? "Stop speech to text" : "Start speech to text"}>
+              <Icons.microphone size={16} color={isListening ? "#fff" : c.textPrimary} />
+            </button>
+          </label>
+          <textarea style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
+          {buttons}
+          {!isDesktop && similarNotes.length > 0 && <div style={{ marginTop: 16 }}><SimilarNotesPreview similarNotes={similarNotes} c={c} /></div>}
         </div>
+        {/* Desktop side panel */}
+        {isDesktop && similarNotes.length > 0 && (
+          <div style={{ width: 320, flexShrink: 0, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "flex-start", borderLeft: `1px solid ${c.cardBorder}`, paddingLeft: 24, overflow: "hidden" }}>
+            <SimilarNotesPreview similarNotes={similarNotes} c={c} fullHeight />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1084,24 +1118,70 @@ function EditBehaviorNoteModal({ note, onClose, onSave, c }) {
   );
 }
 
+// ─── Similar Notes Preview (shared) ─────────────────────────────────────────
+function SimilarNotesPreview({ similarNotes, c, fullHeight = false }) {
+  if (!similarNotes || similarNotes.length === 0) return null;
+  const hlStyle = `background-color:#FFEB3B;color:#1a1a1a;font-weight:700;border-radius:2px;padding:0 2px;`;
+  const injectStyle = (html) => (html || "").replace(/<b>/g, `<b style="${hlStyle}">`);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, height: fullHeight ? "100%" : "auto" }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: c.warmGray, textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
+        Similar existing notes ({similarNotes.length})
+      </div>
+      <div style={{ overflowY: "auto", display: "flex", flexDirection: "column", gap: 6, minHeight: 0, ...(fullHeight ? { flex: 1, maxHeight: "60vh", height: "100%" } : { maxHeight: 200 }) }}>
+        {similarNotes.map((n) => (
+          <div key={n.id} style={{ backgroundColor: c.inputBg, borderRadius: 8, padding: "8px 10px", border: `1px solid ${c.cardBorder}`, flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: c.textPrimary, marginBottom: 2 }}
+              dangerouslySetInnerHTML={{ __html: injectStyle(n.highlightedCase || n.case) }} />
+            <div style={{ fontSize: 12, color: c.textSecondary, lineHeight: 1.45, whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-word" }}
+              dangerouslySetInnerHTML={{ __html: injectStyle(n.highlightedBody || n.body) }} />
+            <div style={{ fontSize: 11, color: c.warmGray, marginTop: 4 }}>{n.by} · {formatTimestamp(n.createdAt)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Create Medical Note Modal ───────────────────────────────────────────────
-function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
+function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, existingNotes = [], c }) {
   const [caseName, setCaseName] = useState("");
   const [body, setBody] = useState("");
   const [status, setStatus] = useState("Raised");
   const [isListening, setIsListening] = useState(false);
+  const [similarNotes, setSimilarNotes] = useState([]);
+  const searchTimerRef = useRef(null);
   const recognitionRef = useRef(null);
   const canSetStatus = userRole === "medical";
-  
+  const { width } = useResponsive();
+  const isDesktop = width >= 768;
+
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
+
+  const runSimilarSearch = (caseVal, bodyVal) => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    const query = `${caseVal} ${bodyVal}`.trim();
+    if (!query) { setSimilarNotes([]); return; }
+    searchTimerRef.current = setTimeout(() => {
+      const mapped = existingNotes.map((n) => ({
+        id: n.id, petId: n.petId, title: n.case, content: n.body,
+        author: n.by, timestamp: new Date(n.createdAt),
+      }));
+      const results = findSimilarNotes(query, mapped, { maxResults: 20 });
+      setSimilarNotes(results.map((r) => {
+        const orig = existingNotes.find((n) => n.id === r.observerNote.id);
+        return { ...orig, highlightedBody: r.highlightedContent, highlightedCase: r.highlightedTitle };
+      }));
+    }, 300);
+  };
 
   const toggleSpeech = () => {
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) { alert("Speech recognition not supported."); return; }
     if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     const r = new SR(); r.continuous = true; r.interimResults = true;
-    r.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setBody(t); };
+    r.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; setBody(t); runSimilarSearch(caseName, t); };
     r.onerror = () => setIsListening(false); r.onend = () => setIsListening(false);
     r.start(); recognitionRef.current = r; setIsListening(true);
   };
@@ -1114,25 +1194,38 @@ function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
 
   const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
   const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
+  const buttons = (
+    <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+      <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
+      <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSubmit}>Submit</button>
+    </div>
+  );
 
   return (
     <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="New medical observation">
-      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>New Medical Observation</h2>
-        <label style={labelStyle}>Case Title</label>
-        <input style={fieldStyle} placeholder="e.g. Limp On Right Leg" value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
-        {canSetStatus && (<><label style={labelStyle}>Status</label><select style={fieldStyle} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="Raised">Raised</option><option value="Resolved">Resolved</option></select></>)}
-        <label style={labelStyle}>
-          Observation Notes
-          <button style={{ width: 34, height: 34, marginLeft: 8, verticalAlign: "middle", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: isListening ? c.brickRed : c.inputBg, transition: "background-color 0.2s ease" }} onClick={toggleSpeech} aria-label={isListening ? "Stop speech to text" : "Start speech to text"}>
-            <Icons.microphone size={16} color={isListening ? "#fff" : c.textPrimary} />
-          </button>
-        </label>
-        <textarea style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} placeholder="Describe your observation..." value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
-          <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSubmit}>Submit</button>
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: isDesktop && similarNotes.length > 0 ? 860 : 420, maxHeight: "85vh", display: "flex", flexDirection: isDesktop ? "row" : "column", gap: isDesktop ? 24 : 0, alignItems: "stretch", overflow: isDesktop ? "hidden" : "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
+        {/* Form */}
+        <div style={{ flex: "0 0 360px", minHeight: 0, overflowY: isDesktop ? "auto" : "visible" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>New Medical Observation</h2>
+          <label style={labelStyle}>Case Title</label>
+          <input style={fieldStyle} placeholder="e.g. Limp On Right Leg" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
+          {canSetStatus && (<><label style={labelStyle}>Status</label><select style={fieldStyle} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="Raised">Raised</option><option value="Resolved">Resolved</option></select></>)}
+          <label style={labelStyle}>
+            Observation Notes
+            <button style={{ width: 34, height: 34, marginLeft: 8, verticalAlign: "middle", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", border: "none", cursor: "pointer", backgroundColor: isListening ? c.brickRed : c.inputBg, transition: "background-color 0.2s ease" }} onClick={toggleSpeech} aria-label={isListening ? "Stop speech to text" : "Start speech to text"}>
+              <Icons.microphone size={16} color={isListening ? "#fff" : c.textPrimary} />
+            </button>
+          </label>
+          <textarea style={{ ...fieldStyle, minHeight: 100, resize: "vertical" }} placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
+          {buttons}
+          {!isDesktop && similarNotes.length > 0 && <div style={{ marginTop: 16 }}><SimilarNotesPreview similarNotes={similarNotes} c={c} /></div>}
         </div>
+        {/* Desktop side panel */}
+        {isDesktop && similarNotes.length > 0 && (
+          <div style={{ width: 320, flexShrink: 0, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "flex-start", borderLeft: `1px solid ${c.cardBorder}`, paddingLeft: 24, overflow: "hidden" }}>
+            <SimilarNotesPreview similarNotes={similarNotes} c={c} fullHeight />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1141,7 +1234,7 @@ function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, c }) {
 // ─── Medical Note Card ───────────────────────────────────────────────────────
 function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
-  const canEdit = isOwner || userRole === "medical";
+  const canEdit = false;
   const [hovered, setHovered] = useState(false);
   
   return (
@@ -1227,7 +1320,7 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }
 // ─── Behavior Note Card (same as medical) ───────────────────────────────────
 function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
-  const canEdit = isOwner && userRole !== "medical";
+  const canEdit = false;
   const [hovered, setHovered] = useState(false);
   
   return (
@@ -1819,9 +1912,9 @@ function DesktopPortal({
       </div>
 
       {/* Modals */}
-      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} c={c} />}
+      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={_notes} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
-      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={_behaviorNotes} c={c} />}
       {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
     </main>
   );
@@ -1962,18 +2055,12 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
     }
   };
 
-  // Use backend search results when available, otherwise fuzzy local filter as fallback
-  const filteredNotes = searchResults !== null
-    ? searchResults
-    : notes.filter((n) => {
-        if (!searchQuery.trim()) return true;
-        return fuzzyMatchText(n.body || "", searchQuery) ||
-               fuzzyMatchText(n.case || "", searchQuery) ||
-               fuzzyMatchText(n.by || "", searchQuery);
-      });
-  
-  const filteredBehaviorNotes = behaviorSearchResults !== null
-    ? behaviorSearchResults
+  const filteredNotes = searchQuery.trim()
+    ? (searchResults ?? notes)
+    : notes;
+
+  const filteredBehaviorNotes = behaviorSearchQuery.trim()
+    ? (behaviorSearchResults ?? behaviorNotes)
     : behaviorNotes;
 
   if (loading || !pet) {
@@ -2358,9 +2445,9 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
         </button>
       )}
 
-      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} c={c} />}
+      {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={notes} c={c} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} c={c} />}
-      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} c={c} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} c={c} />}
       {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} c={c} />}
       {showQR && <QRCodeModal pet={pet} onClose={() => setShowQR(false)} c={c} />}
     </main>

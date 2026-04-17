@@ -26,6 +26,7 @@
     "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
     "create-compatibility-table": "node --loader ts-node/esm src/db/scripts/createPetCompatibilityTable.ts",
     "create-notes-table": "node --loader ts-node/esm src/db/scripts/createMergedNotesTable.ts",
+    "create-tables": "node --loader ts-node/esm src/db/scripts/createAllTables.ts",
     "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js",
     "client": "npm start --prefix frontend",
