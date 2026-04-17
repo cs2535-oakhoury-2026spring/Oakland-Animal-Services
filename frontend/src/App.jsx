@@ -214,6 +214,60 @@ const Icons = {
       <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
     </svg>
   ),
+  lock: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+  eye: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+  eyeOff: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+      <line x1="1" y1="1" x2="23" y2="23" />
+    </svg>
+  ),
+  shield: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
+  trash: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" /><path d="M14 11v6" /><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  ),
+  key: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="7.5" cy="15.5" r="5.5" /><path d="M21 2l-9.6 9.6" /><path d="M15.5 7.5l3 3L22 7l-3-3" />
+    </svg>
+  ),
+  xMark: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  ),
+  check: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  ),
+  users: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  clipboardList: ({ size = 20, color = "#1a1a1a" }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      <rect x="8" y="2" width="8" height="4" rx="1" /><line x1="9" y1="12" x2="15" y2="12" /><line x1="9" y1="16" x2="13" y2="16" />
+    </svg>
+  ),
 };
 
 // ─── Placeholder Image ───────────────────────────────────────────────────────
@@ -235,10 +289,16 @@ function parseWeightFromDesc(desc) {
   return m ? `${m[1]} lbs` : null;
 }
 
+const GENERAL_AGE_RANGES = {
+  dog:  { Baby: "< 1y", Young: "1–3y", Adult: "3–8y",  Senior: "8y+"  },
+  cat:  { Baby: "< 1y", Young: "1–3y", Adult: "3–10y", Senior: "10y+" },
+  default: { Baby: "< 1y", Young: "1–3y", Adult: "3–9y", Senior: "9y+" },
+};
+
 // Compute display age as "Xy Zm/o" from description age + listing date
 // Parses "X year(s) old" from description, then adds months elapsed since reference date
 // Prefers receivedDate (when shelter assessed the animal) over createdDate
-function computeDisplayAge(desc, createdDate, receivedDate, generalAge) {
+function computeDisplayAge(desc, createdDate, receivedDate, generalAge, species) {
   let baseMonths = 0;
   if (desc) {
     const ym = desc.match(/(\d+)\s*year/i);
@@ -262,7 +322,13 @@ function computeDisplayAge(desc, createdDate, receivedDate, generalAge) {
     if (y > 0) return `${y}y`;
     return `${m}m/o`;
   }
-  return generalAge || "Unknown";
+  if (generalAge) {
+    const speciesKey = (species || "").toLowerCase();
+    const table = GENERAL_AGE_RANGES[speciesKey] || GENERAL_AGE_RANGES.default;
+    const range = table[generalAge];
+    return range ? `${generalAge} (${range})` : generalAge;
+  }
+  return "Unknown";
 }
 
 // Compute display age from ISO birthdate string e.g. "2023-06-01" → "2y 10m/o"
@@ -319,6 +385,11 @@ function parseLocationFromSummary(summary) {
  * Mock data is kept minimal and only used as fallback for getPet when API fails.
  */
 
+// Module-level auth token — set on login, cleared on logout.
+// Lets all api methods attach the Bearer header without prop drilling.
+let _authToken = null;
+const authH = () => _authToken ? { "Authorization": `Bearer ${_authToken}` } : {};
+
 const mockPets = [
   { petId: "12345678910", name: "Fluffly", species: "Cat", location: "Cat W:5", arn: "736727", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "green" },
   { petId: "12345678912", name: "Whiskers", species: "Cat", location: "Cat W:5", arn: "736729", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "pink" },
@@ -356,7 +427,7 @@ const api = {
   // REAL — connected to GET /api/pets/:petId
   getPet: async (petId) => {
     try {
-      const res = await fetch(`/api/pets/${petId}`);
+      const res = await fetch(`/api/pets/${petId}`, { headers: authH() });
       if (!res.ok) throw new Error("Failed to fetch pet");
       const data = await res.json();
       if (data.success && data.pet) {
@@ -373,7 +444,7 @@ const api = {
           handlerLevel: (p.otherNames || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
-          age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge),
+          age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge, p.species),
           sex: p.sex || "",
           description: plainDesc,
           weight: p.weightPounds || parseWeightFromDesc(plainDesc) || "Unknown",
@@ -392,7 +463,7 @@ const api = {
     if (!petType || !location) {
       throw new Error("Invalid location parameters");
     }
-    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`);
+    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`, { headers: authH() });
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || "Location not found");
@@ -415,7 +486,7 @@ const api = {
   // REAL — connected to GET /api/pets/:petId/observer-notes
   getNotes: async (petId) => {
     try {
-      const res = await fetch(`/api/pets/${petId}/observer-notes`);
+      const res = await fetch(`/api/pets/${petId}/observer-notes`, { headers: authH() });
       if (!res.ok) throw new Error("Failed to fetch notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.observerNotes)) {
@@ -428,12 +499,29 @@ const api = {
     }
   },
 
+  // REAL — connected to PATCH /api/observer-notes/:id/status
+  updateNote: async (noteId, status) => {
+    try {
+      const res = await fetch(`/api/observer-notes/${noteId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authH() },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Failed to update note");
+      const data = await res.json();
+      return data.success;
+    } catch (err) {
+      console.warn("updateNote failed", err);
+      return false;
+    }
+  },
+
   // REAL — connected to POST /api/observer-notes
   createNote: async (note) => {
     try {
       const res = await fetch("/api/observer-notes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authH() },
         body: JSON.stringify({
           title: note.case,
           content: note.body,
@@ -456,7 +544,7 @@ const api = {
   // REAL — connected to GET /api/pets/:petId/behavior-notes
   getBehaviorNotes: async (petId) => {
     try {
-      const res = await fetch(`/api/pets/${petId}/behavior-notes`);
+      const res = await fetch(`/api/pets/${petId}/behavior-notes`, { headers: authH() });
       if (!res.ok) throw new Error("Failed to fetch behavior notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.behaviorNotes)) {
@@ -481,7 +569,7 @@ const api = {
     try {
       const res = await fetch("/api/behavior-notes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authH() },
         body: JSON.stringify({
           title: note.case,
           content: note.body,
@@ -515,7 +603,7 @@ const api = {
     try {
       const res = await fetch("/api/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authH() },
         body: JSON.stringify({ query, petId: petId ? parseInt(petId, 10) : undefined, maxResults: 20 }),
       });
       if (!res.ok) throw new Error("Search failed");
@@ -540,7 +628,7 @@ const api = {
     try {
       const res = await fetch(`/api/pets/${petId}/behavior-notes/summarize`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authH() },
         body: JSON.stringify({ prompt: prompt || "Summarize the note data in 2-5 concise sentences" }),
       });
       if (!res.ok) throw new Error("AI summary failed");
@@ -557,7 +645,7 @@ const api = {
 
   getAllAnimals: async (page = 1, limit = 50) => {
     try {
-      const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`);
+      const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`, { headers: authH() });
       if (!res.ok) throw new Error("Failed to fetch animals");
       const data = await res.json();
       if (data.success && Array.isArray(data.animals)) {
@@ -596,7 +684,130 @@ const api = {
 
     return merged;
   },
+
+  login: async (username, password) => {
+    let res;
+    try {
+      res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+    } catch {
+      throw new Error("Cannot reach server. Make sure the backend is running.");
+    }
+    const data = await res.json().catch(() => {
+      throw new Error("Cannot reach server. Make sure the backend is running.");
+    });
+    if (!res.ok) throw new Error(data.error || "Invalid username or password");
+    return data;
+  },
+
+  logout: async (token) => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}` },
+    }).catch(() => {});
+  },
+
+  refreshToken: async () => {
+    const res = await fetch("/api/auth/refresh", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error("Session expired");
+    return data.accessToken;
+  },
+
+  changePassword: async (token, currentPassword, newPassword) => {
+    const res = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Password change failed");
+    return data;
+  },
+
+  getUsers: async (token) => {
+    const res = await fetch("/api/users", {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to fetch users");
+    return data.users || [];
+  },
+
+  createUser: async (token, userData) => {
+    const res = await fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(userData),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to create user");
+    return data.user;
+  },
+
+  updateUser: async (token, userId, updates) => {
+    const res = await fetch(`/api/users/${userId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to update user");
+    return data.user;
+  },
+
+  deleteUser: async (token, userId) => {
+    const res = await fetch(`/api/users/${userId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || "Failed to delete user");
+    }
+  },
+
+  resetUserPassword: async (token, userId, newPassword) => {
+    const res = await fetch(`/api/users/${userId}/password`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ newPassword }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to reset password");
+    return data;
+  },
+
+  getActivityLogs: async (token, filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.tags) params.set("tags", filters.tags);
+    if (filters.actor) params.set("actor", filters.actor);
+    if (filters.action) params.set("action", filters.action);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    params.set("limit", String(filters.limit || 25));
+    params.set("page", String(filters.page || 1));
+    const res = await fetch(`/api/activity?${params.toString()}`, {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to fetch activity logs");
+    return data;
+  },
 };
+
+// Decode JWT payload (client-side only, no verification)
+function decodeJwt(token) {
+  try {
+    const payload = token.split(".")[1];
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+}
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -787,7 +998,7 @@ const isCurrentAnimal = (pet) => {
 };
 
 // If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
-function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, setDarkMode, c, onRefresh, refreshing = false }) {
+function AnimalSelection({ animals, onSelect, user, token, onLogout, onBack, darkMode, setDarkMode, c, onRefresh, refreshing = false, onChangePassword }) {
   const r = useResponsive();
   const isDesktop = r.width >= 768;
   const location = animals[0]?.location || "";
@@ -819,7 +1030,7 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
             aria-label="Back to home">
             <Icons.back size={isDesktop ? 22 : 20} color={c.textSecondary} />
           </button>
-          <UserDropdown user={user} onLogout={onLogout} c={c} compact={!isDesktop} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} compact={!isDesktop} onChangePassword={onChangePassword} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: isDesktop ? 40 : 32, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
@@ -956,26 +1167,57 @@ function AnimalSelection({ animals, onSelect, user, onLogout, onBack, darkMode, 
 }
 
 // ─── User Dropdown ───────────────────────────────────────────────────────────
-function UserDropdown({ user, onLogout, c, compact = false }) {
+function UserDropdown({ user, onLogout, token, c, compact = false, onChangePassword }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   useEffect(() => { const h = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }; document.addEventListener("mousedown", h); return () => document.removeEventListener("mousedown", h); }, []);
+
+  const isAdmin = user?.role === "admin";
+  const isStaffOrAdmin = user?.role === "staff" || user?.role === "admin";
+  const canManageUsers = isStaffOrAdmin;
+  const currentPath = window.location.search;
+
+  const navItem = (label, icon, href, isCurrent) => (
+    <button
+      role="menuitem"
+      onClick={() => { setOpen(false); window.location.href = href; }}
+      style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 13, color: isCurrent ? c.headerGreen : c.textSecondary, background: isCurrent ? c.tabActiveBg : "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: isCurrent ? 600 : 400, padding: "8px 10px", borderRadius: 8, textAlign: "left", minHeight: 36 }}
+    >
+      {icon}
+      {label}
+    </button>
+  );
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button onClick={() => setOpen(!open)} style={{ display: "flex", alignItems: "center", gap: compact ? 0 : 6, fontSize: 14, color: c.textSecondary, background: "none", border: "none", cursor: "pointer", padding: "4px 0", fontFamily: font, minHeight: 44 }} aria-label="User menu" aria-expanded={open}>
         <div style={{ width: 30, height: 30, borderRadius: "50%", backgroundColor: c.cardBorder, display: "flex", alignItems: "center", justifyContent: "center" }}><Icons.user size={16} color={c.textSecondary} /></div>
-        {!compact && <span style={{ fontWeight: 500 }}>{user.displayName}</span>}
+        {!compact && <span style={{ fontWeight: 500 }}>{user?.displayName || user?.username || "User"}</span>}
         {!compact && <Icons.chevron size={14} color={c.warmGray} down={!open} />}
       </button>
       {open && (
-        <div role="menu" style={{ position: "absolute", top: 44, left: 0, backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`, borderRadius: 12, padding: 16, minWidth: 220, zIndex: 50, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", fontFamily: font }}>
-          <div style={{ fontSize: 16, fontWeight: 600, color: c.textPrimary, marginBottom: 8 }}>{user.displayName}</div>
-          <div style={{ fontSize: 13, color: c.textSecondary, marginBottom: 4 }}>{user.email}</div>
-          <div style={{ fontSize: 13, color: c.textSecondary, marginBottom: 4 }}>Department: {user.department}</div>
-          <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 12, textTransform: "capitalize" }}>Role: {user.role}</div>
-          <div style={{ borderTop: `1px solid ${c.cardBorder}`, paddingTop: 10 }}>
-            <button role="menuitem" onClick={onLogout} style={{ fontSize: 14, color: c.brickRed, background: "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: 500, padding: 0, minHeight: 44 }}>Logout</button>
+        <div role="menu" style={{ position: "absolute", top: 44, left: 0, backgroundColor: c.cardBg, border: `1px solid ${c.cardBorder}`, borderRadius: 12, padding: 12, minWidth: 230, zIndex: 50, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", fontFamily: font }}>
+          <div style={{ padding: "4px 10px 10px" }}>
+            <div style={{ fontSize: 15, fontWeight: 600, color: c.textPrimary }}>{user?.displayName || user?.username}</div>
+            <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2, textTransform: "capitalize" }}>{user?.role}</div>
+          </div>
+          <div style={{ borderTop: `1px solid ${c.cardBorder}`, paddingTop: 6, marginBottom: 6 }}>
+            {navItem("All Animals", <Icons.arrowRight size={14} color={c.warmGray} />, "/", !currentPath || currentPath === "?")}
+            {navItem("Kennel Locations", <Icons.qrCode size={14} color={c.warmGray} />, "/?view=locations", currentPath.includes("view=locations"))}
+            {isStaffOrAdmin && navItem("Activity Log", <Icons.clipboardList size={14} color={c.warmGray} />, "/?view=activity", currentPath.includes("view=activity"))}
+            {isAdmin && navItem("User Management", <Icons.users size={14} color={c.warmGray} />, "/?view=users", currentPath.includes("view=users"))}
+          </div>
+          <div style={{ borderTop: `1px solid ${c.cardBorder}`, paddingTop: 6 }}>
+            {onChangePassword && (
+              <button role="menuitem" onClick={() => { setOpen(false); onChangePassword(); }} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 13, color: c.textSecondary, background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: "8px 10px", borderRadius: 8, textAlign: "left", minHeight: 36 }}>
+                <Icons.lock size={14} color={c.warmGray} />
+                Change Password
+              </button>
+            )}
+            <button role="menuitem" onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", fontSize: 13, color: c.brickRed, background: "none", border: "none", cursor: "pointer", fontFamily: font, fontWeight: 500, padding: "8px 10px", borderRadius: 8, textAlign: "left", minHeight: 36 }}>
+              <Icons.arrowRight size={14} color={c.brickRed} />
+              Sign Out
+            </button>
           </div>
         </div>
       )}
@@ -1008,12 +1250,11 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
   const [body, setBody] = useState(note.body);
   const [caseName, setCaseName] = useState(note.case || "");
   const [status, setStatus] = useState(note.status || "Raised");
-  const isMedical = userRole === "medical";
-  const handleSave = () => { onSave({ ...note, ...(isMedical ? {} : { body, case: caseName }), ...(isMedical ? { status } : {}) }); onClose(); };
+  const canEditStatus = userRole === "admin" || userRole === "staff";
+  const handleSave = () => { onSave({ ...note, body, case: caseName, ...(canEditStatus ? { status } : {}) }); onClose(); };
   const fieldStyle = { width: "100%", padding: "12px 14px", marginBottom: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box", fontFamily: font };
-  const readOnlyFieldStyle = { ...fieldStyle, backgroundColor: c.cardBorder, cursor: "not-allowed", opacity: 0.6 };
   const labelStyle = { fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" };
-  
+
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
 
@@ -1022,11 +1263,25 @@ function EditNoteModal({ note, userRole, onClose, onSave, c }) {
       <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 24, width: "100%", maxWidth: 380, maxHeight: "80vh", overflow: "auto", fontFamily: font }} onClick={(e) => e.stopPropagation()}>
         <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: c.textPrimary }}>Edit Medical Observation</h2>
         <label style={labelStyle}>Case Title</label>
-        <input style={isMedical ? readOnlyFieldStyle : fieldStyle} value={caseName} onChange={(e) => !isMedical && setCaseName(e.target.value)} disabled={isMedical} aria-label="Case title" />
-        {isMedical && (<><label style={labelStyle}>Status</label><select style={fieldStyle} value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Status"><option value="Raised">Raised</option><option value="Resolved">Resolved</option></select></>)}
+        <input style={fieldStyle} value={caseName} onChange={(e) => setCaseName(e.target.value)} aria-label="Case title" />
+        {canEditStatus && (
+          <>
+            <label style={labelStyle}>Status</label>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              {["Raised", "Resolved"].map((s) => {
+                const isActive = status === s;
+                const col = s === "Raised" ? c.statusRaised : c.statusResolved;
+                return (
+                  <button key={s} onClick={() => setStatus(s)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `2px solid ${isActive ? col : c.inputBorder}`, backgroundColor: isActive ? `${col}18` : "transparent", color: isActive ? col : c.warmGray, fontSize: 13, fontWeight: isActive ? 700 : 400, cursor: "pointer", fontFamily: font, textTransform: "uppercase", letterSpacing: "0.5px", transition: "all 0.15s ease" }}>
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
         <label style={labelStyle}>Notes</label>
-        <textarea style={{ ...(isMedical ? readOnlyFieldStyle : fieldStyle), minHeight: 120, resize: "vertical" }} value={body} onChange={(e) => !isMedical && setBody(e.target.value)} disabled={isMedical} aria-label="Observation notes" />
-        {isMedical && <div style={{ fontSize: 12, color: c.warmGray, fontStyle: "italic", marginTop: -8, marginBottom: 8 }}>Medical staff can only update status</div>}
+        <textarea style={{ ...fieldStyle, minHeight: 120, resize: "vertical" }} value={body} onChange={(e) => setBody(e.target.value)} aria-label="Observation notes" />
         <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
           <button style={{ flex: 1, padding: 12, borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 15, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={onClose}>Cancel</button>
           <button style={{ flex: 1, padding: 12, borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44, transition: "background-color 0.2s ease" }} onClick={handleSave}>Save</button>
@@ -1265,7 +1520,7 @@ function CreateNoteModal({ petId, userName, userRole, onClose, onSubmit, existin
 // ─── Medical Note Card ───────────────────────────────────────────────────────
 function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
-  const canEdit = false;
+  const canEdit = userRole === "admin" || userRole === "staff" || isOwner;
   const [hovered, setHovered] = useState(false);
   
   return (
@@ -1299,13 +1554,13 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }
             </span>
           </div>
         </div>
-        <span 
-          style={{ 
-            fontSize: 11, 
-            fontWeight: 600, 
-            color: note.status === "Raised" ? c.statusRaised : c.statusResolved, 
-            backgroundColor: note.status === "Raised" ? `${c.statusRaised}18` : `${c.statusResolved}18`, 
-            padding: "4px 12px", 
+        <span
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: (note.status || "").toUpperCase() === "RAISED" ? c.statusRaised : c.statusResolved,
+            backgroundColor: (note.status || "").toUpperCase() === "RAISED" ? `${c.statusRaised}18` : `${c.statusResolved}18`,
+            padding: "4px 12px",
             borderRadius: 12,
             textTransform: "uppercase",
             letterSpacing: "0.5px",
@@ -1351,7 +1606,7 @@ function MedicalNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }
 // ─── Behavior Note Card (same as medical) ───────────────────────────────────
 function BehaviorNoteCard({ note, currentUser, userRole, onEdit, c, searchQuery }) {
   const isOwner = note.by === currentUser;
-  const canEdit = false;
+  const canEdit = userRole === "admin" || userRole === "staff" || isOwner;
   const [hovered, setHovered] = useState(false);
   
   return (
@@ -1530,7 +1785,7 @@ function QRCodeModal({ pet, onClose, c }) {
 
 // ─── Desktop Portal (iPad/Desktop two-column layout, width >= 768px) ─────────
 function DesktopPortal({
-  user, pet, notes: _notes, behaviorNotes: _behaviorNotes,
+  user, token, pet, notes: _notes, behaviorNotes: _behaviorNotes,
   filteredNotes, filteredBehaviorNotes,
   activeTab, setActiveTab,
   searchQuery, handleMedicalSearch,
@@ -1546,7 +1801,7 @@ function DesktopPortal({
   editingBehaviorNote, setEditingBehaviorNote,
   handleNoteCreated, handleNoteEdited,
   handleBehaviorNoteCreated, handleBehaviorNoteEdited,
-  onBack, onLogout,
+  onBack, onLogout, onChangePassword,
   darkMode, setDarkMode,
   c,
 }) {
@@ -1572,7 +1827,7 @@ function DesktopPortal({
               <Icons.back size={22} color={c.textSecondary} />
             </button>
           )}
-          <UserDropdown user={user} onLogout={onLogout} c={c} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword || (() => {})} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 40, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 12 }}>
@@ -1956,7 +2211,7 @@ function DesktopPortal({
 // Medical search uses backend NLP-powered search with keyword highlighting.
 // Behavior search uses client-side filtering with text highlighting.
 
-function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
+function Portal({ user, token, petId, onLogout, onBack, darkMode, setDarkMode, onChangePassword }) {
   const c = darkMode ? themes.dark : themes.light;
   const r = useResponsive();
   const [pet, setPet] = useState(null);
@@ -2070,7 +2325,10 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   }, [behaviorNotes]);
 
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
-  const handleNoteEdited = (n) => setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
+  const handleNoteEdited = async (n) => {
+    setNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
+    if (n.status) await api.updateNote(n.id, n.status);
+  };
   const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
   const handleBehaviorNoteEdited = (n) => setBehaviorNotes((prev) => prev.map((x) => (x.id === n.id ? n : x)));
   
@@ -2135,7 +2393,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
   // Desktop/iPad two-column layout (width >= 768px)
   if (r.width >= 768) {
     return <DesktopPortal
-      user={user} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
+      user={user} token={token} pet={pet} notes={notes} behaviorNotes={behaviorNotes}
       filteredNotes={filteredNotes} filteredBehaviorNotes={filteredBehaviorNotes}
       activeTab={activeTab} setActiveTab={setActiveTab}
       searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
@@ -2151,7 +2409,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
       editingBehaviorNote={editingBehaviorNote} setEditingBehaviorNote={setEditingBehaviorNote}
       handleNoteCreated={handleNoteCreated} handleNoteEdited={handleNoteEdited}
       handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
-      onBack={onBack} onLogout={onLogout}
+      onBack={onBack} onLogout={onLogout} onChangePassword={onChangePassword}
       darkMode={darkMode} setDarkMode={setDarkMode}
       c={c} r={r}
     />;
@@ -2168,7 +2426,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
               <Icons.back size={20} color={c.textSecondary} />
             </button>
           )}
-          <UserDropdown user={user} onLogout={onLogout} c={c} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
       </div>
@@ -2491,7 +2749,7 @@ function Portal({ user, petId, onLogout, onBack, darkMode, setDarkMode }) {
 const PLACEHOLDER_HOME = "/DogSHADOW.png";
 
 // ─── Home Screen ─────────────────────────────────────────────────────────────
-function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
+function HomeScreen({ user, token, onLogout, darkMode, setDarkMode, c, onChangePassword }) {
   const r = useResponsive();
   const initialPageParam = Number(new URLSearchParams(window.location.search).get("page") || "1");
   const initialPage = Number.isFinite(initialPageParam) && initialPageParam > 0 ? Math.floor(initialPageParam) : 1;
@@ -2564,7 +2822,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
       {/* Top bar */}
       <div style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
         <div style={{ flex: 1 }}>
-          <UserDropdown user={user} onLogout={onLogout} c={c} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
@@ -2774,7 +3032,7 @@ function HomeScreen({ user, onLogout, darkMode, setDarkMode, c }) {
   );
 }
 
-function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
+function LocationsPage({ user, token, onLogout, darkMode, setDarkMode, c, onChangePassword }) {
   const r = useResponsive();
   const [locations, setLocations] = useState(null);
   const [loadError, setLoadError] = useState(false);
@@ -3033,7 +3291,7 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
     <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
       <div style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
         <div style={{ flex: 1 }}>
-          <UserDropdown user={user} onLogout={onLogout} c={c} />
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={onChangePassword} />
         </div>
         <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
         <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
@@ -3502,13 +3760,1074 @@ function LocationsPage({ user, onLogout, darkMode, setDarkMode, c }) {
   );
 }
 
+// ─── Login Screen ─────────────────────────────────────────────────────────────
+function LoginScreen({ darkMode, setDarkMode, onLogin, c }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const r = useResponsive();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!username.trim() || !password) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await api.login(username.trim(), password);
+      onLogin(data.accessToken);
+    } catch (err) {
+      setError(err.message || "Invalid username or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%", padding: "12px 14px 12px 42px", borderRadius: 10,
+    border: `1px solid ${error ? "#BE3A2B" : c.inputBorder}`, backgroundColor: c.inputBg,
+    color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box",
+    fontFamily: font, transition: "border-color 0.15s",
+  };
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, display: "flex", flexDirection: "column" }}>
+      {/* Top bar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ width: 40 }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40 }}
+          aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+        </button>
+      </div>
+
+      {/* Login card */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: r.padding }}>
+        <div style={{ width: "100%", maxWidth: 380, backgroundColor: c.cardBg, borderRadius: 16, padding: 32, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
+          {/* Icon */}
+          <div style={{ width: 56, height: 56, borderRadius: "50%", backgroundColor: c.tabActiveBg, border: `2px solid ${c.headerGreen}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <Icons.shield size={26} color={c.headerGreen} />
+          </div>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: c.textPrimary, textAlign: "center", marginBottom: 6 }}>Staff Login</h1>
+          <p style={{ fontSize: 14, color: c.warmGray, textAlign: "center", marginBottom: 24 }}>Oakland Animal Services Portal</p>
+
+          <form onSubmit={handleSubmit} noValidate>
+            {/* Username */}
+            <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Username</label>
+            <div style={{ position: "relative", marginBottom: 14 }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icons.user size={16} color={c.warmGray} />
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                placeholder="Enter your username"
+                autoComplete="username"
+                autoFocus
+                style={inputStyle}
+                aria-label="Username"
+              />
+            </div>
+
+            {/* Password */}
+            <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Password</label>
+            <div style={{ position: "relative", marginBottom: 20 }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icons.lock size={16} color={c.warmGray} />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                style={{ ...inputStyle, paddingRight: 44 }}
+                aria-label="Password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <Icons.eyeOff size={16} color={c.warmGray} /> : <Icons.eye size={16} color={c.warmGray} />}
+              </button>
+            </div>
+
+            {/* Error */}
+            {error && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 16 }} role="alert">
+                <Icons.alertCircle size={16} color="#BE3A2B" />
+                <span style={{ fontSize: 13, color: "#BE3A2B", fontWeight: 500 }}>{error}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !username.trim() || !password}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: loading || !username.trim() || !password ? "not-allowed" : "pointer", opacity: loading || !username.trim() || !password ? 0.65 : 1, fontFamily: font, minHeight: 44, transition: "opacity 0.15s" }}
+            >
+              {loading ? "Signing in…" : "Sign In"}
+            </button>
+          </form>
+
+          <p style={{ fontSize: 12, color: c.warmGray, textAlign: "center", marginTop: 20 }}>
+            Locked out? Contact your administrator.
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ─── Forced Password Change Screen ───────────────────────────────────────────
+function ForcePasswordChangeScreen({ user, token, onPasswordChanged, onLogout, darkMode, setDarkMode, c }) {
+  const [tempPassword, setTempPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showTemp, setShowTemp] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const r = useResponsive();
+
+  const mismatch = confirm && newPassword !== confirm;
+  const tooShort = newPassword && newPassword.length < 8;
+  const canSubmit = tempPassword && newPassword.length >= 8 && newPassword === confirm && !loading;
+
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.changePassword(token, tempPassword, newPassword);
+      // Old token is now invalid — clear session and force fresh login
+      _authToken = null;
+      sessionStorage.removeItem("oas_token");
+      setDone(true);
+    } catch (err) {
+      setError(err.message || "Failed to change password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const inputStyle = (hasError) => ({
+    width: "100%", padding: "12px 14px 12px 42px", borderRadius: 10,
+    border: `1px solid ${hasError ? "#BE3A2B" : c.inputBorder}`, backgroundColor: c.inputBg,
+    color: c.textPrimary, fontSize: 15, outline: "none", boxSizing: "border-box",
+    fontFamily: font, paddingRight: 44,
+  });
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ width: 40 }} />
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 40, minWidth: 40 }} aria-label="Toggle dark mode">
+          {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+        </button>
+      </div>
+
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: r.padding }}>
+        <div style={{ width: "100%", maxWidth: 420, backgroundColor: c.cardBg, borderRadius: 16, padding: 32, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
+
+          {done ? (
+            <div style={{ textAlign: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", backgroundColor: "#f0fdf4", border: "2px solid #4CAF50", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                <Icons.check size={28} color="#4CAF50" />
+              </div>
+              <h1 style={{ fontSize: 21, fontWeight: 700, color: c.textPrimary, marginBottom: 10 }}>Password Set!</h1>
+              <p style={{ fontSize: 14, color: c.warmGray, marginBottom: 24 }}>Your password has been updated. Please sign in with your new password.</p>
+              <button onClick={() => { onLogout(); }} style={{ width: "100%", padding: "13px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44 }}>
+                Go to Sign In
+              </button>
+            </div>
+          ) : (<>
+
+          <div style={{ width: 56, height: 56, borderRadius: "50%", backgroundColor: "#fff8e1", border: "2px solid #FFC107", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+            <Icons.key size={26} color="#FFC107" />
+          </div>
+          <h1 style={{ fontSize: 21, fontWeight: 700, color: c.textPrimary, textAlign: "center", marginBottom: 6 }}>Set Your Password</h1>
+          <p style={{ fontSize: 14, color: c.warmGray, textAlign: "center", marginBottom: 20 }}>
+            Hi <strong>{user?.username}</strong>! Enter the temporary password you were given, then choose a new one.
+          </p>
+
+          <form onSubmit={handleSubmit} noValidate>
+            <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Temporary Password</label>
+            <div style={{ position: "relative", marginBottom: 16 }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icons.lock size={16} color={c.warmGray} />
+              </div>
+              <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={(e) => { setTempPassword(e.target.value); setError(""); }} placeholder="Your temporary password" autoFocus style={inputStyle(false)} aria-label="Temporary password" autoComplete="current-password" />
+              <button type="button" onClick={() => setShowTemp(!showTemp)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showTemp ? "Hide" : "Show"}>
+                {showTemp ? <Icons.eyeOff size={16} color={c.warmGray} /> : <Icons.eye size={16} color={c.warmGray} />}
+              </button>
+            </div>
+
+            <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Password <span style={{ color: c.warmGray, fontWeight: 400 }}>(min 8 characters)</span></label>
+            <div style={{ position: "relative", marginBottom: 4 }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icons.lock size={16} color={c.warmGray} />
+              </div>
+              <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setError(""); }} placeholder="New password" style={inputStyle(tooShort)} aria-label="New password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowNew(!showNew)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showNew ? "Hide" : "Show"}>
+                {showNew ? <Icons.eyeOff size={16} color={c.warmGray} /> : <Icons.eye size={16} color={c.warmGray} />}
+              </button>
+            </div>
+            {tooShort && <div style={{ fontSize: 12, color: "#BE3A2B", marginBottom: 10 }}>Must be at least 8 characters</div>}
+
+            <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, marginTop: 12, display: "block" }}>Confirm New Password</label>
+            <div style={{ position: "relative", marginBottom: 4 }}>
+              <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+                <Icons.lock size={16} color={c.warmGray} />
+              </div>
+              <input type={showConfirm ? "text" : "password"} value={confirm} onChange={(e) => { setConfirm(e.target.value); setError(""); }} placeholder="Confirm new password" style={inputStyle(mismatch)} aria-label="Confirm password" autoComplete="new-password" />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showConfirm ? "Hide" : "Show"}>
+                {showConfirm ? <Icons.eyeOff size={16} color={c.warmGray} /> : <Icons.eye size={16} color={c.warmGray} />}
+              </button>
+            </div>
+            {mismatch && <div style={{ fontSize: 12, color: "#BE3A2B", marginBottom: 10 }}>Passwords do not match</div>}
+
+            {error && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 16, marginTop: 8 }} role="alert">
+                <Icons.alertCircle size={16} color="#BE3A2B" />
+                <span style={{ fontSize: 13, color: "#BE3A2B" }}>{error}</span>
+              </div>
+            )}
+
+            <button type="submit" disabled={!canSubmit} style={{ width: "100%", padding: "13px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 15, fontWeight: 600, cursor: !canSubmit ? "not-allowed" : "pointer", opacity: !canSubmit ? 0.65 : 1, fontFamily: font, minHeight: 44, marginTop: 8 }}>
+              {loading ? "Saving…" : "Set Password & Continue"}
+            </button>
+          </form>
+
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: c.warmGray, fontFamily: font }}>Sign out</button>
+          </div>
+          </>)}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ─── Change Password Modal ────────────────────────────────────────────────────
+function ChangePasswordModal({ token, onClose, c }) {
+  const [current, setCurrent] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  const mismatch = confirm && newPwd !== confirm;
+  const tooShort = newPwd && newPwd.length < 8;
+  const canSubmit = current && newPwd.length >= 8 && newPwd === confirm && !loading;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.changePassword(token, current, newPwd);
+      setSuccess(true);
+    } catch (err) {
+      setError(err.message || "Failed to change password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", padding: "11px 14px 11px 42px", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: font, paddingRight: 44 };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true" aria-label="Change password">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 28, width: "100%", maxWidth: 360, fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
+        {success ? (
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{ width: 52, height: 52, borderRadius: "50%", backgroundColor: "#f0fdf4", border: "2px solid #4CAF50", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Icons.check size={24} color="#4CAF50" />
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, marginBottom: 8 }}>Password Changed</h2>
+            <p style={{ fontSize: 14, color: c.warmGray, marginBottom: 20 }}>Your password has been updated. Please sign in again.</p>
+            <button onClick={onClose} style={{ padding: "10px 28px", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Change Password</h2>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }} aria-label="Close"><Icons.xMark size={20} color={c.warmGray} /></button>
+            </div>
+            <form onSubmit={handleSubmit} noValidate>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Current Password</label>
+              <div style={{ position: "relative", marginBottom: 14 }}>
+                <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><Icons.lock size={15} color={c.warmGray} /></div>
+                <input type={showCurrent ? "text" : "password"} value={current} onChange={(e) => { setCurrent(e.target.value); setError(""); }} placeholder="Current password" style={fieldStyle} autoFocus autoComplete="current-password" aria-label="Current password" />
+                <button type="button" onClick={() => setShowCurrent(!showCurrent)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showCurrent ? "Hide" : "Show"}>
+                  {showCurrent ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
+                </button>
+              </div>
+
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Password</label>
+              <div style={{ position: "relative", marginBottom: 4 }}>
+                <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}><Icons.lock size={15} color={c.warmGray} /></div>
+                <input type={showNew ? "text" : "password"} value={newPwd} onChange={(e) => { setNewPwd(e.target.value); setError(""); }} placeholder="New password (min 8 chars)" style={{ ...fieldStyle, border: `1px solid ${tooShort ? "#BE3A2B" : c.inputBorder}` }} autoComplete="new-password" aria-label="New password" />
+                <button type="button" onClick={() => setShowNew(!showNew)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showNew ? "Hide" : "Show"}>
+                  {showNew ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
+                </button>
+              </div>
+              {tooShort && <div style={{ fontSize: 12, color: "#BE3A2B", marginBottom: 8 }}>At least 8 characters required</div>}
+
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, marginTop: 10, display: "block" }}>Confirm New Password</label>
+              <div style={{ marginBottom: 4 }}>
+                <input type="password" value={confirm} onChange={(e) => { setConfirm(e.target.value); setError(""); }} placeholder="Confirm new password" style={{ ...fieldStyle, paddingLeft: 14, border: `1px solid ${mismatch ? "#BE3A2B" : c.inputBorder}` }} autoComplete="new-password" aria-label="Confirm new password" />
+              </div>
+              {mismatch && <div style={{ fontSize: 12, color: "#BE3A2B", marginBottom: 8 }}>Passwords do not match</div>}
+
+              {error && (
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "9px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 14, marginTop: 6 }} role="alert">
+                  <Icons.alertCircle size={15} color="#BE3A2B" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div style={{ fontSize: 13, color: "#BE3A2B" }}>
+                    {error.toLowerCase().includes("environment") || error.toLowerCase().includes("admin")
+                      ? <>The <strong>admin</strong> password is set via the server's <code>.env</code> file (<code>ADMIN_PASS</code>) and cannot be changed here. Update it there and restart the server.</>
+                      : error}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+                <button type="button" onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Cancel</button>
+                <button type="submit" disabled={!canSubmit} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: !canSubmit ? "not-allowed" : "pointer", opacity: !canSubmit ? 0.65 : 1, fontFamily: font, minHeight: 44 }}>
+                  {loading ? "Saving…" : "Change Password"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Activity Log Screen ──────────────────────────────────────────────────────
+function ActivityLogScreen({ user, token, onLogout, darkMode, setDarkMode, c }) {
+  const r = useResponsive();
+  const isDesktop = r.width >= 768;
+  const isAdmin = user?.role === "admin";
+
+  const [logs, setLogs] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  const [filterActor, setFilterActor] = useState("");
+  const [filterAction, setFilterAction] = useState("");
+  const [filterFrom, setFilterFrom] = useState("");
+  const [filterTo, setFilterTo] = useState("");
+  const [showBehavior, setShowBehavior] = useState(true);
+  const [showObserver, setShowObserver] = useState(true);
+  const [showAuth, setShowAuth] = useState(true);
+
+  const [expandedLog, setExpandedLog] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const fetchLogs = useCallback(async (pg = 1) => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const tags = [
+        showBehavior && "behaviorNote",
+        showObserver && "observerNote",
+        isAdmin && showAuth && "authEvent",
+      ].filter(Boolean).join(",");
+
+      const data = await api.getActivityLogs(token, {
+        tags: tags || "behaviorNote",
+        actor: filterActor.trim() || undefined,
+        action: filterAction.trim() || undefined,
+        from: filterFrom || undefined,
+        to: filterTo || undefined,
+        page: pg,
+        limit: 25,
+      });
+      setLogs(data.logs || []);
+      setTotalCount(data.total || 0);
+      setTotalPages(data.totalPages || 1);
+      setPage(pg);
+    } catch (err) {
+      setLoadError(err.message);
+      setLogs([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, filterActor, filterAction, filterFrom, filterTo, showBehavior, showObserver, showAuth, isAdmin]);
+
+  useEffect(() => { fetchLogs(1); }, []);
+
+  const tagColors = {
+    behaviorNote: { bg: "#e8f5e9", text: "#2d7a24", label: "Behavior" },
+    observerNote: { bg: "#e3f2fd", text: "#1565c0", label: "Medical" },
+    authEvent: { bg: "#fce4ec", text: "#c62828", label: "Auth" },
+  };
+
+  const tagBadge = (tag) => {
+    const t = tagColors[tag] || { bg: c.inputBg, text: c.warmGray, label: tag };
+    return (
+      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, backgroundColor: t.bg, color: t.text, whiteSpace: "nowrap" }}>
+        {t.label}
+      </span>
+    );
+  };
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
+      {/* Top bar */}
+      <div style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ flex: 1 }}>
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={() => setShowChangePassword(true)} />
+        </div>
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", minHeight: 40, minWidth: 40 }} aria-label="Toggle dark mode">
+            {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: isDesktop ? 1100 : 700, margin: "0 auto", padding: isDesktop ? "24px 28px 0" : "20px 16px 0" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <button onClick={() => { window.location.href = "/"; }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }} aria-label="Back to home">
+            <Icons.back size={20} color={c.warmGray} />
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.clipboardList size={22} color={c.headerGreen} />
+            <h2 style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Activity Log</h2>
+          </div>
+        </div>
+        <p style={{ fontSize: 14, color: c.textSecondary, margin: "0 0 20px 34px" }}>
+          {isAdmin ? "All system activity including auth events" : "Behavior and medical note activity"}
+        </p>
+
+        {/* Filters card */}
+        <div style={{ backgroundColor: c.cardBg, borderRadius: 12, padding: isDesktop ? "18px 20px" : "14px 16px", border: `1px solid ${c.cardBorder}`, marginBottom: 16, boxShadow: c.shadow }}>
+          <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "1fr 1fr 1fr 1fr" : "1fr 1fr", gap: 12, marginBottom: 14 }}>
+            {[
+              { label: "Actor (username)", val: filterActor, set: setFilterActor, placeholder: "Filter by user…" },
+              { label: "Action", val: filterAction, set: setFilterAction, placeholder: "e.g. USER_CREATED" },
+              { label: "From date", val: filterFrom, set: setFilterFrom, type: "date" },
+              { label: "To date", val: filterTo, set: setFilterTo, type: "date" },
+            ].map(({ label, val, set, placeholder, type = "text" }) => (
+              <div key={label}>
+                <label style={{ fontSize: 12, color: c.warmGray, marginBottom: 4, display: "block" }}>{label}</label>
+                <input type={type} value={val} onChange={(e) => set(e.target.value)} placeholder={placeholder} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: font }} />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 16, marginBottom: 14 }}>
+            <span style={{ fontSize: 13, color: c.warmGray, fontWeight: 500 }}>Show:</span>
+            {[
+              { key: "behavior", label: "Behavior Notes", val: showBehavior, set: setShowBehavior },
+              { key: "observer", label: "Medical Notes", val: showObserver, set: setShowObserver },
+              ...(isAdmin ? [{ key: "auth", label: "Auth Events", val: showAuth, set: setShowAuth }] : []),
+            ].map(({ key, label, val, set }) => (
+              <label key={key} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: c.textPrimary, cursor: "pointer" }}>
+                <input type="checkbox" checked={val} onChange={(e) => set(e.target.checked)} style={{ cursor: "pointer" }} />
+                {label}
+              </label>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => fetchLogs(1)} disabled={loading} style={{ padding: "8px 18px", borderRadius: 8, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 13, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.65 : 1, fontFamily: font, minHeight: 36 }}>
+              {loading ? "Loading…" : "Apply Filters"}
+            </button>
+            <button onClick={() => { setFilterActor(""); setFilterAction(""); setFilterFrom(""); setFilterTo(""); setShowBehavior(true); setShowObserver(true); setShowAuth(true); }} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg, color: c.textSecondary, fontSize: 13, cursor: "pointer", fontFamily: font, minHeight: 36 }}>
+              Clear
+            </button>
+          </div>
+        </div>
+
+        {/* Results count */}
+        {logs !== null && !loading && (
+          <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 10 }}>
+            {loadError ? "" : `${totalCount} event${totalCount !== 1 ? "s" : ""} · page ${page} of ${totalPages}`}
+          </div>
+        )}
+
+        {/* Error */}
+        {loadError && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, marginBottom: 16 }}>
+            <Icons.alertCircle size={16} color="#BE3A2B" />
+            <span style={{ fontSize: 14, color: "#BE3A2B" }}>{loadError}</span>
+          </div>
+        )}
+
+        {/* Skeleton */}
+        {loading && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} height={60} borderRadius={10} />
+            ))}
+          </div>
+        )}
+
+        {/* Log rows */}
+        {!loading && logs && logs.length === 0 && !loadError && (
+          <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 14, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            No activity logs found for the selected filters.
+          </div>
+        )}
+
+        {!loading && logs && logs.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {logs.map((log) => {
+              const isExpanded = expandedLog === log.logId;
+              const hasData = log.jsonData && Object.keys(log.jsonData).length > 0;
+              return (
+                <div key={log.logId} style={{ backgroundColor: c.cardBg, borderRadius: 10, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow, overflow: "hidden" }}>
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 14px", cursor: hasData ? "pointer" : "default", flexWrap: "nowrap" }}
+                    onClick={() => hasData && setExpandedLog(isExpanded ? null : log.logId)}
+                  >
+                    <div style={{ flex: "0 0 auto" }}>{tagBadge(log.tag)}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: c.textPrimary, whiteSpace: isDesktop ? "nowrap" : "normal", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {log.action}
+                      </div>
+                      <div style={{ fontSize: 12, color: c.warmGray, marginTop: 1 }}>
+                        by <strong>{log.actor}</strong> · {formatTimestamp(log.timestamp)}
+                      </div>
+                    </div>
+                    {hasData && (
+                      <div style={{ flex: "0 0 auto" }}>
+                        <Icons.chevron size={14} color={c.warmGray} down={!isExpanded} />
+                      </div>
+                    )}
+                  </div>
+                  {isExpanded && hasData && (
+                    <div style={{ padding: "0 14px 12px", borderTop: `1px solid ${c.cardBorder}` }}>
+                      <pre style={{ fontSize: 12, color: c.textSecondary, backgroundColor: c.inputBg, borderRadius: 8, padding: "10px 12px", margin: "10px 0 0", overflow: "auto", maxHeight: 200, fontFamily: "monospace" }}>
+                        {JSON.stringify(log.jsonData, null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && totalPages > 1 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24 }}>
+            <button onClick={() => fetchLogs(page - 1)} disabled={page <= 1} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg, color: page <= 1 ? c.warmGray : c.textPrimary, cursor: page <= 1 ? "not-allowed" : "pointer", fontFamily: font, fontSize: 13, minHeight: 36 }}>Previous</button>
+            <span style={{ fontSize: 13, color: c.warmGray, padding: "0 8px" }}>Page {page} of {totalPages}</span>
+            <button onClick={() => fetchLogs(page + 1)} disabled={page >= totalPages} style={{ padding: "8px 14px", borderRadius: 8, border: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg, color: page >= totalPages ? c.warmGray : c.textPrimary, cursor: page >= totalPages ? "not-allowed" : "pointer", fontFamily: font, fontSize: 13, minHeight: 36 }}>Next</button>
+          </div>
+        )}
+      </div>
+
+      {showChangePassword && <ChangePasswordModal token={token} onClose={() => setShowChangePassword(false)} c={c} />}
+    </main>
+  );
+}
+
+// ─── User Management Screen ───────────────────────────────────────────────────
+function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c }) {
+  const r = useResponsive();
+  const isDesktop = r.width >= 768;
+  const isAdmin = user?.role === "admin";
+
+  const [users, setUsers] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("volunteer");
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  const tabs = isAdmin
+    ? [{ key: "volunteer", label: "Volunteers" }, { key: "staff", label: "Staff" }, { key: "device", label: "Devices" }, { key: "admin", label: "Admin" }]
+    : [{ key: "volunteer", label: "Volunteers" }];
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const data = await api.getUsers(token);
+      setUsers(data);
+    } catch (err) {
+      setLoadError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchUsers(); }, []);
+
+  const filteredUsers = (users || []).filter((u) => {
+    if (u.role !== activeTab) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return u.username?.toLowerCase().includes(q) || u.deviceName?.toLowerCase().includes(q);
+  });
+
+  const getExpiryStatus = (expiryDate) => {
+    if (!expiryDate) return null;
+    const exp = new Date(expiryDate);
+    const now = new Date();
+    const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { label: "Expired", color: "#BE3A2B", bg: "#fef2f2" };
+    if (diffDays <= 7) return { label: `Expires in ${diffDays}d`, color: "#e65100", bg: "#fff3e0" };
+    return { label: `Expires ${exp.toLocaleDateString()}`, color: "#2d7a24", bg: "#f0fdf4" };
+  };
+
+  const handleDelete = async () => {
+    if (!showDeleteConfirm) return;
+    setDeleteLoading(true);
+    setActionError("");
+    try {
+      await api.deleteUser(token, showDeleteConfirm.userId);
+      setShowDeleteConfirm(null);
+      fetchUsers();
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  return (
+    <main style={{ fontFamily: font, minHeight: "100vh", backgroundColor: c.bg, paddingBottom: 48 }}>
+      {/* Top bar */}
+      <div style={{ display: "flex", alignItems: "center", padding: "12px 20px", borderBottom: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg }}>
+        <div style={{ flex: 1 }}>
+          <UserDropdown user={user} onLogout={onLogout} token={token} c={c} onChangePassword={() => setShowChangePassword(true)} />
+        </div>
+        <img src={darkMode ? "/oas-logo-invert.png" : "/oas-logo.jpg"} alt="Oakland Animal Services" style={{ height: 36, objectFit: "contain" }} />
+        <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={() => setDarkMode(!darkMode)} style={{ background: "none", border: `1px solid ${c.cardBorder}`, cursor: "pointer", padding: 8, borderRadius: 8, display: "flex", alignItems: "center", minHeight: 40, minWidth: 40 }} aria-label="Toggle dark mode">
+            {darkMode ? <Icons.sun size={18} color="#ffd700" /> : <Icons.moon size={18} color={c.textSecondary} />}
+          </button>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: isDesktop ? 1000 : 700, margin: "0 auto", padding: isDesktop ? "24px 28px 0" : "20px 16px 0" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <button onClick={() => { window.location.href = "/"; }} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }} aria-label="Back">
+            <Icons.back size={20} color={c.warmGray} />
+          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Icons.users size={22} color={c.headerGreen} />
+            <h2 style={{ fontSize: isDesktop ? 24 : 20, fontWeight: 700, color: c.textPrimary, margin: 0 }}>User Management</h2>
+          </div>
+        </div>
+        <p style={{ fontSize: 14, color: c.textSecondary, margin: "0 0 20px 34px" }}>
+          {isAdmin ? "Manage all user accounts" : "Manage volunteer accounts"}
+        </p>
+
+        {/* Tabs + actions row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+          <div style={{ display: "flex", gap: 4, backgroundColor: c.inputBg, borderRadius: 10, padding: 4 }}>
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                style={{ padding: "7px 16px", borderRadius: 8, border: "none", backgroundColor: activeTab === t.key ? c.cardBg : "transparent", color: activeTab === t.key ? c.textPrimary : c.warmGray, fontSize: 13, fontWeight: activeTab === t.key ? 600 : 400, cursor: "pointer", fontFamily: font, boxShadow: activeTab === t.key ? c.shadow : "none", transition: "all 0.15s" }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          {activeTab !== "admin" && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 8, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 36 }}
+            >
+              <Icons.plus size={15} />
+              New {activeTab === "volunteer" ? "Volunteer" : activeTab === "staff" ? "Staff" : "Device"}
+            </button>
+          )}
+        </div>
+
+        {/* Search */}
+        <div style={{ position: "relative", marginBottom: 14 }}>
+          <div style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+            <Icons.search size={15} color={c.warmGray} />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`Search ${activeTab}s…`}
+            style={{ width: "100%", padding: "9px 14px 9px 36px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 13, outline: "none", boxSizing: "border-box", fontFamily: font }}
+          />
+        </div>
+
+        {actionError && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 14 }} role="alert">
+            <Icons.alertCircle size={15} color="#BE3A2B" />
+            <span style={{ fontSize: 13, color: "#BE3A2B" }}>{actionError}</span>
+          </div>
+        )}
+
+        {loadError && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, marginBottom: 16 }}>
+            <Icons.alertCircle size={16} color="#BE3A2B" />
+            <span style={{ fontSize: 14, color: "#BE3A2B" }}>{loadError}</span>
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} height={64} borderRadius={10} />)}
+          </div>
+        )}
+
+        {/* Admin tab — env-var account, read-only */}
+        {activeTab === "admin" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", backgroundColor: c.cardBg, borderRadius: 10, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow }}>
+              <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: c.tabActiveBg, border: `2px solid ${c.headerGreen}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <Icons.shield size={16} color={c.headerGreen} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: c.textPrimary }}>admin <span style={{ fontSize: 11, fontWeight: 400, color: c.warmGray }}>(env account)</span></div>
+                <div style={{ fontSize: 12, color: c.warmGray, marginTop: 2 }}>Password managed via <code>ADMIN_PASS</code> in server .env — cannot be reset here</div>
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, backgroundColor: c.tabActiveBg, color: c.headerGreen, flexShrink: 0 }}>System Admin</span>
+            </div>
+            <div style={{ fontSize: 13, color: c.warmGray, padding: "10px 14px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
+              To change the admin password, update <code>ADMIN_PASS</code> in the server <code>.env</code> file and restart the backend.
+            </div>
+          </div>
+        )}
+
+        {activeTab !== "admin" && !loading && !loadError && filteredUsers.length === 0 && (
+          <div style={{ textAlign: "center", padding: 40, color: c.warmGray, fontSize: 14, backgroundColor: c.cardBg, borderRadius: 12, border: `1px solid ${c.cardBorder}` }}>
+            No {activeTab} accounts found.
+          </div>
+        )}
+
+        {!loading && activeTab !== "admin" && filteredUsers.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {filteredUsers.map((u) => {
+              const expStatus = getExpiryStatus(u.expiryDate);
+              return (
+                <div key={u.userId} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", backgroundColor: c.cardBg, borderRadius: 10, border: `1px solid ${c.cardBorder}`, boxShadow: c.shadow, flexWrap: isDesktop ? "nowrap" : "wrap" }}>
+                  {/* Avatar */}
+                  <div style={{ width: 36, height: 36, borderRadius: "50%", backgroundColor: c.inputBg, border: `1px solid ${c.cardBorder}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icons.user size={16} color={c.warmGray} />
+                  </div>
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: c.textPrimary }}>{u.username}</div>
+                    <div style={{ fontSize: 12, color: c.warmGray, marginTop: 1 }}>
+                      {u.deviceName && `Device: ${u.deviceName} · `}
+                      Created {new Date(u.createdAt || Date.now()).toLocaleDateString()}
+                    </div>
+                  </div>
+                  {/* Expiry badge */}
+                  {expStatus && (
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 8px", borderRadius: 20, backgroundColor: expStatus.bg, color: expStatus.color, whiteSpace: "nowrap", flexShrink: 0 }}>
+                      {expStatus.label}
+                    </span>
+                  )}
+                  {/* Actions */}
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button
+                      onClick={() => setShowResetModal(u)}
+                      title="Reset password"
+                      style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${c.cardBorder}`, backgroundColor: c.cardBg, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: c.textSecondary, fontFamily: font, minHeight: 32 }}
+                    >
+                      <Icons.key size={13} color={c.warmGray} />
+                      {isDesktop && "Reset"}
+                    </button>
+                    <button
+                      onClick={() => { setActionError(""); setShowDeleteConfirm(u); }}
+                      title="Delete user"
+                      style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #fecaca", backgroundColor: "#fef2f2", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#BE3A2B", fontFamily: font, minHeight: 32 }}
+                    >
+                      <Icons.trash size={13} color="#BE3A2B" />
+                      {isDesktop && "Delete"}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Create User Modal */}
+      {showCreateModal && (
+        <CreateUserModal
+          token={token}
+          isAdmin={isAdmin}
+          defaultRole={activeTab}
+          onClose={() => setShowCreateModal(false)}
+          onCreated={() => { setShowCreateModal(false); fetchUsers(); }}
+          c={c}
+        />
+      )}
+
+      {/* Reset Password Modal */}
+      {showResetModal && (
+        <ResetPasswordModal
+          token={token}
+          targetUser={showResetModal}
+          onClose={() => setShowResetModal(null)}
+          onReset={() => setShowResetModal(null)}
+          c={c}
+        />
+      )}
+
+      {/* Delete Confirm Modal */}
+      {showDeleteConfirm && (
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={() => setShowDeleteConfirm(null)} role="dialog" aria-modal="true">
+          <div style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 28, maxWidth: 340, width: "100%", fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "#fef2f2", border: "2px solid #fecaca", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+              <Icons.trash size={22} color="#BE3A2B" />
+            </div>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: c.textPrimary, textAlign: "center", marginBottom: 8 }}>Delete Account</h2>
+            <p style={{ fontSize: 14, color: c.warmGray, textAlign: "center", marginBottom: 20 }}>
+              Delete <strong>{showDeleteConfirm.username}</strong>? This cannot be undone.
+            </p>
+            {actionError && <div style={{ fontSize: 13, color: "#BE3A2B", textAlign: "center", marginBottom: 12 }}>{actionError}</div>}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setShowDeleteConfirm(null)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Cancel</button>
+              <button onClick={handleDelete} disabled={deleteLoading} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", backgroundColor: "#BE3A2B", color: "#fff", fontSize: 14, fontWeight: 600, cursor: deleteLoading ? "not-allowed" : "pointer", opacity: deleteLoading ? 0.65 : 1, fontFamily: font, minHeight: 44 }}>
+                {deleteLoading ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChangePassword && <ChangePasswordModal token={token} onClose={() => setShowChangePassword(false)} c={c} />}
+    </main>
+  );
+}
+
+// ─── Create User Modal ────────────────────────────────────────────────────────
+function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState(defaultRole || "volunteer");
+  const [expiryDate, setExpiryDate] = useState("");
+  const [deviceName, setDeviceName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  const canSubmit = username.trim() && password.length >= 8 && !loading;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.createUser(token, {
+        username: username.trim(),
+        password,
+        role,
+        ...(role === "volunteer" && expiryDate ? { expiryDate } : {}),
+        ...(role === "device" && deviceName ? { deviceName: deviceName.trim() } : {}),
+      });
+      onCreated();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: font };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 28, width: "100%", maxWidth: 380, fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.2)", maxHeight: "90vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Create Account</h2>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} aria-label="Close"><Icons.xMark size={20} color={c.warmGray} /></button>
+        </div>
+        <form onSubmit={handleSubmit} noValidate>
+          {isAdmin && (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Role</label>
+              <select value={role} onChange={(e) => setRole(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Role">
+                <option value="volunteer">Volunteer</option>
+                <option value="staff">Staff</option>
+                <option value="device">Device</option>
+              </select>
+            </>
+          )}
+
+          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Username</label>
+          <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" style={{ ...fieldStyle, marginBottom: 14 }} autoFocus autoComplete="off" aria-label="Username" />
+
+          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Temporary Password</label>
+          <div style={{ position: "relative", marginBottom: 14 }}>
+            <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Min 8 characters" style={{ ...fieldStyle, paddingRight: 40 }} autoComplete="new-password" aria-label="Password" />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showPassword ? "Hide" : "Show"}>
+              {showPassword ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
+            </button>
+          </div>
+          {password && password.length < 8 && <div style={{ fontSize: 12, color: "#BE3A2B", marginTop: -10, marginBottom: 10 }}>At least 8 characters</div>}
+
+          {role === "volunteer" && (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Expiry Date <span style={{ color: c.warmGray, fontWeight: 400 }}>(optional)</span></label>
+              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Expiry date" />
+            </>
+          )}
+
+          {role === "device" && (
+            <>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Device Name</label>
+              <input type="text" value={deviceName} onChange={(e) => setDeviceName(e.target.value)} placeholder="e.g. Kiosk-1" style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Device name" />
+            </>
+          )}
+
+          {error && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 14 }} role="alert">
+              <Icons.alertCircle size={15} color="#BE3A2B" />
+              <span style={{ fontSize: 13, color: "#BE3A2B" }}>{error}</span>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+            <button type="button" onClick={onClose} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Cancel</button>
+            <button type="submit" disabled={!canSubmit} style={{ flex: 1, padding: "11px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: !canSubmit ? "not-allowed" : "pointer", opacity: !canSubmit ? 0.65 : 1, fontFamily: font, minHeight: 44 }}>
+              {loading ? "Creating…" : "Create Account"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Reset Password Modal ─────────────────────────────────────────────────────
+function ResetPasswordModal({ token, targetUser, onClose, onReset, c }) {
+  const [newPwd, setNewPwd] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const focusTrapRef = useFocusTrap(true);
+  useEscapeKey(onClose, true);
+
+  const canSubmit = newPwd.length >= 8 && !loading;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.resetUserPassword(token, targetUser.userId, newPwd);
+      setDone(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fieldStyle = { width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${c.inputBorder}`, backgroundColor: c.inputBg, color: c.textPrimary, fontSize: 14, outline: "none", boxSizing: "border-box", fontFamily: font, paddingRight: 40 };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }} onClick={onClose} role="dialog" aria-modal="true">
+      <div ref={focusTrapRef} style={{ backgroundColor: c.cardBg, borderRadius: 16, padding: 28, width: "100%", maxWidth: 340, fontFamily: font, boxShadow: "0 16px 48px rgba(0,0,0,0.2)" }} onClick={(e) => e.stopPropagation()}>
+        {done ? (
+          <div style={{ textAlign: "center" }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", backgroundColor: "#f0fdf4", border: "2px solid #4CAF50", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Icons.check size={22} color="#4CAF50" />
+            </div>
+            <h2 style={{ fontSize: 17, fontWeight: 700, color: c.textPrimary, marginBottom: 8 }}>Password Reset</h2>
+            <p style={{ fontSize: 14, color: c.warmGray, marginBottom: 20 }}>
+              <strong>{targetUser.username}</strong>'s password has been reset. They will need to sign in with the new password.
+            </p>
+            <button onClick={onClose} style={{ padding: "10px 28px", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <h2 style={{ fontSize: 17, fontWeight: 700, color: c.textPrimary, margin: 0 }}>Reset Password</h2>
+              <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} aria-label="Close"><Icons.xMark size={20} color={c.warmGray} /></button>
+            </div>
+            <p style={{ fontSize: 13, color: c.warmGray, marginBottom: 16 }}>Set a new temporary password for <strong>{targetUser.username}</strong>.</p>
+            <form onSubmit={handleSubmit} noValidate>
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Password</label>
+              <div style={{ position: "relative", marginBottom: 4 }}>
+                <input type={showPwd ? "text" : "password"} value={newPwd} onChange={(e) => { setNewPwd(e.target.value); setError(""); }} placeholder="Min 8 characters" style={fieldStyle} autoFocus autoComplete="new-password" aria-label="New password" />
+                <button type="button" onClick={() => setShowPwd(!showPwd)} style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex" }} aria-label={showPwd ? "Hide" : "Show"}>
+                  {showPwd ? <Icons.eyeOff size={15} color={c.warmGray} /> : <Icons.eye size={15} color={c.warmGray} />}
+                </button>
+              </div>
+              {newPwd && newPwd.length < 8 && <div style={{ fontSize: 12, color: "#BE3A2B", marginBottom: 10 }}>At least 8 characters</div>}
+
+              {error && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 12, marginTop: 6 }} role="alert">
+                  <Icons.alertCircle size={15} color="#BE3A2B" />
+                  <span style={{ fontSize: 13, color: "#BE3A2B" }}>{error}</span>
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <button type="button" onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: `1px solid ${c.inputBorder}`, backgroundColor: "transparent", color: c.textSecondary, fontSize: 14, cursor: "pointer", fontFamily: font, minHeight: 44 }}>Cancel</button>
+                <button type="submit" disabled={!canSubmit} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", backgroundColor: c.headerGreen, color: "#fff", fontSize: 14, fontWeight: 600, cursor: !canSubmit ? "not-allowed" : "pointer", opacity: !canSubmit ? 0.65 : 1, fontFamily: font, minHeight: 44 }}>
+                  {loading ? "Resetting…" : "Reset Password"}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const [user] = useState({ displayName: "Staff", role: "staff", email: "", department: "" });
+  const [accessToken, setAccessToken] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
+
   const [animals, setAnimals] = useState([]);
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
 
-  // Persist dark mode preference across page reloads and navigation
   const toggleDarkMode = (val) => {
     localStorage.setItem("darkMode", val);
     setDarkMode(val);
@@ -3517,8 +4836,64 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const c = darkMode ? themes.dark : themes.light;
 
-  // Read pet type and location from URL query params (set by QR code on kennel)
-  // Also support direct pet ID links: ?petId=12345
+  const applyToken = (token) => {
+    const payload = decodeJwt(token);
+    _authToken = token;
+    sessionStorage.setItem("oas_token", token);
+    setAccessToken(token);
+    setCurrentUser({
+      userId: payload?.userId,
+      username: payload?.username,
+      displayName: payload?.username || "User",
+      role: payload?.role || "staff",
+      email: "",
+      department: "",
+    });
+    setMustChangePassword(!!payload?.mustChangePassword);
+  };
+
+  const handleLogin = (token) => applyToken(token);
+
+  // On mount: restore session instantly from sessionStorage, then try a
+  // background cookie-based refresh to get a fresh token (handles expiry).
+  useEffect(() => {
+    const stored = sessionStorage.getItem("oas_token");
+    const payload = stored ? decodeJwt(stored) : null;
+    const isExpired = payload ? payload.exp * 1000 < Date.now() : true;
+
+    if (stored && !isExpired) {
+      // Token still valid — use it immediately, no flicker
+      applyToken(stored);
+      setSessionLoading(false);
+      // Refresh in background so we get a fresh token before it expires
+      api.refreshToken().then(applyToken).catch(() => {});
+    } else {
+      // Token missing or expired — try cookie-based refresh
+      api.refreshToken()
+        .then((token) => applyToken(token))
+        .catch(() => { sessionStorage.removeItem("oas_token"); })
+        .finally(() => setSessionLoading(false));
+    }
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    if (accessToken) await api.logout(accessToken);
+    _authToken = null;
+    sessionStorage.removeItem("oas_token");
+    setAccessToken(null);
+    setCurrentUser(null);
+    setMustChangePassword(false);
+    setSelectedPetId(null);
+    setAnimals([]);
+    setLocationError(null);
+    window.history.replaceState({}, "", "/");
+  }, [accessToken]);
+
+  const handlePasswordChanged = () => {
+    setMustChangePassword(false);
+  };
+
+  // URL params
   const urlParams = new URLSearchParams(window.location.search);
   const urlPetId = urlParams.get("petId");
   const petType = urlParams.get("type");
@@ -3526,29 +4901,16 @@ export default function App() {
   const view = urlParams.get("view");
   const homePageParam = Number(urlParams.get("page") || "1");
   const homePage = Number.isFinite(homePageParam) && homePageParam > 0 ? Math.floor(homePageParam) : 1;
-
   const hasUrlParams = !!(urlPetId || (petType && kennelLocation));
 
   useEffect(() => {
-    if (!hasUrlParams) return;
-    // Direct pet ID link - skip location fetch and go straight to that pet
-    if (urlPetId) {
-      setSelectedPetId(urlPetId);
-      return;
-    }
-    // QR code / location link - fetch pets at this kennel location from backend
+    if (!accessToken || !hasUrlParams) return;
+    if (urlPetId) { setSelectedPetId(urlPetId); return; }
     setLocationError(null);
     api.getPetsByLocation(petType, kennelLocation)
-      .then((pets) => {
-        setAnimals(pets);
-        if (pets.length === 1) setSelectedPetId(pets[0].petId);
-      })
-      .catch((err) => {
-        setLocationError(err.message);
-      });
-  }, [urlPetId, petType, kennelLocation]);
-
-  const handleLogout = () => { setSelectedPetId(null); setAnimals([]); setLocationError(null); };
+      .then((pets) => { setAnimals(pets); if (pets.length === 1) setSelectedPetId(pets[0].petId); })
+      .catch((err) => { setLocationError(err.message); });
+  }, [accessToken, urlPetId, petType, kennelLocation]);
 
   const handleRefresh = () => {
     if (!petType || !kennelLocation || refreshing) return;
@@ -3559,14 +4921,61 @@ export default function App() {
       .finally(() => { setRefreshing(false); });
   };
 
-  // No URL params → show home screen with all animals
-  if (view === "locations") {
-    return <LocationsPage user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
+  // ── Session restore loading ──
+  if (sessionLoading) {
+    return (
+      <div style={{ fontFamily: font, width: "100vw", minHeight: "100vh", backgroundColor: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
+        <div style={{ width: 48, height: 48, border: `4px solid ${c.cardBorder}`, borderTop: `4px solid ${c.headerGreen}`, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
   }
 
-  // No URL params → show home screen with all animals
+  // ── Auth gates ──
+  if (!accessToken) {
+    return <LoginScreen darkMode={darkMode} setDarkMode={toggleDarkMode} onLogin={handleLogin} c={c} />;
+  }
+
+  if (mustChangePassword) {
+    return <ForcePasswordChangeScreen user={currentUser} token={accessToken} onPasswordChanged={handlePasswordChanged} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
+  }
+
+  // ── New views ──
+  if (view === "activity") {
+    return (
+      <>
+        <ActivityLogScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />
+        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} c={c} />}
+      </>
+    );
+  }
+
+  if (view === "users" && currentUser?.role === "admin") {
+    return (
+      <>
+        <UserManagementScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />
+        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} c={c} />}
+      </>
+    );
+  }
+
+  // ── Existing views ──
+  if (view === "locations") {
+    return (
+      <>
+        <LocationsPage user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} onChangePassword={() => setShowChangePassword(true)} />
+        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} c={c} />}
+      </>
+    );
+  }
+
   if (!hasUrlParams && !selectedPetId) {
-    return <HomeScreen user={user} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} />;
+    return (
+      <>
+        <HomeScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} onChangePassword={() => setShowChangePassword(true)} />
+        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} c={c} />}
+      </>
+    );
   }
 
   if (locationError) {
@@ -3574,11 +4983,11 @@ export default function App() {
   }
 
   if (!selectedPetId && animals.length > 1) {
-    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={user} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} onRefresh={handleRefresh} refreshing={refreshing} />;
+    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={currentUser} token={accessToken} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} c={c} onRefresh={handleRefresh} refreshing={refreshing} onChangePassword={() => setShowChangePassword(true)} />;
   }
 
   if (selectedPetId) {
-    return <Portal user={user} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => { window.location.href = homePage > 1 ? `/?page=${homePage}` : "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
+    return <Portal user={currentUser} token={accessToken} petId={selectedPetId} onLogout={handleLogout} onBack={animals.length > 1 ? () => setSelectedPetId(null) : () => { window.location.href = homePage > 1 ? `/?page=${homePage}` : "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} onChangePassword={() => setShowChangePassword(true)} />;
   }
 
   return (
