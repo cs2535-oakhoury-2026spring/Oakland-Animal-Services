@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
-import {
-  getPetById,
-  searchByLocation,
-  getAllAnimals,
-} from "../db/pets.js";
+import { getPetById, searchByLocation, getAllAnimals } from "../db/pets.js";
+import { PetLocation } from "../models/Pet.schema.js";
+import config from "../config/index.js";
+
+const PET_LOCATION_CACHE_TTL = config.PET_LOCATION_CACHE_TTL;
+const petLocationCache: Map<string, PetLocation[]> = new Map();
 
 /**
  * Retrieves a single pet by its unique identifier.
@@ -27,7 +28,7 @@ export async function getPet(req: Request, res: Response) {
 
 /**
  * Searches for pets by type and geographic location.
- * 
+ *
  * @param req - Express request object containing `petType` and `location` in path parameters.
  * @param res - Express response object.
  * @returns A JSON response with a list of pets matching the criteria or a 404 error.
@@ -38,6 +39,15 @@ export async function getPetByLocation(req: Request, res: Response) {
 
   const locationRaw =
     typeof req.params.location === "string" ? req.params.location : "";
+
+  const refresh = req.query.refresh === "true";
+
+  const cacheKey = `${petTypeRaw}:${locationRaw}`;
+  const cached = petLocationCache.get(cacheKey);
+
+  if (cached && !refresh) {
+    return res.json({ success: true, pets: cached });
+  }
 
   const petType = (petTypeRaw ?? "").toLowerCase();
   const location = locationRaw ?? "";
@@ -51,7 +61,8 @@ export async function getPetByLocation(req: Request, res: Response) {
   if (!pet) {
     return res.status(404).json({ error: "Pet not found" });
   }
-
+  petLocationCache.set(cacheKey, pet);
+  setTimeout(() => petLocationCache.delete(cacheKey), PET_LOCATION_CACHE_TTL);
   res.json({ success: true, pets: pet });
 }
 

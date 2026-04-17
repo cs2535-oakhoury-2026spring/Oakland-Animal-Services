@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git show *)",
+      "Bash(cp /tmp/levenshtein_js.txt \"/c/Users/haoti/Documents/Projects/MyProjects/Oakland-Animal-Services/frontend/src/utils/levenshtein.js\")",
+      "Bash(cp /tmp/noteSearcher_js.txt \"/c/Users/haoti/Documents/Projects/MyProjects/Oakland-Animal-Services/frontend/src/utils/noteSearcher.js\")"
+    ]
+  }
+}

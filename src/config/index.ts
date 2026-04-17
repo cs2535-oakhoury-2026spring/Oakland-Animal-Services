@@ -8,6 +8,8 @@ export default {
   USE_MOCK_RG_DB: process.env.USE_MOCK_RG_DB === "true",
   USE_MOCK_OBSERVER_DB: process.env.USE_MOCK_OBSERVER_DB === "true",
   LLM_API_KEY: process.env.OPENAI_API_KEY ?? "",
+  PET_LOCATION_CACHE_TTL:
+    Number(process.env.PET_LOCATION_CACHE_TTL) || 60 * 60 * 1000, // In milliseconds, default to 1 hour
 
   USE_MOCK_NOTES_DB: process.env.USE_MOCK_NOTES_DB === "true",
 

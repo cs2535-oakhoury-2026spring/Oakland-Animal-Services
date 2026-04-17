@@ -11,18 +11,18 @@
 - `sex: string`
 - `species: string`
 - `image: string | null`
-- `description: string | null` -> EMBED HTML
-- `summary: string` -> LOCATION
+- `description: string | null`
+- `summary: string`
 - `breed: string | null`
 - `status: string | null`
-- `rescueId: string | null` -> ARN
+- `rescueId: string | null`
 - `availableDate: string | null`
-- `otherNames: string | null` -> HANDLING COLOR
+- `otherNames: string | null`
 - `distinguishingMarks: string | null`
 - `generalAge: string | null`
 - `generalSize: string | null`
 - `colorDetails: string | null`
-- `specialNeeds: string | null` -> ANOTHER DESCRIPTION
+- `specialNeeds: string | null`
 
 --------------------------
 ### LocationPet
@@ -61,6 +61,8 @@
   - `petType` (`dog` or `cat`, required)
   - `location` (string, required)
     - Spaces in location name should use `-` to seperate ex: `holding-a:2`
+- Query params:
+  - `refresh` (boolean, optional) - If true, bypass cache and fetch fresh data
 - Success: `200` with `{ success: true, pets: LocationPet[] }`
 - Error: `400` for invalid petType/location or missing params, `404` if not found
 
