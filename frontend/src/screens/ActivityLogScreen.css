@@ -265,6 +265,25 @@
   min-height: 36px;
 }
 
+.activity-log-screen__export-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  min-height: 36px;
+}
+
+.activity-log-screen__export-btn:enabled {
+  cursor: pointer;
+}
+
+.activity-log-screen__export-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
 /* Results count */
 .activity-log-screen__count {
   font-size: 13px;

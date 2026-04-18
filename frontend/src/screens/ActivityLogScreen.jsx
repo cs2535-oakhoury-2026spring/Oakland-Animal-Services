@@ -33,6 +33,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
 
   const [expandedLog, setExpandedLog] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const knownActionSuggestions = [
     "CREATED",
@@ -77,6 +78,86 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
       setLoading(false);
     }
   }, [token, filterActor, filterAction, filterFrom, filterTo, showBehavior, showObserver, showAuth, isAdmin]);
+
+  const buildFilters = useCallback((pg = 1, limit = 25) => {
+    const tags = [
+      showBehavior && "behaviorNote",
+      showObserver && "observerNote",
+      isAdmin && showAuth && "authEvent",
+    ].filter(Boolean).join(",");
+
+    return {
+      tags: tags || "behaviorNote",
+      actor: filterActor.trim() || undefined,
+      action: filterAction.trim() || undefined,
+      from: filterFrom || undefined,
+      to: filterTo || undefined,
+      page: pg,
+      limit,
+    };
+  }, [filterAction, filterActor, filterFrom, filterTo, isAdmin, showAuth, showBehavior, showObserver]);
+
+  const csvEscape = (val) => {
+    const raw = val == null ? "" : String(val);
+    return `"${raw.replace(/"/g, '""')}"`;
+  };
+
+  const exportFilteredLogsToCsv = useCallback(async () => {
+    try {
+      setExporting(true);
+      setLoadError("");
+
+      const exportLimit = 200;
+      const firstPage = await api.getActivityLogs(token, buildFilters(1, exportLimit));
+      const total = firstPage.totalPages || 1;
+      const allLogs = [...(firstPage.logs || [])];
+
+      for (let p = 2; p <= total; p += 1) {
+        const data = await api.getActivityLogs(token, buildFilters(p, exportLimit));
+        allLogs.push(...(data.logs || []));
+      }
+
+      const headers = [
+        "timestamp",
+        "tag",
+        "action",
+        "actor",
+        "petId",
+        "jsonData",
+      ];
+
+      const rows = allLogs.map((log) => {
+        const petId = log?.jsonData?.petId ?? "";
+        return [
+          log.timestamp || "",
+          log.tag || "",
+          log.action || "",
+          log.actor || "",
+          petId,
+          log.jsonData ? JSON.stringify(log.jsonData) : "",
+        ];
+      });
+
+      const csv = [headers, ...rows]
+        .map((cols) => cols.map(csvEscape).join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+      link.href = url;
+      link.setAttribute("download", `activity-log-export-${stamp}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setLoadError(err.message || "Failed to export activity logs");
+    } finally {
+      setExporting(false);
+    }
+  }, [buildFilters, token]);
 
   useEffect(() => { fetchLogs(1); }, []);
 
@@ -333,6 +414,13 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
             </button>
             <button onClick={() => { setFilterActor(""); setFilterAction(""); setFilterFrom(""); setFilterTo(""); setShowBehavior(true); setShowObserver(true); setShowAuth(true); }} className="activity-log-screen__clear-btn">
               Clear
+            </button>
+            <button
+              onClick={exportFilteredLogsToCsv}
+              disabled={loading || exporting}
+              className="activity-log-screen__export-btn"
+            >
+              {exporting ? "Exporting…" : "Export CSV"}
             </button>
           </div>
         </div>
