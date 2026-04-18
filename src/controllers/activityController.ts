@@ -48,15 +48,21 @@ export async function listActivityLogs(req: Request, res: Response) {
 
   const actor =
     typeof req.query.actor === "string" ? req.query.actor : undefined;
-  const action =
+  const actionParam =
     typeof req.query.action === "string" ? req.query.action : undefined;
+  const actions = actionParam
+    ? actionParam
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean)
+    : undefined;
   const from = typeof req.query.from === "string" ? req.query.from : undefined;
   const to = typeof req.query.to === "string" ? req.query.to : undefined;
 
   const result = await getActivityLogs({
     tags,
     actor,
-    action,
+    actions,
     from,
     to,
     limit,

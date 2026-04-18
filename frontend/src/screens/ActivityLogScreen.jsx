@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useResponsive } from "../hooks.js";
 import { api } from "../api.js";
 import { formatTimestamp } from "../utils.js";
@@ -28,9 +28,24 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
   const [showBehavior, setShowBehavior] = useState(true);
   const [showObserver, setShowObserver] = useState(true);
   const [showAuth, setShowAuth] = useState(true);
+  const [showActorSuggestions, setShowActorSuggestions] = useState(false);
+  const [showActionSuggestions, setShowActionSuggestions] = useState(false);
 
   const [expandedLog, setExpandedLog] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const knownActionSuggestions = [
+    "CREATED",
+    "DELETED",
+    "STATUS_CHANGED",
+    "BULK_DELETED",
+    "USER_CREATED",
+    "USER_UPDATED",
+    "USER_DELETED",
+    "USER_PASSWORD_RESET",
+    "PASSWORD_CHANGED",
+    "SUMMARY_GENERATED",
+  ];
 
   const fetchLogs = useCallback(async (pg = 1) => {
     setLoading(true);
@@ -78,6 +93,58 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
         {t.label}
       </span>
     );
+  };
+
+  const actionSuggestions = useMemo(() => {
+    const observedActions = Array.isArray(logs)
+      ? logs.map((log) => log.action).filter((action) => typeof action === "string" && action.trim())
+      : [];
+    return Array.from(new Set([...knownActionSuggestions, ...observedActions])).sort((a, b) => a.localeCompare(b));
+  }, [logs]);
+
+  const actorSuggestions = useMemo(() => {
+    const observedActors = Array.isArray(logs)
+      ? logs.map((log) => log.actor).filter((actor) => typeof actor === "string" && actor.trim())
+      : [];
+    return Array.from(new Set(observedActors)).sort((a, b) => a.localeCompare(b));
+  }, [logs]);
+
+  const filteredActorSuggestions = useMemo(() => {
+    const q = filterActor.trim().toLowerCase();
+    return actorSuggestions
+      .filter((actor) => !q || actor.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [actorSuggestions, filterActor]);
+
+  const filteredActionSuggestions = useMemo(() => {
+    const rawTokens = filterAction
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
+    const currentToken = rawTokens.length > 0
+      ? rawTokens[rawTokens.length - 1].toUpperCase()
+      : "";
+    const existingSelections = new Set(rawTokens.slice(0, -1).map((t) => t.toUpperCase()));
+
+    return actionSuggestions
+      .filter((action) => !existingSelections.has(action.toUpperCase()))
+      .filter((action) => !currentToken || action.toUpperCase().includes(currentToken))
+      .slice(0, 8);
+  }, [actionSuggestions, filterAction]);
+
+  const applyActionSuggestion = (selectedAction) => {
+    const rawParts = filterAction.split(",");
+    const prefixParts = rawParts
+      .slice(0, -1)
+      .map((p) => p.trim())
+      .filter(Boolean);
+
+    const nextValue = prefixParts.length > 0
+      ? `${prefixParts.join(", ")}, ${selectedAction}`
+      : selectedAction;
+
+    setFilterAction(nextValue);
+    setShowActionSuggestions(false);
   };
 
   const getLogPetId = (log) => {
@@ -150,17 +217,100 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
         {/* Filters card */}
         <div className={`activity-log-screen__filters activity-log-screen__filters--${isDesktop ? "desktop" : "mobile"}`}>
           <div className="activity-log-screen__filter-grid" style={{ gridTemplateColumns: isDesktop ? "1fr 1fr 1fr 1fr" : "1fr 1fr" }}>
-            {[
-              { label: "Actor (username)", val: filterActor, set: setFilterActor, placeholder: "Filter by user…" },
-              { label: "Action", val: filterAction, set: setFilterAction, placeholder: "e.g. USER_CREATED" },
-              { label: "From date", val: filterFrom, set: setFilterFrom, type: "date" },
-              { label: "To date", val: filterTo, set: setFilterTo, type: "date" },
-            ].map(({ label, val, set, placeholder, type = "text" }) => (
-              <div key={label}>
-                <label className="activity-log-screen__filter-label">{label}</label>
-                <input type={type} value={val} onChange={(e) => set(e.target.value)} placeholder={placeholder} className="activity-log-screen__filter-input" />
+            <div>
+              <label className="activity-log-screen__filter-label">Actor (username)</label>
+              <div className="activity-log-screen__actor-autocomplete">
+                <input
+                  type="text"
+                  value={filterActor}
+                  onChange={(e) => {
+                    setFilterActor(e.target.value);
+                    setShowActorSuggestions(true);
+                  }}
+                  onFocus={() => setShowActorSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowActorSuggestions(false), 120)}
+                  placeholder="Filter by user…"
+                  className="activity-log-screen__filter-input"
+                />
+                {showActorSuggestions && filteredActorSuggestions.length > 0 && (
+                  <div className="activity-log-screen__actor-suggestions" role="listbox" aria-label="Actor suggestions">
+                    {filteredActorSuggestions.map((actor) => (
+                      <button
+                        key={actor}
+                        type="button"
+                        className="activity-log-screen__actor-suggestion-btn"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setFilterActor(actor);
+                          setShowActorSuggestions(false);
+                        }}
+                      >
+                        {actor}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-            ))}
+            </div>
+
+            <div>
+              <label className="activity-log-screen__filter-label">Action</label>
+              <div className="activity-log-screen__action-autocomplete">
+                <input
+                  type="text"
+                  value={filterAction}
+                  onChange={(e) => {
+                    setFilterAction(e.target.value);
+                    setShowActionSuggestions(true);
+                  }}
+                  onFocus={() => setShowActionSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowActionSuggestions(false), 120)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && showActionSuggestions && filteredActionSuggestions.length > 0) {
+                      e.preventDefault();
+                      applyActionSuggestion(filteredActionSuggestions[0]);
+                    }
+                  }}
+                  placeholder="e.g. USER_CREATED, DELETED"
+                  className="activity-log-screen__filter-input"
+                />
+                {showActionSuggestions && filteredActionSuggestions.length > 0 && (
+                  <div className="activity-log-screen__action-suggestions" role="listbox" aria-label="Action suggestions">
+                    {filteredActionSuggestions.map((action) => (
+                      <button
+                        key={action}
+                        type="button"
+                        className="activity-log-screen__action-suggestion-btn"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => applyActionSuggestion(action)}
+                      >
+                        {action}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="activity-log-screen__filter-label">From date</label>
+              <input
+                type="date"
+                value={filterFrom}
+                onChange={(e) => setFilterFrom(e.target.value)}
+                className="activity-log-screen__filter-input"
+              />
+            </div>
+
+            <div>
+              <label className="activity-log-screen__filter-label">To date</label>
+              <input
+                type="date"
+                value={filterTo}
+                onChange={(e) => setFilterTo(e.target.value)}
+                className="activity-log-screen__filter-input"
+              />
+            </div>
           </div>
 
           <div className="activity-log-screen__toggle-row">

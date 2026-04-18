@@ -24,7 +24,7 @@ export async function addActivityLog(log: ActivityLog): Promise<void> {
 export interface GetActivityLogsParams {
   tags?: ActivityTag[];
   actor?: string;
-  action?: string;
+  actions?: string[];
   from?: string; // ISO date string (inclusive)
   to?: string; // ISO date string (inclusive)
   limit?: number;
@@ -42,7 +42,7 @@ export interface GetActivityLogsResult {
 export async function getActivityLogs(
   params: GetActivityLogsParams,
 ): Promise<GetActivityLogsResult> {
-  const { tags, actor, action, from, to, limit = 20, page = 1 } = params;
+  const { tags, actor, actions, from, to, limit = 20, page = 1 } = params;
 
   const filterParts: string[] = [];
   const exprValues: Record<string, any> = { ":pk": PARTITION_KEY };
@@ -62,10 +62,13 @@ export async function getActivityLogs(
     exprValues[":actor"] = actor;
   }
 
-  if (action) {
-    filterParts.push("#action = :action");
+  if (actions && actions.length > 0) {
+    const actionPlaceholders = actions.map((_, i) => `:action${i}`).join(", ");
+    filterParts.push(`#action IN (${actionPlaceholders})`);
     exprNames["#action"] = "action";
-    exprValues[":action"] = action;
+    actions.forEach((a, i) => {
+      exprValues[`:action${i}`] = a;
+    });
   }
 
   if (from) {
