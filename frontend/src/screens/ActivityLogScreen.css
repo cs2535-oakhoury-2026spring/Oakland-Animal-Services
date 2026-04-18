@@ -308,6 +308,22 @@
   border-top: 1px solid var(--clr-card-border);
 }
 
+.activity-log-screen__animal-btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  flex: 0 0 auto;
+}
+
+.activity-log-screen__animal-btn:enabled {
+  cursor: pointer;
+}
+
 .activity-log-screen__log-pre {
   font-size: 12px;
   color: var(--clr-text-secondary);

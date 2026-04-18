@@ -80,6 +80,19 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
     );
   };
 
+  const getLogPetId = (log) => {
+    if (!log || !log.jsonData) return null;
+    const rawPetId = log.jsonData.petId;
+    if (typeof rawPetId === "number" && Number.isFinite(rawPetId)) return String(rawPetId);
+    if (typeof rawPetId === "string" && rawPetId.trim()) return rawPetId.trim();
+    return null;
+  };
+
+  const openAnimalFromLog = (petId) => {
+    if (!petId) return;
+    window.location.href = `/?petId=${encodeURIComponent(petId)}`;
+  };
+
   const renderPaginationControls = (extraClass = "") => {
     if (totalPages <= 1) return null;
     return (
@@ -213,6 +226,8 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
             {logs.map((log) => {
               const isExpanded = expandedLog === log.logId;
               const hasData = log.jsonData && Object.keys(log.jsonData).length > 0;
+              const isAnimalRelated = log.tag === "behaviorNote" || log.tag === "observerNote";
+              const petId = getLogPetId(log);
               return (
                 <div key={log.logId} className="activity-log-screen__log-row">
                   <div
@@ -229,6 +244,17 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
                         by <strong>{log.actor}</strong> · {formatTimestamp(log.timestamp)}
                       </div>
                     </div>
+                    {isAnimalRelated && petId && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openAnimalFromLog(petId);
+                        }}
+                        className="activity-log-screen__animal-btn"
+                      >
+                        Go To Animal
+                      </button>
+                    )}
                     {hasData && (
                       <div className="activity-log-screen__log-chevron">
                         <Icons.chevron size={14} color="var(--clr-warm-gray)" down={!isExpanded} />
