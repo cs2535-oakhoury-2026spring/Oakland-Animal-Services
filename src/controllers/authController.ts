@@ -22,7 +22,7 @@ const ChangePasswordSchema = z.object({
 });
 
 function isEnvManagedAdminUser(userId: string): boolean {
-  return userId === "admin" || userId.startsWith("env-admin:");
+  return userId === "admin";
 }
 
 export async function loginHandler(req: Request, res: Response): Promise<void> {

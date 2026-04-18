@@ -340,24 +340,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           </div>
         )}
 
-        {/* Admin tab note — env-var account still available */}
-        {activeTab === "admin" && (
-          <div className="user-mgmt-screen__admin-section">
-            <div className="user-mgmt-screen__admin-card">
-              <div className="user-mgmt-screen__admin-avatar">
-                <Icons.shield size={16} color="var(--clr-header-green)" />
-              </div>
-              <div className="user-mgmt-screen__admin-info">
-                <div className="user-mgmt-screen__admin-name">Environment Admin Account(s) <span className="user-mgmt-screen__admin-note">(.env managed)</span></div>
-                <div className="user-mgmt-screen__admin-meta">Passwords from <code>ADMIN_PASS</code> / <code>ADMIN_ACCOUNTS</code> are managed in server .env and cannot be reset here</div>
-              </div>
-              <span className="user-mgmt-screen__admin-badge">Env Managed</span>
-            </div>
-            <div className="user-mgmt-screen__admin-hint">
-              To change environment-admin passwords, update <code>ADMIN_PASS</code> and/or <code>ADMIN_ACCOUNTS</code> in server <code>.env</code>, then restart the backend.
-            </div>
-          </div>
-        )}
+
 
         {!loading && !loadError && sortedFilteredUsers.length === 0 && (
           <div className="user-mgmt-screen__empty">

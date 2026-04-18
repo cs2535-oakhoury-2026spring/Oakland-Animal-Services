@@ -45,39 +45,18 @@ type EnvAdminAccount = {
 };
 
 function parseEnvAdminAccounts(): EnvAdminAccount[] {
-  const accounts: EnvAdminAccount[] = [];
-
   const primaryUsername = process.env.ADMIN_USER?.trim().toLowerCase();
   const primaryPassword = process.env.ADMIN_PASS ?? "";
   if (primaryUsername) {
-    accounts.push({
-      userId: "admin",
-      username: primaryUsername,
-      password: primaryPassword,
-    });
+    return [
+      {
+        userId: "admin",
+        username: primaryUsername,
+        password: primaryPassword,
+      },
+    ];
   }
-
-  // Optional format: ADMIN_ACCOUNTS="alice:pass123,bob:pass456"
-  const additional = process.env.ADMIN_ACCOUNTS ?? "";
-  for (const pair of additional.split(",").map((v) => v.trim()).filter(Boolean)) {
-    const separatorIndex = pair.indexOf(":");
-    if (separatorIndex <= 0 || separatorIndex === pair.length - 1) continue;
-
-    const username = pair.slice(0, separatorIndex).trim().toLowerCase();
-    const password = pair.slice(separatorIndex + 1).trim();
-    if (!username || !password) continue;
-
-    // Do not override an existing account (primary ADMIN_USER wins on collisions)
-    if (accounts.some((a) => a.username === username)) continue;
-
-    accounts.push({
-      userId: `env-admin:${username}`,
-      username,
-      password,
-    });
-  }
-
-  return accounts;
+  return [];
 }
 
 function getEnvAdminByUsername(username: string): EnvAdminAccount | null {
