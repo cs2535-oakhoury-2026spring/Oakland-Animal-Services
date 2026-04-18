@@ -395,7 +395,7 @@ export const api = {
     }
   },
 
-  getAllAnimalsAllPages: async (limit = 200) => {
+  getAllAnimalsAllPages: async (limit = 400) => {
     const first = await api.getAllAnimals(1, limit);
     if (!first) return null;
 
