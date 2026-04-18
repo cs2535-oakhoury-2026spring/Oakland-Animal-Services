@@ -63,6 +63,7 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
             <>
               <label className="create-user-modal__label">Role</label>
               <select value={role} onChange={(e) => setRole(e.target.value)} className="create-user-modal__field create-user-modal__field--spaced" aria-label="Role">
+                <option value="admin">Admin</option>
                 <option value="volunteer">Volunteer</option>
                 <option value="staff">Staff</option>
                 <option value="device">Device</option>

@@ -196,9 +196,8 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
               </button>
             ))}
           </div>
-          {activeTab !== "admin" && (
-            <div className="user-mgmt-screen__actions">
-              {isAdmin && (
+          <div className="user-mgmt-screen__actions">
+              {isAdmin && activeTab !== "admin" && (
                 <button
                   onClick={() => setShowBatchModal(true)}
                   className="user-mgmt-screen__batch-btn"
@@ -212,10 +211,9 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                 className="user-mgmt-screen__new-btn"
                              >
                 <Icons.plus size={15} />
-                New {activeTab === "volunteer" ? "Volunteer" : activeTab === "staff" ? "Staff" : "Device"}
+                New {activeTab === "volunteer" ? "Volunteer" : activeTab === "staff" ? "Staff" : activeTab === "admin" ? "Admin" : "Device"}
               </button>
             </div>
-          )}
         </div>
 
         {/* Search */}
@@ -294,7 +292,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           </div>
         )}
 
-        {/* Admin tab — env-var account, read-only */}
+        {/* Admin tab note — env-var account still available */}
         {activeTab === "admin" && (
           <div className="user-mgmt-screen__admin-section">
             <div className="user-mgmt-screen__admin-card">
@@ -313,13 +311,13 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           </div>
         )}
 
-        {activeTab !== "admin" && !loading && !loadError && filteredUsers.length === 0 && (
+        {!loading && !loadError && filteredUsers.length === 0 && (
           <div className="user-mgmt-screen__empty">
             No {activeTab} accounts found.
           </div>
         )}
 
-        {!loading && activeTab !== "admin" && filteredUsers.length > 0 && (
+        {!loading && filteredUsers.length > 0 && (
           <div className="user-mgmt-screen__user-list">
             {filteredUsers.map((u) => {
               const expStatus = getExpiryStatus(u.expiresAt);

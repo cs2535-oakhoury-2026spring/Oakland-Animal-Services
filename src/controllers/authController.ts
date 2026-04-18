@@ -21,6 +21,10 @@ const ChangePasswordSchema = z.object({
   newPassword: z.string().min(1),
 });
 
+function isEnvManagedAdminUser(userId: string): boolean {
+  return userId === "admin" || userId.startsWith("env-admin:");
+}
+
 export async function loginHandler(req: Request, res: Response): Promise<void> {
   const parsed = LoginSchema.safeParse(req.body);
   if (!parsed.success) {
@@ -84,7 +88,7 @@ export async function changePasswordHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  if (req.user!.role === "admin") {
+  if (req.user!.role === "admin" && isEnvManagedAdminUser(req.user!.userId)) {
     res
       .status(400)
       .json({ error: "Admin password is managed via environment variables" });

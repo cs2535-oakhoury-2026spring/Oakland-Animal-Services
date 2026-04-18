@@ -22,7 +22,7 @@ const validIsoDate = z
 const CreateUserSchema = z.object({
   username: z.string().min(1).toLowerCase(),
   password: z.string().min(1),
-  role: z.enum(["staff", "volunteer", "device"]),
+  role: z.enum(["admin", "staff", "volunteer", "device"]),
   deviceName: z.string().optional(),
   expiresAt: validIsoDate.optional(),
 });

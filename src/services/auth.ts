@@ -16,6 +16,57 @@ import type { SafeUser, UserRole } from "../models/User.schema.js";
 const JWT_SECRET = process.env.JWT_SECRET!; // guaranteed by server.ts startup check
 const ACCESS_TOKEN_EXPIRY = "15m";
 
+type EnvAdminAccount = {
+  userId: string;
+  username: string;
+  password: string;
+};
+
+function parseEnvAdminAccounts(): EnvAdminAccount[] {
+  const accounts: EnvAdminAccount[] = [];
+
+  const primaryUsername = process.env.ADMIN_USER?.trim().toLowerCase();
+  const primaryPassword = process.env.ADMIN_PASS ?? "";
+  if (primaryUsername) {
+    accounts.push({
+      userId: "admin",
+      username: primaryUsername,
+      password: primaryPassword,
+    });
+  }
+
+  // Optional format: ADMIN_ACCOUNTS="alice:pass123,bob:pass456"
+  const additional = process.env.ADMIN_ACCOUNTS ?? "";
+  for (const pair of additional.split(",").map((v) => v.trim()).filter(Boolean)) {
+    const separatorIndex = pair.indexOf(":");
+    if (separatorIndex <= 0 || separatorIndex === pair.length - 1) continue;
+
+    const username = pair.slice(0, separatorIndex).trim().toLowerCase();
+    const password = pair.slice(separatorIndex + 1).trim();
+    if (!username || !password) continue;
+
+    // Do not override an existing account (primary ADMIN_USER wins on collisions)
+    if (accounts.some((a) => a.username === username)) continue;
+
+    accounts.push({
+      userId: `env-admin:${username}`,
+      username,
+      password,
+    });
+  }
+
+  return accounts;
+}
+
+function getEnvAdminByUsername(username: string): EnvAdminAccount | null {
+  const normalized = username.toLowerCase();
+  return parseEnvAdminAccounts().find((a) => a.username === normalized) ?? null;
+}
+
+function getEnvAdminByUserId(userId: string): EnvAdminAccount | null {
+  return parseEnvAdminAccounts().find((a) => a.userId === userId) ?? null;
+}
+
 export type JwtPayload = {
   userId: string;
   username: string;
@@ -52,27 +103,28 @@ export async function login(
   const normalizedUsername = username.toLowerCase();
 
   // Check admin credentials from .env first
-  if (normalizedUsername === process.env.ADMIN_USER?.toLowerCase()) {
-    if (password !== process.env.ADMIN_PASS) {
+  const envAdmin = getEnvAdminByUsername(normalizedUsername);
+  if (envAdmin) {
+    if (password !== envAdmin.password) {
       return { ok: false, error: "INVALID_CREDENTIALS" };
     }
 
     const payload: JwtPayload = {
-      userId: "admin",
-      username: normalizedUsername,
+      userId: envAdmin.userId,
+      username: envAdmin.username,
       role: "admin",
       mustChangePassword: false,
     };
     const accessToken = signAccessToken(payload);
-    const refreshToken = await createRefreshToken("admin");
+    const refreshToken = await createRefreshToken(envAdmin.userId);
 
     return {
       ok: true,
       accessToken,
       refreshToken,
       user: {
-        userId: "admin",
-        username: normalizedUsername,
+        userId: envAdmin.userId,
+        username: envAdmin.username,
         role: "admin",
         mustChangePassword: false,
         createdAt: "",
@@ -128,11 +180,12 @@ export async function refresh(oldRefreshToken: string): Promise<{
   await deleteRefreshToken(oldRefreshToken);
   const newRefreshToken = await createRefreshToken(record.userId);
 
-  // Admin is not in DB — rebuild payload directly
-  if (record.userId === "admin") {
+  // .env admins are not in DB — rebuild payload directly
+  const envAdmin = getEnvAdminByUserId(record.userId);
+  if (envAdmin) {
     const payload: JwtPayload = {
-      userId: "admin",
-      username: process.env.ADMIN_USER ?? "admin",
+      userId: envAdmin.userId,
+      username: envAdmin.username,
       role: "admin",
       mustChangePassword: false,
     };

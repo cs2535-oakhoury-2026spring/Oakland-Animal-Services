@@ -91,6 +91,13 @@ export const transformObserverNote = (note, index) => ({
   createdAt: note.timestamp || note.createdAt || new Date().toISOString(),
 });
 
+const sortByNewestFirst = (notes) =>
+  [...notes].sort((a, b) => {
+    const tA = new Date(a?.createdAt || 0).getTime() || 0;
+    const tB = new Date(b?.createdAt || 0).getTime() || 0;
+    return tB - tA;
+  });
+
 export const api = {
   // REAL — connected to GET /api/pets/:petId
   getPet: async (petId) => {
@@ -174,7 +181,7 @@ export const api = {
       if (!res.ok) throw new Error("Failed to fetch notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.observerNotes)) {
-        return data.observerNotes.map(transformObserverNote);
+        return sortByNewestFirst(data.observerNotes.map(transformObserverNote));
       }
       return [];
     } catch (err) {
@@ -262,14 +269,14 @@ export const api = {
       if (!res.ok) throw new Error("Failed to fetch behavior notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.behaviorNotes)) {
-        return data.behaviorNotes.map((note, i) => ({
+        return sortByNewestFirst(data.behaviorNotes.map((note, i) => ({
           id: note.id || Date.now() + i,
           petId: String(note.petId),
           case: note.title || note.case || "Behavior Observation",
           by: note.author || "Unknown",
           body: note.content || "",
           createdAt: note.timestamp || new Date().toISOString(),
-        }));
+        })));
       }
       return [];
     } catch (err) {
