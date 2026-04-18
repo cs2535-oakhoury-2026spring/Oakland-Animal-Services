@@ -7,16 +7,21 @@ import { main as createRefreshTokensTable } from "./createRefreshTokensTable.js"
 import { main as createActivityLogTable } from "./createActivityLogTable.js";
 
 export const main = async () => {
-  await createObserverNotesTable();
-  await createBehaviorNotesTable();
   await createPetCompatibilityTable();
   await createMergedNotesTable();
+  await createObserverNotesTable();
+  await createBehaviorNotesTable();
   await createUsersTable();
   await createRefreshTokensTable();
   await createActivityLogTable();
 };
 
-main().catch((error) => {
-  console.error("Failed to create DynamoDB tables:", error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => {
+    console.log("All tables created successfully");
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error("Failed to create DynamoDB tables:", error);
+    process.exit(1);
+  });

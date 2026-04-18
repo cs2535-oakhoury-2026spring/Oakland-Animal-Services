@@ -46,7 +46,7 @@ export async function createUser(params: {
         role: params.role,
         deviceName: params.deviceName,
         expiresAt: params.expiresAt,
-        mustChangePassword: true,
+        mustChangePassword: params.role !== "device",
         createdAt: new Date().toISOString(),
     };
 

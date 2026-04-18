@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, type JwtPayload } from "../services/auth.js";
+import { getUserById } from "../db/_db/usersDB.js";
 
 // Extend Express Request to include the authenticated user
 declare global {
@@ -10,7 +11,7 @@ declare global {
     }
 }
 
-export function authenticate(req: Request, res: Response, next: NextFunction): void {
+export async function authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
         res.status(401).json({ error: "Missing or invalid authorization header" });
@@ -25,6 +26,20 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     } catch {
         res.status(401).json({ error: "Invalid or expired access token" });
         return;
+    }
+
+    // Check volunteer expiry for non-admin users
+    if (user.role === "volunteer" && user.userId !== "admin") {
+        try {
+            const dbUser = await getUserById(user.userId);
+            if (!dbUser || (dbUser.expiresAt && new Date(dbUser.expiresAt) < new Date())) {
+                res.status(401).json({ error: "Volunteer account has expired" });
+                return;
+            }
+        } catch (err) {
+            res.status(500).json({ error: "Failed to verify user status" });
+            return;
+        }
     }
 
     // Block all routes except change-password if user must change their password
