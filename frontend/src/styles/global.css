@@ -1,0 +1,177 @@
+/* ── Oakland Animal Services – Global Styles ──────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--clr-bg);
+  color: var(--clr-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+
+@keyframes skeleton-pulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes slide-left {
+  0%   { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slide-right {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ── Shared utility classes ───────────────────────────────────────────────── */
+
+.oas-card {
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-card-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.oas-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
+}
+
+.oas-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.oas-modal-box {
+  background-color: var(--clr-card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 85vh;
+  overflow-y: auto;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.oas-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: var(--clr-input-bg);
+  color: var(--clr-text-primary);
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.oas-input:focus {
+  border-color: var(--clr-header-green);
+}
+
+.oas-label {
+  display: block;
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 4px;
+}
+
+.oas-btn-primary {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  min-height: 44px;
+  transition: opacity 0.15s ease;
+}
+
+.oas-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.oas-btn-secondary {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: transparent;
+  color: var(--clr-text-secondary);
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 0.15s ease;
+}
+
+.oas-btn-secondary:hover {
+  background-color: var(--clr-input-bg);
+}
+
+.oas-btn-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  border-radius: 8px;
+  transition: opacity 0.2s ease, background-color 0.15s ease;
+}
+
+.oas-btn-icon:hover {
+  background-color: var(--clr-input-bg);
+}
+
+.app-loading {
+  width: 100vw;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.oas-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid var(--clr-card-border);
+  border-top-color: var(--clr-header-green);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}

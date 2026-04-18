@@ -150,3 +150,55 @@ export async function deleteUserHandler(req: Request, res: Response): Promise<vo
     logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_DELETED", jsonData: { targetUserId: userId, targetUsername: target.username, role: target.role } });
     res.json({ success: true });
 }
+
+const BatchRowSchema = z.object({
+    username: z.string().min(1),
+    password: z.string().min(1),
+    role: z.enum(["staff", "volunteer", "device"]),
+});
+
+function parseCSV(text: string): Array<Record<string, string>> {
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    return lines.slice(1).filter((l) => l.trim()).map((line) => {
+        const values = line.split(",").map((v) => v.trim());
+        return Object.fromEntries(headers.map((h, i) => [h, values[i] ?? ""]));
+    });
+}
+
+export async function batchCreateUsersHandler(req: Request, res: Response): Promise<void> {
+    const { csv } = req.body as { csv?: string };
+    if (typeof csv !== "string" || !csv.trim()) {
+        res.status(400).json({ error: "csv field is required" });
+        return;
+    }
+
+    const rows = parseCSV(csv);
+    if (rows.length === 0) {
+        res.status(400).json({ error: "CSV must have a header row and at least one data row" });
+        return;
+    }
+
+    const created: string[] = [];
+    const failed: Array<{ username: string; reason: string }> = [];
+
+    for (const row of rows) {
+        const parsed = BatchRowSchema.safeParse(row);
+        if (!parsed.success) {
+            failed.push({ username: row.username || "(empty)", reason: "Invalid row: " + parsed.error.issues.map((i) => i.message).join(", ") });
+            continue;
+        }
+        const { username, password, role } = parsed.data;
+        try {
+            const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+            await createUser({ username, passwordHash, role });
+            logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_CREATED", jsonData: { username, role, batch: true } });
+            created.push(username);
+        } catch (err: any) {
+            failed.push({ username, reason: err.message === "USERNAME_TAKEN" ? "Username already taken" : "Internal error" });
+        }
+    }
+
+    res.status(200).json({ success: true, created, failed });
+}

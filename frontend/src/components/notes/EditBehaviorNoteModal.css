@@ -1,0 +1,88 @@
+.edit-behavior-note-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.edit-behavior-note-modal__panel {
+  background-color: var(--clr-card-bg);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 380px;
+  max-height: 80vh;
+  overflow: auto;
+}
+
+.edit-behavior-note-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--clr-text-primary);
+}
+
+.edit-behavior-note-modal__label {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.edit-behavior-note-modal__field {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: var(--clr-input-bg);
+  color: var(--clr-text-primary);
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.edit-behavior-note-modal__textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.edit-behavior-note-modal__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-behavior-note-modal__btn-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: transparent;
+  color: var(--clr-text-secondary);
+  font-size: 15px;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 0.2s ease;
+}
+
+.edit-behavior-note-modal__btn-save {
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 0.2s ease;
+}

@@ -141,7 +141,7 @@ export async function uploadObserverNote(req: Request, res: Response) {
     return res.status(400).json({ error: z.treeifyError(parseResult.error) });
   }
 
-  const { title, content, author, petId } = parseResult.data;
+  const { title, content, author, petId, status } = parseResult.data;
 
   const resolvedAuthor = resolveAuthor(req, author);
   if (resolvedAuthor === null) {
@@ -152,7 +152,7 @@ export async function uploadObserverNote(req: Request, res: Response) {
     id: 0, // set later.
     // noteType is assigned in the repository layer.
     timestamp: new Date(),
-    status: "RAISED",
+    status: status ?? "RAISED",
     title,
     content,
     author: resolvedAuthor,

@@ -1,0 +1,443 @@
+/* Portal.css */
+
+/* ── Skeleton / Loading ── */
+.portal-loading {
+  font-family: inherit;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+}
+
+.portal-skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.portal-skeleton-pet-card {
+  background-color: var(--clr-card-bg);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--clr-card-border);
+  margin-top: 12px;
+}
+
+.portal-skeleton-pet-card-inner {
+  display: flex;
+  gap: 14px;
+}
+
+.portal-skeleton-pet-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.portal-skeleton-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.portal-skeleton-content {
+  margin-top: 16px;
+}
+
+.portal-skeleton-content-card {
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--clr-card-border);
+}
+
+/* ── Phone Layout Main ── */
+.portal-main {
+  font-family: inherit;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+  position: relative;
+}
+
+/* ── Top Bar ── */
+.portal-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+}
+
+.portal-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.portal-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-topbar-logo {
+  height: 36px;
+  object-fit: contain;
+}
+
+/* ── Pet Card ── */
+.portal-pet-card {
+  margin: 12px 16px;
+  background-color: var(--clr-card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--clr-card-border);
+  box-shadow: var(--shadow);
+}
+
+.portal-pet-card-body {
+  display: flex;
+  align-items: flex-start;
+}
+
+.portal-pet-img {
+  border-radius: 12px;
+  object-fit: cover;
+  border: 2px solid var(--clr-card-border);
+  flex-shrink: 0;
+}
+
+.portal-pet-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-content: center;
+}
+
+.portal-pet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.portal-pet-name {
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 0;
+}
+
+.portal-pet-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.portal-pet-info-line {
+  line-height: 1.5;
+}
+
+.portal-pet-info-key {
+  color: var(--clr-text-secondary);
+  font-weight: 600;
+}
+
+.portal-pet-info-val {
+  color: var(--clr-text-primary);
+}
+
+/* ── Expandable Details ── */
+.portal-expandable {
+  overflow: hidden;
+  transition: max-height 0.35s ease, opacity 0.3s ease;
+}
+
+.portal-expand-inner {
+  padding: 0 16px 4px;
+}
+
+/* Stats grid (2x3) */
+.portal-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 10px;
+  border: 1px solid var(--clr-card-border);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.portal-stat-cell {
+  padding: 12px 10px;
+  text-align: center;
+  background-color: var(--clr-input-bg);
+}
+
+.portal-stat-cell.border-right {
+  border-right: 1px solid var(--clr-card-border);
+}
+
+.portal-stat-cell.border-bottom {
+  border-bottom: 1px solid var(--clr-card-border);
+}
+
+.portal-stat-label {
+  font-size: 10px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.portal-stat-value {
+  font-size: 13px;
+  color: var(--clr-text-primary);
+  font-weight: 600;
+}
+
+/* Handler / location 2x2 grid */
+.portal-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-radius: 10px;
+  border: 1px solid var(--clr-card-border);
+  overflow: hidden;
+}
+
+.portal-detail-cell {
+  padding: 12px 10px;
+  text-align: center;
+  background-color: var(--clr-card-bg);
+}
+
+.portal-detail-cell.border-right {
+  border-right: 1px solid var(--clr-card-border);
+}
+
+.portal-detail-cell.border-bottom {
+  border-bottom: 1px solid var(--clr-card-border);
+}
+
+.portal-detail-label {
+  font-size: 10px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.portal-detail-value {
+  font-size: 13px;
+  color: var(--clr-text-primary);
+  font-weight: 600;
+}
+
+/* handler level badge — bg/color set inline (data-driven) */
+.portal-handler-badge {
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+/* ── Toggle Button ── */
+.portal-toggle-btn {
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--clr-card-border);
+  color: var(--clr-header-green);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.portal-toggle-icon {
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.portal-toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+/* ── Tabs Nav ── */
+.portal-tabs {
+  display: flex;
+  margin: 0 16px;
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  padding: 3px;
+  border: 1px solid var(--clr-card-border);
+}
+
+.portal-tab-btn {
+  flex: 1;
+  padding: 10px 6px;
+  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  min-height: 44px;
+  background: transparent;
+  color: var(--clr-warm-gray);
+  font-weight: 500;
+}
+
+.portal-tab-btn.active {
+  font-weight: 700;
+  background-color: var(--clr-tab-active);
+  /* color set inline for darkMode differentiation */
+}
+
+/* ── Tab Panel ── */
+.portal-tab-outer {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes slide-left {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes slide-right {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+
+/* ── Medical / Behavior search + note list ── */
+.portal-search-row {
+  margin: 12px 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.portal-search-wrap {
+  flex: 1;
+  position: relative;
+}
+
+.portal-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.portal-search-input {
+  width: 100%;
+  padding: 10px 14px 10px 34px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-primary);
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.portal-add-btn-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.portal-notes-area {
+  padding: 0 16px 100px;
+  position: relative;
+}
+
+.portal-load-more-wrap {
+  position: relative;
+  margin-top: -60px;
+  padding-top: 60px;
+}
+
+.portal-load-more-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  pointer-events: none;
+  /* gradient uses --clr-bg, set inline */
+}
+
+.portal-load-more-inner {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.portal-load-more-btn {
+  background: none;
+  border: none;
+  color: var(--clr-text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s ease;
+  padding: 8px 16px;
+}
+
+.portal-load-more-btn:hover {
+  opacity: 0.7;
+}
+
+.portal-empty-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--clr-warm-gray);
+  font-size: 15px;
+}
+
+/* ── Dark mode FAB ── */
+.portal-darkmode-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}

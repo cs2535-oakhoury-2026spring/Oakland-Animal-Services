@@ -13,8 +13,9 @@ export const ObserverNoteSchema = z.object({
 export const ObserverNoteCreateSchema = z.object({
   title: z.string().optional(),
   content: z.string().min(1),
-  author: z.string().optional(), 
+  author: z.string().optional(),
   petId: z.number().int(),
+  status: z.string().optional(),
 });
 
 export type ObserverNote = z.infer<typeof ObserverNoteSchema>;

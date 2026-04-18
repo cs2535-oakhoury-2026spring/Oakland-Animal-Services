@@ -1,0 +1,139 @@
+/* UserDropdown.css */
+
+.ud-wrapper {
+  position: relative;
+}
+
+.ud-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--clr-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  min-height: 44px;
+}
+
+.ud-trigger.compact {
+  gap: 0;
+}
+
+.ud-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--clr-card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ud-trigger-name {
+  font-weight: 500;
+}
+
+.ud-menu {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-card-border);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 230px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  font-family: inherit;
+}
+
+.ud-user-info {
+  padding: 4px 10px 10px;
+}
+
+.ud-user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--clr-text-primary);
+}
+
+.ud-user-role {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+.ud-section {
+  border-top: 1px solid var(--clr-card-border);
+  padding-top: 6px;
+  margin-bottom: 6px;
+}
+
+.ud-section-bottom {
+  border-top: 1px solid var(--clr-card-border);
+  padding-top: 6px;
+}
+
+.ud-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 13px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  min-height: 36px;
+  color: var(--clr-text-secondary);
+  font-weight: 400;
+}
+
+.ud-nav-item.active {
+  color: var(--clr-header-green);
+  background-color: var(--clr-tab-active);
+  font-weight: 600;
+}
+
+.ud-change-password-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 13px;
+  color: var(--clr-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  min-height: 36px;
+}
+
+.ud-signout-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 13px;
+  color: var(--clr-brick-red);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 8px 10px;
+  border-radius: 8px;
+  text-align: left;
+  min-height: 36px;
+}
