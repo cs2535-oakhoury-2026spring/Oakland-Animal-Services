@@ -45,6 +45,6 @@ export async function listActivityLogs(req: Request, res: Response) {
     const from = typeof req.query.from === "string" ? req.query.from : undefined;
     const to = typeof req.query.to === "string" ? req.query.to : undefined;
 
-    const logs = await getActivityLogs({ tags, actor, action, from, to, limit, page });
-    res.json({ success: true, logs });
+    const result = await getActivityLogs({ tags, actor, action, from, to, limit, page });
+    res.json({ success: true, ...result });
 }

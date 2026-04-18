@@ -26,7 +26,15 @@ export interface GetActivityLogsParams {
     page?: number;
 }
 
-export async function getActivityLogs(params: GetActivityLogsParams): Promise<ActivityLog[]> {
+export interface GetActivityLogsResult {
+    logs: ActivityLog[];
+    total: number;
+    totalPages: number;
+    page: number;
+    limit: number;
+}
+
+export async function getActivityLogs(params: GetActivityLogsParams): Promise<GetActivityLogsResult> {
     const { tags, actor, action, from, to, limit = 20, page = 1 } = params;
 
     const filterParts: string[] = [];
@@ -83,6 +91,16 @@ export async function getActivityLogs(params: GetActivityLogsParams): Promise<Ac
         lastKey = result.LastEvaluatedKey;
     } while (lastKey);
 
-    const start = (page - 1) * limit;
-    return allItems.slice(start, start + limit);
+    const total = allItems.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    const safePage = Math.min(Math.max(1, page), totalPages);
+    const start = (safePage - 1) * limit;
+
+    return {
+        logs: allItems.slice(start, start + limit),
+        total,
+        totalPages,
+        page: safePage,
+        limit,
+    };
 }

@@ -54,7 +54,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
       setLogs(data.logs || []);
       setTotalCount(data.total || 0);
       setTotalPages(data.totalPages || 1);
-      setPage(pg);
+      setPage(data.page || pg);
     } catch (err) {
       setLoadError(err.message);
       setLogs([]);
@@ -77,6 +77,30 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, backgroundColor: t.bg, color: t.text, whiteSpace: "nowrap" }}>
         {t.label}
       </span>
+    );
+  };
+
+  const renderPaginationControls = (extraClass = "") => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className={`activity-log-screen__pagination ${extraClass}`.trim()}>
+        <button onClick={() => fetchLogs(page - 1)} disabled={page <= 1} className="activity-log-screen__page-btn">Previous</button>
+        <span className="activity-log-screen__page-info">Page {page} of {totalPages}</span>
+        <label className="activity-log-screen__page-select-wrap">
+          <span className="activity-log-screen__page-select-label">Go to</span>
+          <select
+            value={page}
+            onChange={(e) => fetchLogs(Number(e.target.value))}
+            className="activity-log-screen__page-select"
+            aria-label="Select activity log page"
+          >
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+          </select>
+        </label>
+        <button onClick={() => fetchLogs(page + 1)} disabled={page >= totalPages} className="activity-log-screen__page-btn">Next</button>
+      </div>
     );
   };
 
@@ -152,8 +176,11 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
 
         {/* Results count */}
         {logs !== null && !loading && (
-          <div className="activity-log-screen__count">
-            {loadError ? "" : `${totalCount} event${totalCount !== 1 ? "s" : ""} · page ${page} of ${totalPages}`}
+          <div className="activity-log-screen__count-row">
+            <div className="activity-log-screen__count">
+              {loadError ? "" : `${totalCount} event${totalCount !== 1 ? "s" : ""} · page ${page} of ${totalPages}`}
+            </div>
+            {!loadError && renderPaginationControls("activity-log-screen__pagination--top")}
           </div>
         )}
 
@@ -222,13 +249,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
         )}
 
         {/* Pagination */}
-        {!loading && totalPages > 1 && (
-          <div className="activity-log-screen__pagination">
-            <button onClick={() => fetchLogs(page - 1)} disabled={page <= 1} className="activity-log-screen__page-btn">Previous</button>
-            <span className="activity-log-screen__page-info">Page {page} of {totalPages}</span>
-            <button onClick={() => fetchLogs(page + 1)} disabled={page >= totalPages} className="activity-log-screen__page-btn">Next</button>
-          </div>
-        )}
+        {!loading && renderPaginationControls()}
       </div>
 
       {showChangePassword && <ChangePasswordModal token={token} onClose={() => setShowChangePassword(false)} />}

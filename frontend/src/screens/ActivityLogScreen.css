@@ -203,6 +203,14 @@
 .activity-log-screen__count {
   font-size: 13px;
   color: var(--clr-warm-gray);
+}
+
+.activity-log-screen__count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
@@ -319,6 +327,12 @@
   justify-content: center;
   gap: 8px;
   margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.activity-log-screen__pagination--top {
+  margin-top: 0;
+  justify-content: flex-end;
 }
 
 .activity-log-screen__page-btn {
@@ -344,4 +358,25 @@
   font-size: 13px;
   color: var(--clr-warm-gray);
   padding: 0 8px;
+}
+
+.activity-log-screen__page-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activity-log-screen__page-select-label {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+}
+
+.activity-log-screen__page-select {
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  padding: 4px 8px;
 }
