@@ -1,5 +1,5 @@
 // Oakland Animal Services Portal - Frontend
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { api, applyToken as apiApplyToken, clearToken, setOnAccountExpired } from "./api.js";
 import { decodeJwt } from "./utils.js";
 
@@ -43,6 +43,19 @@ export default function App() {
 
   const [locationError, setLocationError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const authRecoveryInFlight = useRef(false);
+
+  const isAccessTokenValid = useCallback((token) => {
+    if (!token) return false;
+    const payload = decodeJwt(token);
+    if (!payload?.exp) return false;
+    return payload.exp * 1000 > Date.now();
+  }, []);
+
+  const isVolunteerExpired = useCallback((user) => {
+    if (!user || user.role !== "volunteer" || !user.expiresAt) return false;
+    return new Date(user.expiresAt) < new Date();
+  }, []);
 
   const applyToken = (token) => {
     const payload = decodeJwt(token);
@@ -58,6 +71,7 @@ export default function App() {
       email: "",
       department: "",
     });
+    setAccountExpired(false);
     setMustChangePassword(!!payload?.mustChangePassword);
   };
 
@@ -72,10 +86,8 @@ export default function App() {
       applyToken(stored);
       setSessionLoading(false);
       api.refreshToken().then(applyToken).catch(() => {
-        clearToken();
-        sessionStorage.removeItem("oas_token");
-        setAccessToken(null);
-        setCurrentUser(null);
+        // Keep current session if the access token is still valid.
+        // A rotated/invalid refresh token should not force immediate logout.
       });
     } else {
       api.refreshToken()
@@ -96,6 +108,7 @@ export default function App() {
     sessionStorage.removeItem("oas_token");
     setAccessToken(null);
     setCurrentUser(null);
+    setAccountExpired(false);
     setMustChangePassword(false);
     setSelectedPetId(null);
     setAnimals([]);
@@ -104,13 +117,60 @@ export default function App() {
   }, [accessToken]);
 
   useEffect(() => {
-    // Any auth-expired callback from api.js should force a clean logout to login screen.
-    setOnAccountExpired(() => {
+    // On auth failures, first verify local session validity before forcing logout.
+    setOnAccountExpired(async (reason) => {
+      const message = String(reason || "").toLowerCase();
+      const isVolunteerExpiry =
+        message.includes("volunteer account has expired") ||
+        message.includes("account expired");
+
+      // Only volunteers should be treated as expired accounts.
+      if (isVolunteerExpiry && currentUser?.role === "volunteer") {
+        clearToken();
+        sessionStorage.removeItem("oas_token");
+        setAccessToken(null);
+        setMustChangePassword(false);
+        setAccountExpired(true);
+        return;
+      }
+
+      // If account itself is expired (from JWT user data), show expired screen.
+      if (isVolunteerExpired(currentUser)) {
+        clearToken();
+        sessionStorage.removeItem("oas_token");
+        setAccessToken(null);
+        setMustChangePassword(false);
+        setAccountExpired(true);
+        return;
+      }
+
+      // Keep user signed in if a valid access token still exists.
+      const storedToken = sessionStorage.getItem("oas_token");
+      const tokenToCheck = accessToken || storedToken;
+      if (isAccessTokenValid(tokenToCheck)) {
+        return;
+      }
+
+      // Attempt one silent recovery before logging out.
+      if (authRecoveryInFlight.current) return;
+      authRecoveryInFlight.current = true;
+      try {
+        const refreshed = await api.refreshToken();
+        if (refreshed) {
+          applyToken(refreshed);
+          return;
+        }
+      } catch {
+        // fall through to logout
+      } finally {
+        authRecoveryInFlight.current = false;
+      }
+
       handleLogout();
     });
 
     return () => setOnAccountExpired(null);
-  }, [handleLogout]);
+  }, [accessToken, applyToken, currentUser, handleLogout, isAccessTokenValid, isVolunteerExpired]);
 
   const handlePasswordChanged = () => setMustChangePassword(false);
 

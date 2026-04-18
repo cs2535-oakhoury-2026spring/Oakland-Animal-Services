@@ -34,6 +34,8 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [bulkExpiryDate, setBulkExpiryDate] = useState("");
   const [actionError, setActionError] = useState("");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortDirection, setSortDirection] = useState("desc");
 
   const tabs = isAdmin
     ? [{ key: "volunteer", label: "Volunteers" }, { key: "staff", label: "Staff" }, { key: "device", label: "Devices" }, { key: "admin", label: "Admin" }]
@@ -61,6 +63,21 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     return u.username?.toLowerCase().includes(q) || u.deviceName?.toLowerCase().includes(q);
   });
 
+  const sortedFilteredUsers = [...filteredUsers].sort((a, b) => {
+    const aRaw = sortField === "expiresAt" ? a.expiresAt : a.createdAt;
+    const bRaw = sortField === "expiresAt" ? b.expiresAt : b.createdAt;
+
+    const aTime = aRaw ? new Date(aRaw).getTime() : null;
+    const bTime = bRaw ? new Date(bRaw).getTime() : null;
+
+    if (aTime == null && bTime == null) return 0;
+    if (aTime == null) return 1;
+    if (bTime == null) return -1;
+
+    const diff = aTime - bTime;
+    return sortDirection === "asc" ? diff : -diff;
+  });
+
   useEffect(() => {
     setSelectedUserIds([]);
   }, [activeTab, searchQuery, users]);
@@ -71,7 +88,11 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     const now = new Date();
     const diffMs = exp - now;
     if (diffMs < 0) {
-      return { label: "Expired", color: "#BE3A2B", bg: "#fef2f2" };
+      return {
+        label: `Expired ${exp.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+        color: "#BE3A2B",
+        bg: "#fef2f2",
+      };
     }
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -230,6 +251,33 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                      />
         </div>
 
+        <div className="user-mgmt-screen__sort-row">
+          <label className="user-mgmt-screen__sort-label">
+            Sort by
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value)}
+              className="user-mgmt-screen__sort-select"
+              aria-label="Sort users by field"
+            >
+              <option value="createdAt">Time Created</option>
+              <option value="expiresAt">Expiry Date</option>
+            </select>
+          </label>
+          <label className="user-mgmt-screen__sort-label">
+            Order
+            <select
+              value={sortDirection}
+              onChange={(e) => setSortDirection(e.target.value)}
+              className="user-mgmt-screen__sort-select"
+              aria-label="Sort users by order"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+        </div>
+
                   {activeTab === "volunteer" && (
                     <div className="user-mgmt-screen__bulk-bar">
                       <button
@@ -311,15 +359,15 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           </div>
         )}
 
-        {!loading && !loadError && filteredUsers.length === 0 && (
+        {!loading && !loadError && sortedFilteredUsers.length === 0 && (
           <div className="user-mgmt-screen__empty">
             No {activeTab} accounts found.
           </div>
         )}
 
-        {!loading && filteredUsers.length > 0 && (
+        {!loading && sortedFilteredUsers.length > 0 && (
           <div className="user-mgmt-screen__user-list">
-            {filteredUsers.map((u) => {
+            {sortedFilteredUsers.map((u) => {
               const expStatus = getExpiryStatus(u.expiresAt);
               return (
                 <div key={u.userId} className="user-mgmt-screen__user-card" style={{ flexWrap: isDesktop ? "nowrap" : "wrap" }}>

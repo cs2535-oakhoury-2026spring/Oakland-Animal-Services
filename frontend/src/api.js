@@ -269,14 +269,16 @@ export const api = {
       if (!res.ok) throw new Error("Failed to fetch behavior notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.behaviorNotes)) {
-        return sortByNewestFirst(data.behaviorNotes.map((note, i) => ({
-          id: note.id || Date.now() + i,
-          petId: String(note.petId),
-          case: note.title || note.case || "Behavior Observation",
-          by: note.author || "Unknown",
-          body: note.content || "",
-          createdAt: note.timestamp || new Date().toISOString(),
-        })));
+        return sortByNewestFirst(
+          data.behaviorNotes.map((note, i) => ({
+            id: note.id || Date.now() + i,
+            petId: String(note.petId),
+            case: note.title || note.case || "Behavior Observation",
+            by: note.author || "Unknown",
+            body: note.content || "",
+            createdAt: note.timestamp || new Date().toISOString(),
+          })),
+        );
       }
       return [];
     } catch (err) {
