@@ -1,12 +1,13 @@
 // Oakland Animal Services Portal - Frontend
 import { useState, useEffect, useCallback } from "react";
-import { api, applyToken as apiApplyToken, clearToken } from "./api.js";
+import { api, applyToken as apiApplyToken, clearToken, setOnAccountExpired } from "./api.js";
 import { decodeJwt } from "./utils.js";
 
 // Screens
 import LoginScreen from "./screens/LoginScreen.jsx";
 import ForcePasswordChangeScreen from "./screens/ForcePasswordChangeScreen.jsx";
 import ChangePasswordModal from "./screens/ChangePasswordModal.jsx";
+import ExpiredAccountScreen from "./screens/ExpiredAccountScreen.jsx";
 import HomeScreen from "./screens/HomeScreen.jsx";
 import LocationsPage from "./screens/LocationsPage.jsx";
 import ActivityLogScreen from "./screens/ActivityLogScreen.jsx";
@@ -22,6 +23,7 @@ export default function App() {
   const [accessToken, setAccessToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [accountExpired, setAccountExpired] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
 
@@ -52,6 +54,7 @@ export default function App() {
       username: payload?.username,
       displayName: payload?.username || "User",
       role: payload?.role || "staff",
+      expiresAt: payload?.expiresAt,
       email: "",
       department: "",
     });
@@ -68,11 +71,21 @@ export default function App() {
     if (stored && !isExpired) {
       applyToken(stored);
       setSessionLoading(false);
-      api.refreshToken().then(applyToken).catch(() => {});
+      api.refreshToken().then(applyToken).catch(() => {
+        clearToken();
+        sessionStorage.removeItem("oas_token");
+        setAccessToken(null);
+        setCurrentUser(null);
+      });
     } else {
       api.refreshToken()
         .then((token) => applyToken(token))
-        .catch(() => { sessionStorage.removeItem("oas_token"); })
+        .catch(() => {
+          clearToken();
+          sessionStorage.removeItem("oas_token");
+          setAccessToken(null);
+          setCurrentUser(null);
+        })
         .finally(() => setSessionLoading(false));
     }
   }, []);
@@ -89,6 +102,15 @@ export default function App() {
     setLocationError(null);
     window.history.replaceState({}, "", "/");
   }, [accessToken]);
+
+  useEffect(() => {
+    // Any auth-expired callback from api.js should force a clean logout to login screen.
+    setOnAccountExpired(() => {
+      handleLogout();
+    });
+
+    return () => setOnAccountExpired(null);
+  }, [handleLogout]);
 
   const handlePasswordChanged = () => setMustChangePassword(false);
 
@@ -127,11 +149,15 @@ export default function App() {
     );
   }
 
+  if (accountExpired) {
+    return <ExpiredAccountScreen user={currentUser} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
+  }
+
   if (!accessToken) {
     return <LoginScreen darkMode={darkMode} setDarkMode={toggleDarkMode} onLogin={handleLogin} />;
   }
 
-  if (mustChangePassword) {
+  if (mustChangePassword && currentUser?.role !== "device") {
     return <ForcePasswordChangeScreen user={currentUser} token={accessToken} onPasswordChanged={handlePasswordChanged} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
   }
 
@@ -144,7 +170,7 @@ export default function App() {
     );
   }
 
-  if (view === "users" && currentUser?.role === "admin") {
+  if (view === "users" && (currentUser?.role === "admin" || currentUser?.role === "staff")) {
     return (
       <>
         <UserManagementScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />

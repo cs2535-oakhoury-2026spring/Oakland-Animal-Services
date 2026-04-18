@@ -37,6 +37,16 @@
   font-weight: 500;
 }
 
+.ud-trigger-expiry {
+  font-size: 11px;
+  color: #e65100;
+  font-weight: 600;
+  padding: 2px 6px;
+  background-color: #fff3e0;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .ud-menu {
   position: absolute;
   top: 44px;

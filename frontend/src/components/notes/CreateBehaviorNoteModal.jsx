@@ -7,9 +7,10 @@ import SimilarNotesPreview from "./SimilarNotesPreview.jsx";
 import "./CreateBehaviorNoteModal.css";
 
 // ─── Create Behavior Note Modal ─────────────────────────────────────────────
-export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSubmit, existingNotes = [] }) {
+export default function CreateBehaviorNoteModal({ petId, userName, userRole, onClose, onSubmit, existingNotes = [] }) {
   const [caseName, setCaseName] = useState("");
   const [body, setBody] = useState("");
+  const [deviceUserName, setDeviceUserName] = useState(userRole === "device" ? "" : userName);
   const [isListening, setIsListening] = useState(false);
   const [similarNotes, setSimilarNotes] = useState([]);
   const searchTimerRef = useRef(null);
@@ -19,6 +20,11 @@ export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSu
 
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
+
+  const finalUserName = userRole === "device" ? deviceUserName : userName;
+  const canSubmit = caseName.trim() && body.trim() && (userRole !== "device" || deviceUserName.trim());
+
+  const isMissing = (field) => !canSubmit && !field.trim();
 
   const runSimilarSearch = (caseVal, bodyVal) => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
@@ -48,8 +54,8 @@ export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSu
   };
 
   const handleSubmit = async () => {
-    if (!caseName.trim() || !body.trim()) return;
-    const created = await api.createBehaviorNote({ petId, by: userName, body, case: caseName });
+    if (!canSubmit) return;
+    const created = await api.createBehaviorNote({ petId, by: finalUserName, body, case: caseName });
     onSubmit(created); onClose();
   };
 
@@ -68,7 +74,7 @@ export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSu
   const buttons = (
     <div className="create-behavior-note-modal__actions">
       <button className="create-behavior-note-modal__btn-cancel" onClick={onClose}>Cancel</button>
-      <button className="create-behavior-note-modal__btn-submit" onClick={handleSubmit}>Submit</button>
+      <button className="create-behavior-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit}>Submit</button>
     </div>
   );
 
@@ -78,8 +84,14 @@ export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSu
         {/* Form */}
         <div className={formClass}>
           <h2 className="create-behavior-note-modal__title">New Behavior Note</h2>
+          {userRole === "device" && (
+            <>
+              <label className="create-behavior-note-modal__label">Your Name</label>
+              <input className={`create-behavior-note-modal__field ${isMissing(deviceUserName) ? "create-behavior-note-modal__field--error" : ""}`} placeholder="Enter your name" value={deviceUserName} onChange={(e) => setDeviceUserName(e.target.value)} aria-label="Your name" />
+            </>
+          )}
           <label className="create-behavior-note-modal__label">Case Title</label>
-          <input className="create-behavior-note-modal__field" placeholder="e.g. Socialization Progress" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
+          <input className={`create-behavior-note-modal__field ${isMissing(caseName) ? "create-behavior-note-modal__field--error" : ""}`} placeholder="e.g. Socialization Progress" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
           <label className="create-behavior-note-modal__label">
             Observation Notes
             <button
@@ -91,7 +103,7 @@ export default function CreateBehaviorNoteModal({ petId, userName, onClose, onSu
               <Icons.microphone size={16} color={isListening ? "#fff" : "var(--clr-text-primary)"} />
             </button>
           </label>
-          <textarea className="create-behavior-note-modal__field create-behavior-note-modal__textarea" placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
+          <textarea className={`create-behavior-note-modal__field create-behavior-note-modal__textarea ${isMissing(body) ? "create-behavior-note-modal__field--error" : ""}`} placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
           {buttons}
           {!isDesktop && similarNotes.length > 0 && (
             <div className="create-behavior-note-modal__similar-mobile">

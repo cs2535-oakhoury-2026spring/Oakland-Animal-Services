@@ -1,5 +1,10 @@
 import { PLACEHOLDER_CAT, PLACEHOLDER_DOG } from "./constants.js";
-import { stripHtml, computeDisplayAge, computeAgeFromBirthdate, parseLocationFromSummary } from "./utils.js";
+import {
+  stripHtml,
+  computeDisplayAge,
+  computeAgeFromBirthdate,
+  parseLocationFromSummary,
+} from "./utils.js";
 
 /**
  * ═══════════════════════════════════════════════════════════════════════════
@@ -13,8 +18,10 @@ import { stripHtml, computeDisplayAge, computeAgeFromBirthdate, parseLocationFro
 // Module-level auth token — set on login, cleared on logout.
 // Lets all api methods attach the Bearer header without prop drilling.
 let _authToken = null;
+let _onAccountExpired = null;
 
-export const authH = () => _authToken ? { "Authorization": `Bearer ${_authToken}` } : {};
+export const authH = () =>
+  _authToken ? { Authorization: `Bearer ${_authToken}` } : {};
 
 export function applyToken(token) {
   _authToken = token;
@@ -24,12 +31,51 @@ export function clearToken() {
   _authToken = null;
 }
 
+export function setOnAccountExpired(callback) {
+  _onAccountExpired = callback;
+}
+
+function handleApiError(res, data) {
+  if (res.status === 401) {
+    if (_onAccountExpired) _onAccountExpired(data?.error || "Unauthorized");
+    throw new Error(data?.error || "Unauthorized");
+  }
+  throw new Error(data?.error || "API request failed");
+}
+
 export const noteDataCache = new Map();
 
 export const mockPets = [
-  { petId: "12345678910", name: "Fluffly", species: "Cat", location: "Cat W:5", arn: "736727", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "green" },
-  { petId: "12345678912", name: "Whiskers", species: "Cat", location: "Cat W:5", arn: "736729", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "pink" },
-  { petId: "12345678913", name: "Mittens", species: "Cat", location: "Cat W:5", arn: "736730", status: "available", imageUrl: PLACEHOLDER_CAT, handlerLevel: "yellow" },
+  {
+    petId: "12345678910",
+    name: "Fluffly",
+    species: "Cat",
+    location: "Cat W:5",
+    arn: "736727",
+    status: "available",
+    imageUrl: PLACEHOLDER_CAT,
+    handlerLevel: "green",
+  },
+  {
+    petId: "12345678912",
+    name: "Whiskers",
+    species: "Cat",
+    location: "Cat W:5",
+    arn: "736729",
+    status: "available",
+    imageUrl: PLACEHOLDER_CAT,
+    handlerLevel: "pink",
+  },
+  {
+    petId: "12345678913",
+    name: "Mittens",
+    species: "Cat",
+    location: "Cat W:5",
+    arn: "736730",
+    status: "available",
+    imageUrl: PLACEHOLDER_CAT,
+    handlerLevel: "yellow",
+  },
 ];
 
 // Transform backend observer note shape ({ id, title, content, author, petId, timestamp })
@@ -46,7 +92,6 @@ export const transformObserverNote = (note, index) => ({
 });
 
 export const api = {
-
   // REAL — connected to GET /api/pets/:petId
   getPet: async (petId) => {
     try {
@@ -61,13 +106,23 @@ export const api = {
           name: p.name,
           species: p.species || "Unknown",
           location: parseLocationFromSummary(p.summary) || "",
-          imageUrl: p.image || (p.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
+          imageUrl:
+            p.image ||
+            (p.species === "Cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
           summary: p.summary || "",
           arn: p.rescueId || "N/A",
           handlerLevel: (p.otherNames || "green").toLowerCase(),
           status: p.status || "Unknown",
           breed: p.breed || "",
-          age: p.birthdate ? computeAgeFromBirthdate(p.birthdate) : computeDisplayAge(plainDesc, p.createdDate, p.receivedDate, p.generalAge, p.species),
+          age: p.birthdate
+            ? computeAgeFromBirthdate(p.birthdate)
+            : computeDisplayAge(
+                plainDesc,
+                p.createdDate,
+                p.receivedDate,
+                p.generalAge,
+                p.species,
+              ),
           sex: p.sex || "",
           description: plainDesc,
           weight: p.weightPounds || parseWeightFromDesc(plainDesc) || "Unknown",
@@ -86,7 +141,10 @@ export const api = {
     if (!petType || !location) {
       throw new Error("Invalid location parameters");
     }
-    const res = await fetch(`/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`, { headers: authH() });
+    const res = await fetch(
+      `/api/location/${petType}/${encodeURIComponent(location)}${refresh ? "?refresh=true" : ""}`,
+      { headers: authH() },
+    );
     if (!res.ok) {
       const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.error || "Location not found");
@@ -98,7 +156,8 @@ export const api = {
         name: pet.name,
         species: pet.species || (petType === "cat" ? "Cat" : "Dog"),
         location: location,
-        imageUrl: pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
+        imageUrl:
+          pet.image || (petType === "cat" ? PLACEHOLDER_CAT : PLACEHOLDER_DOG),
         summary: pet.summary || "",
         status: pet.status || "Unknown",
       }));
@@ -109,7 +168,9 @@ export const api = {
   // REAL — connected to GET /api/pets/:petId/observer-notes
   getNotes: async (petId) => {
     try {
-      const res = await fetch(`/api/pets/${petId}/observer-notes`, { headers: authH() });
+      const res = await fetch(`/api/pets/${petId}/observer-notes`, {
+        headers: authH(),
+      });
       if (!res.ok) throw new Error("Failed to fetch notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.observerNotes)) {
@@ -142,7 +203,10 @@ export const api = {
   // REAL — connected to DELETE /api/observer-notes/:id
   deleteNote: async (noteId) => {
     try {
-      await fetch(`/api/observer-notes/${noteId}`, { method: "DELETE", headers: authH() });
+      await fetch(`/api/observer-notes/${noteId}`, {
+        method: "DELETE",
+        headers: authH(),
+      });
     } catch (err) {
       console.warn("deleteNote failed", err);
     }
@@ -151,7 +215,10 @@ export const api = {
   // REAL — connected to DELETE /api/behavior-notes/:id
   deleteBehaviorNote: async (noteId) => {
     try {
-      await fetch(`/api/behavior-notes/${noteId}`, { method: "DELETE", headers: authH() });
+      await fetch(`/api/behavior-notes/${noteId}`, {
+        method: "DELETE",
+        headers: authH(),
+      });
     } catch (err) {
       console.warn("deleteBehaviorNote failed", err);
     }
@@ -174,7 +241,10 @@ export const api = {
       if (!res.ok) throw new Error("Failed to create note");
       const data = await res.json();
       if (data.success && data.observerNote) {
-        return transformObserverNote({ ...data.observerNote, status: note.status }, 0);
+        return transformObserverNote(
+          { ...data.observerNote, status: note.status },
+          0,
+        );
       }
       return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
     } catch (err) {
@@ -186,7 +256,9 @@ export const api = {
   // REAL — connected to GET /api/pets/:petId/behavior-notes
   getBehaviorNotes: async (petId) => {
     try {
-      const res = await fetch(`/api/pets/${petId}/behavior-notes`, { headers: authH() });
+      const res = await fetch(`/api/pets/${petId}/behavior-notes`, {
+        headers: authH(),
+      });
       if (!res.ok) throw new Error("Failed to fetch behavior notes");
       const data = await res.json();
       if (data.success && Array.isArray(data.behaviorNotes)) {
@@ -244,7 +316,11 @@ export const api = {
       const res = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authH() },
-        body: JSON.stringify({ query, petId: petId ? parseInt(petId, 10) : undefined, maxResults: 20 }),
+        body: JSON.stringify({
+          query,
+          petId: petId ? parseInt(petId, 10) : undefined,
+          maxResults: 20,
+        }),
       });
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
@@ -268,7 +344,9 @@ export const api = {
       const res = await fetch(`/api/pets/${petId}/behavior-notes/summarize`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authH() },
-        body: JSON.stringify({ prompt: prompt || "Summarize the note data in 2-5 concise sentences" }),
+        body: JSON.stringify({
+          prompt: prompt || "Summarize the note data in 2-5 concise sentences",
+        }),
       });
       if (!res.ok) throw new Error("AI summary failed");
       const data = await res.json();
@@ -284,8 +362,13 @@ export const api = {
 
   getAllAnimals: async (page = 1, limit = 50) => {
     try {
-      const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`, { headers: authH() });
-      if (!res.ok) throw new Error("Failed to fetch animals");
+      const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`, {
+        headers: authH(),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        handleApiError(res, data);
+      }
       const data = await res.json();
       if (data.success && Array.isArray(data.animals)) {
         return {
@@ -311,7 +394,9 @@ export const api = {
     if (totalPages <= 1) return first.animals || [];
 
     const rest = await Promise.all(
-      Array.from({ length: totalPages - 1 }, (_, i) => api.getAllAnimals(i + 2, limit))
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        api.getAllAnimals(i + 2, limit),
+      ),
     );
 
     const merged = [...(first.animals || [])];
@@ -345,21 +430,24 @@ export const api = {
   logout: async (token) => {
     await fetch("/api/auth/logout", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {});
   },
 
   refreshToken: async () => {
     const res = await fetch("/api/auth/refresh", { method: "POST" });
-    const data = await res.json();
-    if (!res.ok) throw new Error("Session expired");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) handleApiError(res, data);
     return data.accessToken;
   },
 
   changePassword: async (token, currentPassword, newPassword) => {
     const res = await fetch("/api/auth/change-password", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ currentPassword, newPassword }),
     });
     const data = await res.json();
@@ -369,7 +457,7 @@ export const api = {
 
   getUsers: async (token) => {
     const res = await fetch("/api/users", {
-      headers: { "Authorization": `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to fetch users");
@@ -379,7 +467,10 @@ export const api = {
   createUser: async (token, userData) => {
     const res = await fetch("/api/users", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(userData),
     });
     const data = await res.json();
@@ -390,7 +481,10 @@ export const api = {
   updateUser: async (token, userId, updates) => {
     const res = await fetch(`/api/users/${userId}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify(updates),
     });
     const data = await res.json();
@@ -401,7 +495,7 @@ export const api = {
   deleteUser: async (token, userId) => {
     const res = await fetch(`/api/users/${userId}`, {
       method: "DELETE",
-      headers: { "Authorization": `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -412,7 +506,10 @@ export const api = {
   resetUserPassword: async (token, userId, newPassword) => {
     const res = await fetch(`/api/users/${userId}/password`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ password: newPassword }),
     });
     const data = await res.json();
@@ -423,7 +520,10 @@ export const api = {
   batchCreateUsers: async (token, csvText) => {
     const res = await fetch("/api/users/batch", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
       body: JSON.stringify({ csv: csvText }),
     });
     const data = await res.json();
@@ -441,7 +541,7 @@ export const api = {
     params.set("limit", String(filters.limit || 25));
     params.set("page", String(filters.page || 1));
     const res = await fetch(`/api/activity?${params.toString()}`, {
-      headers: { "Authorization": `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to fetch activity logs");

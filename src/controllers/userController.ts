@@ -155,7 +155,15 @@ const BatchRowSchema = z.object({
     username: z.string().min(1),
     password: z.string().min(1),
     role: z.enum(["staff", "volunteer", "device"]),
+    expiresat: z.string().optional(),
 });
+
+function parseOptionalExpiryToIso(raw?: string): string | undefined {
+    if (!raw || !raw.trim()) return undefined;
+    const parsed = new Date(raw);
+    if (isNaN(parsed.getTime())) return undefined;
+    return parsed.toISOString();
+}
 
 function parseCSV(text: string): Array<Record<string, string>> {
     const lines = text.trim().split(/\r?\n/);
@@ -189,10 +197,21 @@ export async function batchCreateUsersHandler(req: Request, res: Response): Prom
             failed.push({ username: row.username || "(empty)", reason: "Invalid row: " + parsed.error.issues.map((i) => i.message).join(", ") });
             continue;
         }
-        const { username, password, role } = parsed.data;
+        const { username, password, role, expiresat } = parsed.data;
+        const expiresAtIso = parseOptionalExpiryToIso(expiresat);
+        if (expiresat && !expiresAtIso) {
+            failed.push({ username, reason: "Invalid expiresAt date format" });
+            continue;
+        }
+
+        if (expiresAtIso && role !== "volunteer") {
+            failed.push({ username, reason: "expiresAt is only allowed for volunteer accounts" });
+            continue;
+        }
+
         try {
             const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-            await createUser({ username, passwordHash, role });
+            await createUser({ username, passwordHash, role, expiresAt: expiresAtIso });
             logActivity({ tag: "authEvent", actor: req.user!.username, action: "USER_CREATED", jsonData: { username, role, batch: true } });
             created.push(username);
         } catch (err: any) {

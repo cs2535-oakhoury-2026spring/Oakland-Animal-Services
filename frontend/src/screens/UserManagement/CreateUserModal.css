@@ -97,6 +97,14 @@
   margin-bottom: 10px;
 }
 
+.create-user-modal__helper-text {
+  font-size: 12px;
+  color: #0ea5e9;
+  margin-top: -10px;
+  margin-bottom: 14px;
+  padding: 6px 0;
+}
+
 /* Error alert */
 .create-user-modal__alert {
   display: flex;

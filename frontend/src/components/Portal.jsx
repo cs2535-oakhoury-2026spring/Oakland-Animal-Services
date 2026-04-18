@@ -516,7 +516,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
 
       {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={notes} />}
       {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} />}
-      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} />}
+      {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} />}
       {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} />}
       {showQR && <QRCodeModal pet={pet} onClose={() => setShowQR(false)} />}
     </main>

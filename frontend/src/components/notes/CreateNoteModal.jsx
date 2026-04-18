@@ -11,6 +11,7 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
   const [caseName, setCaseName] = useState("");
   const [body, setBody] = useState("");
   const [status, setStatus] = useState("Raised");
+  const [deviceUserName, setDeviceUserName] = useState(userRole === "device" ? "" : userName);
   const [isListening, setIsListening] = useState(false);
   const [similarNotes, setSimilarNotes] = useState([]);
   const searchTimerRef = useRef(null);
@@ -21,6 +22,11 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
 
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
+
+  const finalUserName = userRole === "device" ? deviceUserName : userName;
+  const canSubmit = caseName.trim() && body.trim() && (userRole !== "device" || deviceUserName.trim());
+
+  const isMissing = (field) => !canSubmit && !field.trim();
 
   const runSimilarSearch = (caseVal, bodyVal) => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
@@ -50,8 +56,8 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
   };
 
   const handleSubmit = async () => {
-    if (!caseName.trim() || !body.trim()) return;
-    const created = await api.createNote({ petId, by: userName, type: "medical", body, case: caseName, status: canSetStatus ? status : "Raised" });
+    if (!canSubmit) return;
+    const created = await api.createNote({ petId, by: finalUserName, type: "medical", body, case: caseName, status: canSetStatus ? status : "Raised" });
     onSubmit(created); onClose();
   };
 
@@ -70,7 +76,7 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
   const buttons = (
     <div className="create-note-modal__actions">
       <button className="create-note-modal__btn-cancel" onClick={onClose}>Cancel</button>
-      <button className="create-note-modal__btn-submit" onClick={handleSubmit}>Submit</button>
+      <button className="create-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit}>Submit</button>
     </div>
   );
 
@@ -80,8 +86,14 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
         {/* Form */}
         <div className={formClass}>
           <h2 className="create-note-modal__title">New Medical Observation</h2>
+          {userRole === "device" && (
+            <>
+              <label className="create-note-modal__label">Your Name</label>
+              <input className={`create-note-modal__field ${isMissing(deviceUserName) ? "create-note-modal__field--error" : ""}`} placeholder="Enter your name" value={deviceUserName} onChange={(e) => setDeviceUserName(e.target.value)} aria-label="Your name" />
+            </>
+          )}
           <label className="create-note-modal__label">Case Title</label>
-          <input className="create-note-modal__field" placeholder="e.g. Limp On Right Leg" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
+          <input className={`create-note-modal__field ${isMissing(caseName) ? "create-note-modal__field--error" : ""}`} placeholder="e.g. Limp On Right Leg" value={caseName} onChange={(e) => { setCaseName(e.target.value); runSimilarSearch(e.target.value, body); }} aria-label="Case title" />
           {canSetStatus && (
             <>
               <label className="create-note-modal__label">Status</label>
@@ -102,7 +114,7 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
               <Icons.microphone size={16} color={isListening ? "#fff" : "var(--clr-text-primary)"} />
             </button>
           </label>
-          <textarea className="create-note-modal__field create-note-modal__textarea" placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
+          <textarea className={`create-note-modal__field create-note-modal__textarea ${isMissing(body) ? "create-note-modal__field--error" : ""}`} placeholder="Describe your observation..." value={body} onChange={(e) => { setBody(e.target.value); runSimilarSearch(caseName, e.target.value); }} aria-label="Observation notes" />
           {buttons}
           {!isDesktop && similarNotes.length > 0 && (
             <div className="create-note-modal__similar-mobile">

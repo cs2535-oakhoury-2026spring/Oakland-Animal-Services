@@ -1,0 +1,92 @@
+.expired-account-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+  color: var(--clr-text-primary);
+  padding: 20px;
+}
+
+.expired-account-header {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.expired-account-theme-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.expired-account-theme-btn:hover {
+  background: var(--clr-input-bg);
+}
+
+.expired-account-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  max-width: 480px;
+  text-align: center;
+}
+
+.expired-account-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: #fef2f2;
+  border-radius: 50%;
+}
+
+.expired-account-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #BE3A2B;
+  letter-spacing: -0.3px;
+}
+
+.expired-account-message {
+  font-size: 15px;
+  color: var(--clr-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.expired-account-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: #BE3A2B;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.expired-account-logout-btn:hover {
+  background: #a02d25;
+  box-shadow: 0 4px 12px rgba(190, 58, 43, 0.3);
+}
+
+.expired-account-logout-btn:active {
+  transform: scale(0.98);
+}

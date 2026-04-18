@@ -8,6 +8,7 @@ import ChangePasswordModal from "../ChangePasswordModal.jsx";
 import CreateUserModal from "./CreateUserModal.jsx";
 import ResetPasswordModal from "./ResetPasswordModal.jsx";
 import BatchImportModal from "./BatchImportModal.jsx";
+import EditExpiryModal from "./EditExpiryModal.jsx";
 import "./UserManagementScreen.css";
 
 // ─── User Management Screen ───────────────────────────────────────────────────
@@ -25,9 +26,13 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(null);
+  const [showEditExpiryModal, setShowEditExpiryModal] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
+  const [bulkExpiryDate, setBulkExpiryDate] = useState("");
   const [actionError, setActionError] = useState("");
 
   const tabs = isAdmin
@@ -56,18 +61,17 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     return u.username?.toLowerCase().includes(q) || u.deviceName?.toLowerCase().includes(q);
   });
 
+  useEffect(() => {
+    setSelectedUserIds([]);
+  }, [activeTab, searchQuery, users]);
+
   const getExpiryStatus = (expiryDate) => {
     if (!expiryDate) return null;
     const exp = new Date(expiryDate);
     const now = new Date();
     const diffMs = exp - now;
     if (diffMs < 0) {
-      const expiredHoursAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
-      const expiredDaysAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
-      if (expiredDaysAgo > 0) {
-        return { label: `Expired ${expiredDaysAgo}d ago`, color: "#BE3A2B", bg: "#fef2f2" };
-      }
-      return { label: `Expired ${expiredHoursAgo}h ago`, color: "#BE3A2B", bg: "#fef2f2" };
+      return { label: "Expired", color: "#BE3A2B", bg: "#fef2f2" };
     }
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -88,6 +92,64 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
       setActionError(err.message);
     } finally {
       setDeleteLoading(false);
+    }
+  };
+
+  const isExpiredVolunteer = (u) => (
+    u.role === "volunteer" && u.expiresAt && new Date(u.expiresAt) < new Date()
+  );
+
+  const expiredVolunteerIds = filteredUsers.filter(isExpiredVolunteer).map((u) => u.userId);
+
+  const toggleUserSelection = (userId) => {
+    setSelectedUserIds((prev) => (
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    ));
+  };
+
+  const selectAllExpired = () => {
+    setSelectedUserIds(expiredVolunteerIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedUserIds([]);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUserIds.length === 0) return;
+    const shouldDelete = window.confirm(`Delete ${selectedUserIds.length} selected volunteer account(s)? This cannot be undone.`);
+    if (!shouldDelete) return;
+
+    setBulkActionLoading(true);
+    setActionError("");
+    try {
+      await Promise.all(selectedUserIds.map((userId) => api.deleteUser(token, userId)));
+      setSelectedUserIds([]);
+      await fetchUsers();
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkExpiryUpdate = async () => {
+    if (!bulkExpiryDate.trim() || selectedUserIds.length === 0) return;
+
+    setBulkActionLoading(true);
+    setActionError("");
+    try {
+      const isoExpiryDate = new Date(bulkExpiryDate).toISOString();
+      await Promise.all(selectedUserIds.map((userId) => api.updateUser(token, userId, { expiresAt: isoExpiryDate })));
+      setBulkExpiryDate("");
+      setSelectedUserIds([]);
+      await fetchUsers();
+    } catch (err) {
+      setActionError(err.message);
+    } finally {
+      setBulkActionLoading(false);
     }
   };
 
@@ -170,6 +232,48 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                      />
         </div>
 
+                  {activeTab === "volunteer" && (
+                    <div className="user-mgmt-screen__bulk-bar">
+                      <button
+                        onClick={selectAllExpired}
+                        className="user-mgmt-screen__bulk-btn"
+                        disabled={expiredVolunteerIds.length === 0 || bulkActionLoading}
+                      >
+                        <Icons.check size={13} color="var(--clr-text-secondary)" />
+                        Select Expired ({expiredVolunteerIds.length})
+                      </button>
+                      <button
+                        onClick={clearSelection}
+                        className="user-mgmt-screen__bulk-btn"
+                        disabled={selectedUserIds.length === 0 || bulkActionLoading}
+                      >
+                        Deselect
+                      </button>
+                      <button
+                        onClick={handleBulkDelete}
+                        className="user-mgmt-screen__bulk-delete-btn"
+                        disabled={selectedUserIds.length === 0 || bulkActionLoading}
+                      >
+                        <Icons.trash size={13} color="#BE3A2B" />
+                        {bulkActionLoading ? "Working..." : `Delete Selected (${selectedUserIds.length})`}
+                      </button>
+                      <input
+                        type="datetime-local"
+                        value={bulkExpiryDate}
+                        onChange={(e) => setBulkExpiryDate(e.target.value)}
+                        className="user-mgmt-screen__bulk-date-input"
+                        aria-label="Bulk expiry date and time"
+                      />
+                      <button
+                        onClick={handleBulkExpiryUpdate}
+                        className="user-mgmt-screen__bulk-update-btn"
+                        disabled={selectedUserIds.length === 0 || !bulkExpiryDate.trim() || bulkActionLoading}
+                      >
+                        Update Expiry Time
+                      </button>
+                    </div>
+                  )}
+
         {actionError && (
           <div className="user-mgmt-screen__alert user-mgmt-screen__alert--action" role="alert">
             <Icons.alertCircle size={15} color="#BE3A2B" />
@@ -218,9 +322,18 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
         {!loading && activeTab !== "admin" && filteredUsers.length > 0 && (
           <div className="user-mgmt-screen__user-list">
             {filteredUsers.map((u) => {
-              const expStatus = getExpiryStatus(u.expiryDate);
+              const expStatus = getExpiryStatus(u.expiresAt);
               return (
                 <div key={u.userId} className="user-mgmt-screen__user-card" style={{ flexWrap: isDesktop ? "nowrap" : "wrap" }}>
+                  {activeTab === "volunteer" && (
+                    <input
+                      type="checkbox"
+                      checked={selectedUserIds.includes(u.userId)}
+                      onChange={() => toggleUserSelection(u.userId)}
+                      className="user-mgmt-screen__select-checkbox"
+                      aria-label={`Select ${u.username}`}
+                    />
+                  )}
                   {/* Avatar */}
                   <div className="user-mgmt-screen__user-avatar">
                     <Icons.user size={16} color="var(--clr-warm-gray)" />
@@ -241,11 +354,21 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                   )}
                   {/* Actions */}
                   <div className="user-mgmt-screen__user-actions">
+                    {activeTab === "volunteer" && (
+                      <button
+                        onClick={() => setShowEditExpiryModal(u)}
+                        title="Edit expiry date"
+                        className="user-mgmt-screen__edit-btn"
+                      >
+                        <Icons.pencil size={13} color="var(--clr-warm-gray)" />
+                        {isDesktop && "Edit Expiry"}
+                      </button>
+                    )}
                     <button
                       onClick={() => setShowResetModal(u)}
                       title="Reset password"
                       className="user-mgmt-screen__reset-btn"
-                                         >
+                    >
                       <Icons.key size={13} color="var(--clr-warm-gray)" />
                       {isDesktop && "Reset"}
                     </button>
@@ -253,7 +376,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                       onClick={() => { setActionError(""); setShowDeleteConfirm(u); }}
                       title="Delete user"
                       className="user-mgmt-screen__delete-btn"
-                                         >
+                    >
                       <Icons.trash size={13} color="#BE3A2B" />
                       {isDesktop && "Delete"}
                     </button>
@@ -283,6 +406,16 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           targetUser={showResetModal}
           onClose={() => setShowResetModal(null)}
           onReset={() => setShowResetModal(null)}
+        />
+      )}
+
+      {/* Edit Expiry Modal */}
+      {showEditExpiryModal && (
+        <EditExpiryModal
+          token={token}
+          targetUser={showEditExpiryModal}
+          onClose={() => setShowEditExpiryModal(null)}
+          onUpdated={() => { setShowEditExpiryModal(null); fetchUsers(); }}
         />
       )}
 

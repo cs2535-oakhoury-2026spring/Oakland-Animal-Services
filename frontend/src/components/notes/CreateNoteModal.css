@@ -78,6 +78,12 @@
   font-size: 15px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.create-note-modal__field--error {
+  border-color: #ff4444;
+  border-width: 2px;
 }
 
 .create-note-modal__textarea {
@@ -103,6 +109,12 @@
   display: flex;
   gap: 8px;
   margin-top: 8px;
+  position: sticky;
+  bottom: 0;
+  background-color: var(--clr-card-bg);
+  padding-top: 12px;
+  padding-bottom: 0;
+  z-index: 10;
 }
 
 .create-note-modal__btn-cancel {
