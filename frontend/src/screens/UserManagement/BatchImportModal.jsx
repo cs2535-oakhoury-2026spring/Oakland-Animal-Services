@@ -37,7 +37,7 @@ export default function BatchImportModal({ token, onClose, onDone }) {
   };
 
   const downloadTemplate = () => {
-    const blob = new Blob(["username,password,role\njohn_doe,Pass1234,staff\njane_doe,Pass5678,volunteer\n"], { type: "text/csv" });
+    const blob = new Blob(["username,password,role,expiresAt\njohn_doe,Pass1234,staff,\njane_doe,Pass5678,volunteer,2026-12-31T23:59\n"], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = "users_template.csv"; a.click();
@@ -49,8 +49,9 @@ export default function BatchImportModal({ token, onClose, onDone }) {
       <div ref={focusTrapRef} className="batch-import-modal__box" onClick={(e) => e.stopPropagation()}>
         <h2 className="batch-import-modal__title">Batch Import Users</h2>
         <p className="batch-import-modal__description">
-          Upload a CSV with columns: <code className="batch-import-modal__code">username, password, role</code>
+          Upload a CSV with columns: <code className="batch-import-modal__code">username, password, role, expiresAt</code>
           {" "}— role must be <code className="batch-import-modal__code">staff</code>, <code className="batch-import-modal__code">volunteer</code>, or <code className="batch-import-modal__code">device</code>.
+          {" "}<code className="batch-import-modal__code">expiresAt</code> is optional and only for volunteer rows.
         </p>
         <button onClick={downloadTemplate} className="batch-import-modal__template-link">
           Download template CSV
@@ -63,7 +64,7 @@ export default function BatchImportModal({ token, onClose, onDone }) {
             <label className="batch-import-modal__label">Or paste CSV directly</label>
             <textarea
               className="batch-import-modal__field batch-import-modal__textarea"
-                           placeholder={"username,password,role\njohn,pass123,staff"}
+                           placeholder={"username,password,role,expiresAt\njohn,pass123,staff,\njane,pass567,volunteer,2026-12-31T23:59"}
               value={csvText}
               onChange={(e) => setCsvText(e.target.value)}
             />
