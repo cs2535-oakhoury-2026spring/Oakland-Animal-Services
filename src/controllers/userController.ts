@@ -68,8 +68,13 @@ export async function createUserHandler(req: Request, res: Response): Promise<vo
     }
 }
 
-export async function listUsersHandler(_req: Request, res: Response): Promise<void> {
+export async function listUsersHandler(req: Request, res: Response): Promise<void> {
     const users = await listUsers();
+    if (req.user!.role === "staff") {
+        const volunteerOnly = users.filter((u) => u.role === "volunteer");
+        res.json({ success: true, users: volunteerOnly });
+        return;
+    }
     res.json({ success: true, users });
 }
 
@@ -190,6 +195,7 @@ export async function batchCreateUsersHandler(req: Request, res: Response): Prom
 
     const created: string[] = [];
     const failed: Array<{ username: string; reason: string }> = [];
+    const callerRole = req.user!.role;
 
     for (const row of rows) {
         const parsed = BatchRowSchema.safeParse(row);
@@ -199,6 +205,17 @@ export async function batchCreateUsersHandler(req: Request, res: Response): Prom
         }
         const { username, password, role, expiresat } = parsed.data;
         const expiresAtIso = parseOptionalExpiryToIso(expiresat);
+
+        if (callerRole === "staff" && role !== "volunteer") {
+            failed.push({ username, reason: "Staff can only create volunteer accounts" });
+            continue;
+        }
+
+        if (callerRole === "staff" && !expiresAtIso) {
+            failed.push({ username, reason: "expiresAt is required for volunteer accounts created by staff" });
+            continue;
+        }
+
         if (expiresat && !expiresAtIso) {
             failed.push({ username, reason: "Invalid expiresAt date format" });
             continue;

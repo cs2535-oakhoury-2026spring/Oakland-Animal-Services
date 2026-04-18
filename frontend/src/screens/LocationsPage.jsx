@@ -13,6 +13,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   const r = useResponsive();
   const [locations, setLocations] = useState(null);
   const [loadError, setLoadError] = useState(false);
+  const [locationSearch, setLocationSearch] = useState("");
   const [selectedSpecies, setSelectedSpecies] = useState([]);
   const [selectedKennels, setSelectedKennels] = useState([]);
   const [qrSizePx, setQrSizePx] = useState(180);
@@ -75,8 +76,17 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   const isDesktop = r.width >= 768;
   const speciesOptions = locations ? Array.from(new Set(locations.map((s) => s.species))).sort() : [];
   const speciesFilterSet = new Set(selectedSpecies);
+  const searchQuery = locationSearch.trim().toLowerCase();
   const visibleLocations = locations
     ? locations.filter((loc) => selectedSpecies.length === 0 || speciesFilterSet.has(loc.species))
+        .filter((loc) => {
+          if (!searchQuery) return true;
+          return (
+            loc.location.toLowerCase().includes(searchQuery) ||
+            loc.species.toLowerCase().includes(searchQuery) ||
+            loc.label.toLowerCase().includes(searchQuery)
+          );
+        })
     : [];
   const visibleKeys = visibleLocations.map((loc) => `${loc.species}|${loc.location}`);
   const selectedKennelSet = new Set(selectedKennels);
@@ -296,6 +306,22 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
             Back To Home
           </button>
         </div>
+
+        {locations && !loadError && locations.length > 0 && (
+          <div className="locations-page__search-wrap">
+            <div className="locations-page__search-icon">
+              <Icons.search size={15} color="var(--clr-warm-gray)" />
+            </div>
+            <input
+              type="text"
+              value={locationSearch}
+              onChange={(e) => setLocationSearch(e.target.value)}
+              placeholder="Search locations by kennel or species..."
+              className="locations-page__search-input"
+              aria-label="Search kennel locations"
+            />
+          </div>
+        )}
 
         {locations && !loadError && locations.length > 0 && (
           <div className="locations-page__export-panel">
@@ -559,7 +585,9 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
 
         {locations && !loadError && locations.length > 0 && visibleLocations.length === 0 && (
           <div className="locations-page__message locations-page__message--sm">
-            No kennels match the selected animal types.
+            {searchQuery
+              ? "No kennels match your search and selected animal types."
+              : "No kennels match the selected animal types."}
           </div>
         )}
       </div>
