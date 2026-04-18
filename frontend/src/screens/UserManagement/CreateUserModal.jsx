@@ -25,11 +25,12 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
     setLoading(true);
     setError("");
     try {
+      const isoExpiryDate = role === "volunteer" && expiryDate ? new Date(expiryDate).toISOString() : null;
       await api.createUser(token, {
         username: username.trim(),
         password,
         role,
-        ...(role === "volunteer" && expiryDate ? { expiryDate } : {}),
+        ...(role === "volunteer" && isoExpiryDate ? { expiryDate: isoExpiryDate } : {}),
         ...(role === "device" && deviceName ? { deviceName: deviceName.trim() } : {}),
       });
       onCreated();
@@ -73,8 +74,8 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
 
           {role === "volunteer" && (
             <>
-              <label className="create-user-modal__label">Expiry Date <span style={{ fontWeight: 400 }}>(optional)</span></label>
-              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="create-user-modal__field create-user-modal__field--spaced" aria-label="Expiry date" />
+              <label className="create-user-modal__label">Expiry Date & Time <span style={{ fontWeight: 400 }}>(optional)</span></label>
+              <input type="datetime-local" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} className="create-user-modal__field create-user-modal__field--spaced" aria-label="Expiry date and time" />
             </>
           )}
 

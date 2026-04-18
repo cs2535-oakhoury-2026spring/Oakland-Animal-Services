@@ -413,7 +413,7 @@ export const api = {
     const res = await fetch(`/api/users/${userId}/password`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-      body: JSON.stringify({ newPassword }),
+      body: JSON.stringify({ password: newPassword }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Failed to reset password");

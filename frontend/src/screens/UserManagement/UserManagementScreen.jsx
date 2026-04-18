@@ -60,10 +60,20 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     if (!expiryDate) return null;
     const exp = new Date(expiryDate);
     const now = new Date();
-    const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { label: "Expired", color: "#BE3A2B", bg: "#fef2f2" };
-    if (diffDays <= 7) return { label: `Expires in ${diffDays}d`, color: "#e65100", bg: "#fff3e0" };
-    return { label: `Expires ${exp.toLocaleDateString()}`, color: "#2d7a24", bg: "#f0fdf4" };
+    const diffMs = exp - now;
+    if (diffMs < 0) {
+      const expiredHoursAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
+      const expiredDaysAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
+      if (expiredDaysAgo > 0) {
+        return { label: `Expired ${expiredDaysAgo}d ago`, color: "#BE3A2B", bg: "#fef2f2" };
+      }
+      return { label: `Expired ${expiredHoursAgo}h ago`, color: "#BE3A2B", bg: "#fef2f2" };
+    }
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (diffDays < 1) return { label: `Expires in ${diffHours}h`, color: "#BE3A2B", bg: "#fef2f2" };
+    if (diffDays <= 7) return { label: `Expires in ${diffDays}d ${diffHours}h`, color: "#e65100", bg: "#fff3e0" };
+    return { label: `Expires ${exp.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`, color: "#2d7a24", bg: "#f0fdf4" };
   };
 
   const handleDelete = async () => {
