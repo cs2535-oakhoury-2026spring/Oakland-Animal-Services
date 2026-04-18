@@ -66,6 +66,17 @@
   flex-shrink: 0;
 }
 
+.medical-note-card__status-btn {
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.medical-note-card__status-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
 .medical-note-card__body-row {
   display: flex;
   justify-content: space-between;
@@ -81,7 +92,7 @@
   margin: 0;
 }
 
-.medical-note-card__edit-btn {
+.medical-note-card__delete-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -92,11 +103,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s ease;
-  opacity: 0.6;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  opacity: 0.72;
 }
 
-.medical-note-card__edit-btn:hover,
-.medical-note-card:hover .medical-note-card__edit-btn {
+.medical-note-card__delete-btn:hover,
+.medical-note-card:hover .medical-note-card__delete-btn {
   opacity: 1;
+  transform: translateY(-1px);
 }

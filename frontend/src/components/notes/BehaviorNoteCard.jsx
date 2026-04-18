@@ -5,9 +5,9 @@ import HighlightedText from "../HighlightedText.jsx";
 import "./BehaviorNoteCard.css";
 
 // ─── Behavior Note Card ──────────────────────────────────────────────────────
-export default function BehaviorNoteCard({ note, currentUser, userRole, onEdit, searchQuery }) {
+export default function BehaviorNoteCard({ note, currentUser, userRole, onDelete, searchQuery }) {
   const isOwner = note.by === currentUser;
-  const canEdit = userRole === "admin" || userRole === "staff" || isOwner;
+  const canDelete = userRole === "admin" || userRole === "staff" || isOwner;
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -33,14 +33,15 @@ export default function BehaviorNoteCard({ note, currentUser, userRole, onEdit, 
         <p className="behavior-note-card__body">
           <HighlightedText text={note.highlightedBody || note.body} searchQuery={searchQuery} />
         </p>
-        {canEdit && (
+        {canDelete && (
           <button
-            onClick={() => onEdit(note)}
-            className="behavior-note-card__edit-btn"
-            style={{ opacity: hovered ? 1 : 0.6 }}
-            aria-label="Edit note"
+            onClick={() => onDelete?.(note)}
+            className="behavior-note-card__delete-btn"
+            style={{ opacity: hovered ? 1 : 0.7 }}
+            aria-label="Delete note"
+            type="button"
           >
-            <Icons.pencil size={16} color="var(--clr-warm-gray)" />
+            <Icons.trash size={16} color="var(--clr-brick-red)" />
           </button>
         )}
       </div>

@@ -16,11 +16,9 @@ export async function listActivityLogs(req: Request, res: Response) {
     const parsed = tagsParam.split(",").map((t) => t.trim()) as ActivityTag[];
     const invalid = parsed.filter((t) => !VALID_TAGS.includes(t));
     if (invalid.length > 0) {
-      return res
-        .status(400)
-        .json({
-          error: `Invalid tags: ${invalid.join(", ")}. Valid: ${VALID_TAGS.join(", ")}`,
-        });
+      return res.status(400).json({
+        error: `Invalid tags: ${invalid.join(", ")}. Valid: ${VALID_TAGS.join(", ")}`,
+      });
     }
     if (!isAdmin && parsed.includes("authEvent")) {
       return res

@@ -13,9 +13,7 @@ import DesktopPortal from "./DesktopPortal.jsx";
 import MedicalNoteCard from "./notes/MedicalNoteCard.jsx";
 import BehaviorNoteCard from "./notes/BehaviorNoteCard.jsx";
 import CreateNoteModal from "./notes/CreateNoteModal.jsx";
-import EditNoteModal from "./notes/EditNoteModal.jsx";
 import CreateBehaviorNoteModal from "./notes/CreateBehaviorNoteModal.jsx";
-import EditBehaviorNoteModal from "./notes/EditBehaviorNoteModal.jsx";
 import './Portal.css';
 
 // ─── Portal ───────────────────────────────────────────────────────────────────
@@ -29,8 +27,12 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   const [slideDirection, setSlideDirection] = useState("right");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCreateBehaviorModal, setShowCreateBehaviorModal] = useState(false);
-  const [editingNote, setEditingNote] = useState(null);
-  const [editingBehaviorNote, setEditingBehaviorNote] = useState(null);
+  const [pendingDeleteMedicalNote, setPendingDeleteMedicalNote] = useState(null);
+  const [skipMedicalDeleteConfirm, setSkipMedicalDeleteConfirm] = useState(false);
+  const [deleteDontShowAgainChecked, setDeleteDontShowAgainChecked] = useState(false);
+  const [pendingDeleteBehaviorNote, setPendingDeleteBehaviorNote] = useState(null);
+  const [skipBehaviorDeleteConfirm, setSkipBehaviorDeleteConfirm] = useState(false);
+  const [behaviorDeleteDontShowAgainChecked, setBehaviorDeleteDontShowAgainChecked] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [behaviorSearchQuery, setBehaviorSearchQuery] = useState("");
@@ -130,16 +132,89 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   }, [behaviorNotes]);
 
   const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
-  const handleNoteEdited = async (n) => {
-    await api.deleteNote(n.id);
-    const created = await api.createNote(n);
-    setNotes((prev) => prev.map((x) => (x.id === n.id ? created : x)));
+
+  const updateMedicalNoteState = useCallback((noteId, updater) => {
+    setNotes((prev) => prev.map((n) => (n.id === noteId ? updater(n) : n)));
+    setSearchResults((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      return prev.map((n) => (n.id === noteId ? updater(n) : n));
+    });
+  }, []);
+
+  const removeMedicalNoteState = useCallback((noteId) => {
+    setNotes((prev) => prev.filter((n) => n.id !== noteId));
+    setSearchResults((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      return prev.filter((n) => n.id !== noteId);
+    });
+  }, []);
+
+  const handleToggleMedicalStatus = async (note) => {
+    const canManageMedical = user?.role === "admin" || user?.role === "staff";
+    if (!canManageMedical) return;
+
+    const isRaised = (note.status || "").toUpperCase() === "RAISED";
+    const nextStatus = isRaised ? "RESOLVED" : "RAISED";
+    const ok = await api.updateNote(note.id, nextStatus);
+    if (!ok) return;
+
+    updateMedicalNoteState(note.id, (n) => ({ ...n, status: nextStatus }));
+  };
+
+  const performDeleteMedicalNote = async (note) => {
+    await api.deleteNote(note.id);
+    removeMedicalNoteState(note.id);
+  };
+
+  const handleRequestDeleteMedicalNote = async (note) => {
+    if (skipMedicalDeleteConfirm) {
+      await performDeleteMedicalNote(note);
+      return;
+    }
+    setDeleteDontShowAgainChecked(false);
+    setPendingDeleteMedicalNote(note);
+  };
+
+  const handleConfirmDeleteMedicalNote = async () => {
+    if (!pendingDeleteMedicalNote) return;
+    await performDeleteMedicalNote(pendingDeleteMedicalNote);
+    if (deleteDontShowAgainChecked) {
+      setSkipMedicalDeleteConfirm(true);
+    }
+    setPendingDeleteMedicalNote(null);
+    setDeleteDontShowAgainChecked(false);
   };
   const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
-  const handleBehaviorNoteEdited = async (n) => {
-    await api.deleteBehaviorNote(n.id);
-    const created = await api.createBehaviorNote(n);
-    setBehaviorNotes((prev) => prev.map((x) => (x.id === n.id ? created : x)));
+  const removeBehaviorNoteState = useCallback((noteId) => {
+    setBehaviorNotes((prev) => prev.filter((n) => n.id !== noteId));
+    setBehaviorSearchResults((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      return prev.filter((n) => n.id !== noteId);
+    });
+  }, []);
+
+  const performDeleteBehaviorNote = useCallback(async (note) => {
+    await api.deleteBehaviorNote(note.id);
+    removeBehaviorNoteState(note.id);
+  }, [removeBehaviorNoteState]);
+
+  const handleRequestDeleteBehaviorNote = async (note) => {
+    if (skipBehaviorDeleteConfirm) {
+      await performDeleteBehaviorNote(note);
+      return;
+    }
+    setBehaviorDeleteDontShowAgainChecked(false);
+    setPendingDeleteBehaviorNote(note);
+  };
+
+  const handleConfirmDeleteBehaviorNote = async () => {
+    if (!pendingDeleteBehaviorNote) return;
+    await performDeleteBehaviorNote(pendingDeleteBehaviorNote);
+    if (behaviorDeleteDontShowAgainChecked) {
+      setSkipBehaviorDeleteConfirm(true);
+    }
+    setPendingDeleteBehaviorNote(null);
+    setBehaviorDeleteDontShowAgainChecked(false);
   };
 
   const handleAiQuery = async () => {
@@ -215,10 +290,21 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
       NOTES_PER_PAGE={NOTES_PER_PAGE}
       showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
       showCreateBehaviorModal={showCreateBehaviorModal} setShowCreateBehaviorModal={setShowCreateBehaviorModal}
-      editingNote={editingNote} setEditingNote={setEditingNote}
-      editingBehaviorNote={editingBehaviorNote} setEditingBehaviorNote={setEditingBehaviorNote}
-      handleNoteCreated={handleNoteCreated} handleNoteEdited={handleNoteEdited}
-      handleBehaviorNoteCreated={handleBehaviorNoteCreated} handleBehaviorNoteEdited={handleBehaviorNoteEdited}
+      pendingDeleteMedicalNote={pendingDeleteMedicalNote}
+      setPendingDeleteMedicalNote={setPendingDeleteMedicalNote}
+      deleteDontShowAgainChecked={deleteDontShowAgainChecked}
+      setDeleteDontShowAgainChecked={setDeleteDontShowAgainChecked}
+      handleConfirmDeleteMedicalNote={handleConfirmDeleteMedicalNote}
+      pendingDeleteBehaviorNote={pendingDeleteBehaviorNote}
+      setPendingDeleteBehaviorNote={setPendingDeleteBehaviorNote}
+      behaviorDeleteDontShowAgainChecked={behaviorDeleteDontShowAgainChecked}
+      setBehaviorDeleteDontShowAgainChecked={setBehaviorDeleteDontShowAgainChecked}
+      handleConfirmDeleteBehaviorNote={handleConfirmDeleteBehaviorNote}
+      handleNoteCreated={handleNoteCreated}
+      handleToggleMedicalStatus={handleToggleMedicalStatus}
+      handleRequestDeleteMedicalNote={handleRequestDeleteMedicalNote}
+      handleRequestDeleteBehaviorNote={handleRequestDeleteBehaviorNote}
+      handleBehaviorNoteCreated={handleBehaviorNoteCreated}
       onBack={onBack} onLogout={onLogout} onChangePassword={onChangePassword}
       darkMode={darkMode} setDarkMode={setDarkMode}
       r={r}
@@ -418,7 +504,14 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
                 {filteredNotes.length > 0 ? (
                   <>
                     {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
-                      <MedicalNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingNote} searchQuery={searchQuery} />
+                      <MedicalNoteCard
+                        key={note.id}
+                        note={note}
+                        userRole={user.role}
+                        onToggleStatus={handleToggleMedicalStatus}
+                        onDelete={handleRequestDeleteMedicalNote}
+                        searchQuery={searchQuery}
+                      />
                     ))}
                     {filteredNotes.length > medicalNotesVisible && (
                       <div className="portal-load-more-wrap">
@@ -472,7 +565,14 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
                 {filteredBehaviorNotes.length > 0 ? (
                   <>
                     {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
-                      <BehaviorNoteCard key={note.id} note={note} currentUser={user.displayName} userRole={user.role} onEdit={setEditingBehaviorNote} searchQuery={behaviorSearchQuery} />
+                      <BehaviorNoteCard
+                        key={note.id}
+                        note={note}
+                        currentUser={user.displayName}
+                        userRole={user.role}
+                        onDelete={handleRequestDeleteBehaviorNote}
+                        searchQuery={behaviorSearchQuery}
+                      />
                     ))}
                     {filteredBehaviorNotes.length > behaviorNotesVisible && (
                       <div className="portal-load-more-wrap">
@@ -515,9 +615,57 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
       )}
 
       {showCreateModal && <CreateNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateModal(false)} onSubmit={handleNoteCreated} existingNotes={notes} />}
-      {editingNote && <EditNoteModal note={editingNote} userRole={user.role} onClose={() => setEditingNote(null)} onSave={handleNoteEdited} />}
       {showCreateBehaviorModal && <CreateBehaviorNoteModal petId={pet.petId} userName={user.displayName} userRole={user.role} onClose={() => setShowCreateBehaviorModal(false)} onSubmit={handleBehaviorNoteCreated} existingNotes={behaviorNotes} />}
-      {editingBehaviorNote && <EditBehaviorNoteModal note={editingBehaviorNote} onClose={() => setEditingBehaviorNote(null)} onSave={handleBehaviorNoteEdited} />}
+      {pendingDeleteMedicalNote && (
+        <div className="portal-delete-confirm__overlay" onClick={() => setPendingDeleteMedicalNote(null)} role="dialog" aria-modal="true">
+          <div className="portal-delete-confirm__box" onClick={(e) => e.stopPropagation()}>
+            <div className="portal-delete-confirm__icon">
+              <Icons.trash size={22} color="#BE3A2B" />
+            </div>
+            <h2 className="portal-delete-confirm__title">Delete Medical Observation</h2>
+            <p className="portal-delete-confirm__body">
+              Delete this observation? This cannot be undone.
+            </p>
+            <label className="portal-delete-confirm__toggle">
+              <input
+                type="checkbox"
+                checked={deleteDontShowAgainChecked}
+                onChange={(e) => setDeleteDontShowAgainChecked(e.target.checked)}
+              />
+              Don&apos;t show again for this session
+            </label>
+            <div className="portal-delete-confirm__footer">
+              <button onClick={() => setPendingDeleteMedicalNote(null)} className="portal-delete-confirm__cancel-btn">Cancel</button>
+              <button onClick={handleConfirmDeleteMedicalNote} className="portal-delete-confirm__confirm-btn">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pendingDeleteBehaviorNote && (
+        <div className="portal-delete-confirm__overlay" onClick={() => setPendingDeleteBehaviorNote(null)} role="dialog" aria-modal="true">
+          <div className="portal-delete-confirm__box" onClick={(e) => e.stopPropagation()}>
+            <div className="portal-delete-confirm__icon">
+              <Icons.trash size={22} color="#BE3A2B" />
+            </div>
+            <h2 className="portal-delete-confirm__title">Delete Behavior Note</h2>
+            <p className="portal-delete-confirm__body">
+              Delete this behavior note? This cannot be undone.
+            </p>
+            <label className="portal-delete-confirm__toggle">
+              <input
+                type="checkbox"
+                checked={behaviorDeleteDontShowAgainChecked}
+                onChange={(e) => setBehaviorDeleteDontShowAgainChecked(e.target.checked)}
+              />
+              Don&apos;t show again for this session
+            </label>
+            <div className="portal-delete-confirm__footer">
+              <button onClick={() => setPendingDeleteBehaviorNote(null)} className="portal-delete-confirm__cancel-btn">Cancel</button>
+              <button onClick={handleConfirmDeleteBehaviorNote} className="portal-delete-confirm__confirm-btn">Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
       {showQR && <QRCodeModal pet={pet} onClose={() => setShowQR(false)} />}
     </main>
   );

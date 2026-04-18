@@ -441,3 +441,82 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 10;
 }
+
+.portal-delete-confirm__overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.portal-delete-confirm__box {
+  width: min(420px, 100%);
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-card-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+.portal-delete-confirm__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(190, 58, 43, 0.12);
+  margin-bottom: 10px;
+}
+
+.portal-delete-confirm__title {
+  margin: 0 0 8px;
+  color: var(--clr-text-primary);
+  font-size: 18px;
+}
+
+.portal-delete-confirm__body {
+  margin: 0 0 14px;
+  color: var(--clr-text-secondary);
+  font-size: 14px;
+}
+
+.portal-delete-confirm__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.portal-delete-confirm__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.portal-delete-confirm__cancel-btn,
+.portal-delete-confirm__confirm-btn {
+  border: 1px solid var(--clr-card-border);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.portal-delete-confirm__cancel-btn {
+  color: var(--clr-text-secondary);
+  background-color: var(--clr-input-bg);
+}
+
+.portal-delete-confirm__confirm-btn {
+  color: #fff;
+  border-color: #be3a2b;
+  background-color: #be3a2b;
+}

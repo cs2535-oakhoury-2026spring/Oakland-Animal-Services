@@ -71,7 +71,7 @@
   margin: 0;
 }
 
-.behavior-note-card__edit-btn {
+.behavior-note-card__delete-btn {
   background: none;
   border: none;
   cursor: pointer;
@@ -83,10 +83,10 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.2s ease;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-.behavior-note-card__edit-btn:hover,
-.behavior-note-card:hover .behavior-note-card__edit-btn {
+.behavior-note-card__delete-btn:hover,
+.behavior-note-card:hover .behavior-note-card__delete-btn {
   opacity: 1;
 }
