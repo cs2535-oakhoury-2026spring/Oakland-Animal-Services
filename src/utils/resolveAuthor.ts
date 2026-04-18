@@ -13,7 +13,9 @@ export function resolveAuthor(req: Request, author?: string): string | null {
 
     if (user.role === "device") {
         if (!author || author.trim().length < 2) return null;
-        return `${author.trim()} (${user.deviceName ?? user.username})`;
+        const rawDeviceLabel = user.deviceName?.trim() || user.username;
+        const normalizedDeviceLabel = rawDeviceLabel.replace(/^device-/i, "");
+        return `${author.trim()} (${normalizedDeviceLabel})`;
     }
 
     return user.username;

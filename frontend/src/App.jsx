@@ -45,13 +45,6 @@ export default function App() {
   const [refreshing, setRefreshing] = useState(false);
   const authRecoveryInFlight = useRef(false);
 
-  const isAccessTokenValid = useCallback((token) => {
-    if (!token) return false;
-    const payload = decodeJwt(token);
-    if (!payload?.exp) return false;
-    return payload.exp * 1000 > Date.now();
-  }, []);
-
   const isVolunteerExpired = useCallback((user) => {
     if (!user || user.role !== "volunteer" || !user.expiresAt) return false;
     return new Date(user.expiresAt) < new Date();
@@ -144,17 +137,12 @@ export default function App() {
         return;
       }
 
-      // Keep user signed in if a valid access token still exists.
-      const storedToken = sessionStorage.getItem("oas_token");
-      const tokenToCheck = accessToken || storedToken;
-      if (isAccessTokenValid(tokenToCheck)) {
-        return;
-      }
-
       // Attempt one silent recovery before logging out.
       if (authRecoveryInFlight.current) return;
       authRecoveryInFlight.current = true;
       try {
+        // Revalidate server-side by attempting refresh.
+        // This prevents a "stuck logged-in but unauthorized" state.
         const refreshed = await api.refreshToken();
         if (refreshed) {
           applyToken(refreshed);
@@ -170,7 +158,7 @@ export default function App() {
     });
 
     return () => setOnAccountExpired(null);
-  }, [accessToken, applyToken, currentUser, handleLogout, isAccessTokenValid, isVolunteerExpired]);
+  }, [accessToken, applyToken, currentUser, handleLogout, isVolunteerExpired]);
 
   const handlePasswordChanged = () => setMustChangePassword(false);
 

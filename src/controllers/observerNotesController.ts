@@ -165,9 +165,9 @@ export async function uploadObserverNote(req: Request, res: Response) {
 
   logActivity({
     tag: "observerNote",
-    actor: req.user!.username,
+    actor: resolvedAuthor,
     action: "CREATED",
-    jsonData: { petId, content },
+    jsonData: { petId, content, author: resolvedAuthor, username: req.user!.username },
   });
 
   res.json({

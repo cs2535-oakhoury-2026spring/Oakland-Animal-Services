@@ -15,6 +15,28 @@ import type { SafeUser, UserRole } from "../models/User.schema.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!; // guaranteed by server.ts startup check
 const ACCESS_TOKEN_EXPIRY = "15m";
+const ROTATED_REFRESH_GRACE_MS = 15_000;
+const recentlyRotatedRefreshTokens = new Map<
+  string,
+  { userId: string; expiresAtMs: number }
+>();
+
+function rememberRotatedRefreshToken(tokenId: string, userId: string): void {
+  recentlyRotatedRefreshTokens.set(tokenId, {
+    userId,
+    expiresAtMs: Date.now() + ROTATED_REFRESH_GRACE_MS,
+  });
+}
+
+function consumeRecentlyRotatedRefreshToken(tokenId: string): string | null {
+  const record = recentlyRotatedRefreshTokens.get(tokenId);
+  if (!record) return null;
+  if (record.expiresAtMs < Date.now()) {
+    recentlyRotatedRefreshTokens.delete(tokenId);
+    return null;
+  }
+  return record.userId;
+}
 
 type EnvAdminAccount = {
   userId: string;
@@ -168,20 +190,29 @@ export async function refresh(oldRefreshToken: string): Promise<{
   refreshToken: string;
 } | null> {
   const record = await getRefreshToken(oldRefreshToken);
-  if (!record) return null;
 
-  // Check refresh token expiry
-  if (new Date(record.expiresAt) < new Date()) {
+  let refreshUserId: string;
+  if (!record) {
+    const graceUserId = consumeRecentlyRotatedRefreshToken(oldRefreshToken);
+    if (!graceUserId) return null;
+    refreshUserId = graceUserId;
+  } else {
+    // Check refresh token expiry
+    if (new Date(record.expiresAt) < new Date()) {
+      await deleteRefreshToken(oldRefreshToken);
+      return null;
+    }
+
+    // Rotate: delete old token, issue new one
     await deleteRefreshToken(oldRefreshToken);
-    return null;
+    rememberRotatedRefreshToken(oldRefreshToken, record.userId);
+    refreshUserId = record.userId;
   }
 
-  // Rotate: delete old token, issue new one
-  await deleteRefreshToken(oldRefreshToken);
-  const newRefreshToken = await createRefreshToken(record.userId);
+  const newRefreshToken = await createRefreshToken(refreshUserId);
 
   // .env admins are not in DB — rebuild payload directly
-  const envAdmin = getEnvAdminByUserId(record.userId);
+  const envAdmin = getEnvAdminByUserId(refreshUserId);
   if (envAdmin) {
     const payload: JwtPayload = {
       userId: envAdmin.userId,
@@ -195,7 +226,7 @@ export async function refresh(oldRefreshToken: string): Promise<{
     };
   }
 
-  const user = await getUserById(record.userId);
+  const user = await getUserById(refreshUserId);
   if (!user) return null;
 
   // Re-check volunteer expiry on every refresh

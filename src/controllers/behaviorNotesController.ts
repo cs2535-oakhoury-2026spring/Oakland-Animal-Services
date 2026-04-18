@@ -124,9 +124,9 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
 
   logActivity({
     tag: "behaviorNote",
-    actor: req.user!.username,
+    actor: resolvedAuthor,
     action: "CREATED",
-    jsonData: { petId, content },
+    jsonData: { petId, content, author: resolvedAuthor, username: req.user!.username },
   });
 
   res.json({

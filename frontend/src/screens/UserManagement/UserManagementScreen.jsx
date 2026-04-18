@@ -348,13 +348,13 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                 <Icons.shield size={16} color="var(--clr-header-green)" />
               </div>
               <div className="user-mgmt-screen__admin-info">
-                <div className="user-mgmt-screen__admin-name">admin <span className="user-mgmt-screen__admin-note">(env account)</span></div>
-                <div className="user-mgmt-screen__admin-meta">Password managed via <code>ADMIN_PASS</code> in server .env — cannot be reset here</div>
+                <div className="user-mgmt-screen__admin-name">Environment Admin Account(s) <span className="user-mgmt-screen__admin-note">(.env managed)</span></div>
+                <div className="user-mgmt-screen__admin-meta">Passwords from <code>ADMIN_PASS</code> / <code>ADMIN_ACCOUNTS</code> are managed in server .env and cannot be reset here</div>
               </div>
-              <span className="user-mgmt-screen__admin-badge">System Admin</span>
+              <span className="user-mgmt-screen__admin-badge">Env Managed</span>
             </div>
             <div className="user-mgmt-screen__admin-hint">
-              To change the admin password, update <code>ADMIN_PASS</code> in the server <code>.env</code> file and restart the backend.
+              To change environment-admin passwords, update <code>ADMIN_PASS</code> and/or <code>ADMIN_ACCOUNTS</code> in server <code>.env</code>, then restart the backend.
             </div>
           </div>
         )}
