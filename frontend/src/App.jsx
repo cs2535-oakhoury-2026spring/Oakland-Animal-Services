@@ -4514,10 +4514,20 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
     if (!expiryDate) return null;
     const exp = new Date(expiryDate);
     const now = new Date();
-    const diffDays = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { label: "Expired", color: "#BE3A2B", bg: "#fef2f2" };
-    if (diffDays <= 7) return { label: `Expires in ${diffDays}d`, color: "#e65100", bg: "#fff3e0" };
-    return { label: `Expires ${exp.toLocaleDateString()}`, color: "#2d7a24", bg: "#f0fdf4" };
+    const diffMs = exp - now;
+    if (diffMs < 0) {
+      const expiredHoursAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60));
+      const expiredDaysAgo = Math.floor(Math.abs(diffMs) / (1000 * 60 * 60 * 24));
+      if (expiredDaysAgo > 0) {
+        return { label: `Expired ${expiredDaysAgo}d ago`, color: "#BE3A2B", bg: "#fef2f2" };
+      }
+      return { label: `Expired ${expiredHoursAgo}h ago`, color: "#BE3A2B", bg: "#fef2f2" };
+    }
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    if (diffDays < 1) return { label: `Expires in ${diffHours}h`, color: "#BE3A2B", bg: "#fef2f2" };
+    if (diffDays <= 7) return { label: `Expires in ${diffDays}d ${diffHours}h`, color: "#e65100", bg: "#fff3e0" };
+    return { label: `Expires ${exp.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}`, color: "#2d7a24", bg: "#f0fdf4" };
   };
 
   const handleDelete = async () => {
@@ -4772,7 +4782,7 @@ function UserManagementScreen({ user, token, onLogout, darkMode, setDarkMode, c 
 // ─── Edit Expiry Modal ────────────────────────────────────────────────────────
 function EditExpiryModal({ token, targetUser, onClose, onSaved, c }) {
   const [expiryDate, setExpiryDate] = useState(
-    targetUser.expiresAt ? new Date(targetUser.expiresAt).toISOString().split("T")[0] : ""
+    targetUser.expiresAt ? new Date(targetUser.expiresAt).toISOString().slice(0, 16) : ""
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -4784,7 +4794,8 @@ function EditExpiryModal({ token, targetUser, onClose, onSaved, c }) {
     setLoading(true);
     setError("");
     try {
-      await api.updateUser(token, targetUser.userId, { expiresAt: expiryDate || null });
+      const isoString = expiryDate ? new Date(expiryDate).toISOString() : null;
+      await api.updateUser(token, targetUser.userId, { expiresAt: isoString });
       onSaved();
     } catch (err) {
       setError(err.message);
@@ -4805,15 +4816,15 @@ function EditExpiryModal({ token, targetUser, onClose, onSaved, c }) {
         <form onSubmit={handleSave} noValidate>
           {targetUser.expiresAt ? (
             <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 14, padding: "8px 12px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
-              Currently expires: <strong style={{ color: c.textPrimary }}>{new Date(targetUser.expiresAt).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" })}</strong>
+              Currently expires: <strong style={{ color: c.textPrimary }}>{new Date(targetUser.expiresAt).toLocaleString(undefined, { year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}</strong>
             </div>
           ) : (
             <div style={{ fontSize: 13, color: c.warmGray, marginBottom: 14, padding: "8px 12px", backgroundColor: c.inputBg, borderRadius: 8, border: `1px solid ${c.cardBorder}` }}>
               No expiry set — account does not expire.
             </div>
           )}
-          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Expiry Date <span style={{ fontWeight: 400 }}>(leave blank to remove)</span></label>
-          <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 16 }} autoFocus aria-label="Expiry date" />
+          <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>New Expiry Date & Time <span style={{ fontWeight: 400 }}>(leave blank to remove)</span></label>
+          <input type="datetime-local" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 16 }} autoFocus aria-label="Expiry date and time" />
           {error && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, marginBottom: 14 }} role="alert">
               <Icons.alertCircle size={15} color="#BE3A2B" />
@@ -4862,11 +4873,12 @@ function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c })
     setLoading(true);
     setError("");
     try {
+      const isoExpiryDate = role === "volunteer" && expiryDate ? new Date(expiryDate).toISOString() : null;
       await api.createUser(token, {
         username: autoUsername,
         password: isDevice ? generatedPassword : password,
         role,
-        ...(role === "volunteer" && expiryDate ? { expiresAt: expiryDate } : {}),
+        ...(role === "volunteer" && isoExpiryDate ? { expiresAt: isoExpiryDate } : {}),
         ...(role === "device" && deviceName ? { deviceName: deviceName.trim() } : {}),
       });
       onCreated();
@@ -4940,8 +4952,8 @@ function CreateUserModal({ token, isAdmin, defaultRole, onClose, onCreated, c })
 
           {role === "volunteer" && (
             <>
-              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Expiry Date <span style={{ color: c.warmGray, fontWeight: 400 }}>(optional)</span></label>
-              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Expiry date" />
+              <label style={{ fontSize: 13, color: c.warmGray, marginBottom: 4, display: "block" }}>Expiry Date & Time <span style={{ color: c.warmGray, fontWeight: 400 }}>(optional)</span></label>
+              <input type="datetime-local" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} style={{ ...fieldStyle, marginBottom: 14 }} aria-label="Expiry date and time" />
             </>
           )}
 
