@@ -160,7 +160,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
     }
   }, [buildFilters, token]);
 
-  useEffect(() => { fetchLogs(1); }, []);
+  useEffect(() => { fetchLogs(1); }, [fetchLogs]);
 
   const tagColors = {
     behaviorNote: { bg: "#e8f5e9", text: "#2d7a24", label: "Behavior" },
@@ -460,11 +460,8 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
           </div>
 
           <div className="activity-log-screen__filter-actions">
-            <button onClick={() => fetchLogs(1)} disabled={loading} className="activity-log-screen__apply-btn">
-              {loading ? "Loading…" : "Apply Filters"}
-            </button>
             <button onClick={() => { setFilterActor(""); setFilterAction(""); setFilterFrom(""); setFilterTo(""); setShowBehavior(true); setShowObserver(true); setShowAuth(true); }} className="activity-log-screen__clear-btn">
-              Clear
+              Reset
             </button>
             <button
               onClick={exportFilteredLogsToCsv}
