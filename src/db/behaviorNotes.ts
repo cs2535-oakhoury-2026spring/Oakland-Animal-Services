@@ -24,7 +24,9 @@ export async function getBehaviorNotesByPetId(
   return REPO.getBehaviorNoteByPetId(petId);
 }
 
-export async function getBehaviorNoteById(id: number): Promise<BehaviorNote | null> {
+export async function getBehaviorNoteById(
+  id: number,
+): Promise<BehaviorNote | null> {
   return REPO.getBehaviorNoteById(id);
 }
 

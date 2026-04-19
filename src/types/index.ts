@@ -11,14 +11,13 @@ export interface PetRepository {
 }
 
 export interface ObserverNoteRepository {
-  getObserverNotes(limit?:number,page?:number): Promise<ObserverNote[]>;
+  getObserverNotes(limit?: number, page?: number): Promise<ObserverNote[]>;
   getObserverNoteByPetId(petId: number): Promise<ObserverNote[]>;
   getObserverNoteById(id: number): Promise<ObserverNote | null>;
   addObserverNote(note: ObserverNote): Promise<number>;
   removeObserverNoteById(id: number): Promise<boolean>;
   updateObserverNoteStatus(id: number, status: string): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
-
 }
 
 export interface BehaviorNoteRepository {
@@ -28,5 +27,4 @@ export interface BehaviorNoteRepository {
   addBehaviorNote(note: BehaviorNote): Promise<number>;
   removeBehaviorNoteById(id: number): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
-
 }

@@ -109,6 +109,19 @@ export default function App() {
     window.history.replaceState({}, "", "/");
   }, [accessToken]);
 
+  const handleSelectPet = useCallback((petId) => {
+    if (!petId) return;
+    const params = new URLSearchParams(window.location.search);
+    params.delete("type");
+    params.delete("location");
+    params.delete("view");
+    params.delete("page");
+    params.set("petId", petId);
+    const newUrl = params.toString() ? `/?${params.toString()}` : "/";
+    window.history.replaceState({}, "", newUrl);
+    setSelectedPetId(petId);
+  }, []);
+
   useEffect(() => {
     // On auth failures, first verify local session validity before forcing logout.
     setOnAccountExpired(async (reason) => {
@@ -250,7 +263,7 @@ export default function App() {
   }
 
   if (!selectedPetId && animals.length > 1) {
-    return <AnimalSelection animals={animals} onSelect={setSelectedPetId} user={currentUser} token={accessToken} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} onRefresh={handleRefresh} refreshing={refreshing} onChangePassword={() => setShowChangePassword(true)} />;
+    return <AnimalSelection animals={animals} onSelect={handleSelectPet} user={currentUser} token={accessToken} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} onRefresh={handleRefresh} refreshing={refreshing} onChangePassword={() => setShowChangePassword(true)} />;
   }
 
   if (selectedPetId) {

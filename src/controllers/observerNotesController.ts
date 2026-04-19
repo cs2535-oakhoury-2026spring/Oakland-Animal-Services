@@ -21,8 +21,10 @@ export async function listObserverNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
   const pageParam = req.query.page;
 
-  const limit = typeof limitParam === "string" ? parseInt(limitParam, 10) : undefined;
-  const page = typeof pageParam === "string" ? parseInt(pageParam, 10) : undefined;
+  const limit =
+    typeof limitParam === "string" ? parseInt(limitParam, 10) : undefined;
+  const page =
+    typeof pageParam === "string" ? parseInt(pageParam, 10) : undefined;
 
   if ((limit != null && isNaN(limit)) || (page != null && isNaN(page))) {
     return res.status(400).json({ error: "limit and page must be integers" });
@@ -37,7 +39,9 @@ export async function listObserverNotes(req: Request, res: Response) {
   }
 
   if (page != null && limit == null) {
-    return res.status(400).json({ error: "limit is required when paging by page" });
+    return res
+      .status(400)
+      .json({ error: "limit is required when paging by page" });
   }
 
   const resolvedPage = limit != null && page == null ? 1 : page;
@@ -63,7 +67,12 @@ export async function deleteObserverNote(req: Request, res: Response) {
     actor: req.user!.username,
     action: "DELETED",
     jsonData: note
-      ? { noteId: id, petId: note.petId, content: note.content, status: note.status }
+      ? {
+          noteId: id,
+          petId: note.petId,
+          content: note.content,
+          status: note.status,
+        }
       : { noteId: id },
   });
 
@@ -105,7 +114,9 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
   } catch (error) {
     return res
       .status(500)
-      .json({ error: error instanceof Error ? error.message : "Unknown error" });
+      .json({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
   }
 }
 
@@ -131,7 +142,9 @@ export async function deleteObserverNotesByPetId(req: Request, res: Response) {
 
   const removed = await removeNotesByPetId(petId);
   if (!removed) {
-    return res.status(404).json({ error: "No observer notes found for this pet ID" });
+    return res
+      .status(404)
+      .json({ error: "No observer notes found for this pet ID" });
   }
 
   logActivity({
@@ -154,7 +167,12 @@ export async function uploadObserverNote(req: Request, res: Response) {
 
   const resolvedAuthor = resolveAuthor(req, author);
   if (resolvedAuthor === null) {
-    return res.status(400).json({ error: "Device accounts must provide an author name of at least 2 characters" });
+    return res
+      .status(400)
+      .json({
+        error:
+          "Device accounts must provide an author name of at least 2 characters",
+      });
   }
 
   const newObserverNote: ObserverNote = {
@@ -180,7 +198,12 @@ export async function uploadObserverNote(req: Request, res: Response) {
     tag: "observerNote",
     actor: resolvedAuthor,
     action: "CREATED",
-    jsonData: { petId, content, author: resolvedAuthor, username: req.user!.username },
+    jsonData: {
+      petId,
+      content,
+      author: resolvedAuthor,
+      username: req.user!.username,
+    },
   });
 
   res.json({

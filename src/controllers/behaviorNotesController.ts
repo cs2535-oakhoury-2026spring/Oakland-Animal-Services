@@ -8,13 +8,21 @@ import {
   BehaviorNoteCreateSchema,
   BehaviorNoteSchema,
 } from "../models/BehaviorNote.schema.js";
-import { addBehaviorNote, getAllBehaviorNotes, getBehaviorNoteById, removeBehaviorNoteById, removeNotesByPetId,getBehaviorNotesByPetId as _getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
+import {
+  addBehaviorNote,
+  getAllBehaviorNotes,
+  getBehaviorNoteById,
+  removeBehaviorNoteById,
+  removeNotesByPetId,
+  getBehaviorNotesByPetId as _getBehaviorNotesByPetId,
+} from "../db/behaviorNotes.js";
 
 export async function listBehaviorNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
   const pageParam = req.query.page;
 
-  const limit = typeof limitParam === "string" ? parseInt(limitParam, 10) : null;
+  const limit =
+    typeof limitParam === "string" ? parseInt(limitParam, 10) : null;
   const page = typeof pageParam === "string" ? parseInt(pageParam, 10) : null;
 
   if ((limit != null && isNaN(limit)) || (page != null && isNaN(page))) {
@@ -30,11 +38,16 @@ export async function listBehaviorNotes(req: Request, res: Response) {
   }
 
   if (page != null && limit == null) {
-    return res.status(400).json({ error: "limit is required when paging by page" });
+    return res
+      .status(400)
+      .json({ error: "limit is required when paging by page" });
   }
 
   const resolvedPage = limit != null && page == null ? 1 : page;
-  const behaviorNotes = await getAllBehaviorNotes(limit ?? 10, resolvedPage ?? 1);
+  const behaviorNotes = await getAllBehaviorNotes(
+    limit ?? 10,
+    resolvedPage ?? 1,
+  );
   res.json({ success: true, behaviorNotes });
 }
 
@@ -55,7 +68,9 @@ export async function deleteBehaviorNote(req: Request, res: Response) {
     tag: "behaviorNote",
     actor: req.user!.username,
     action: "DELETED",
-    jsonData: note ? { noteId: id, petId: note.petId, content: note.content } : { noteId: id },
+    jsonData: note
+      ? { noteId: id, petId: note.petId, content: note.content }
+      : { noteId: id },
   });
 
   res.json({ success: true, message: "Behavior note deleted" });
@@ -83,7 +98,9 @@ export async function deleteBehaviorNotesByPetId(req: Request, res: Response) {
 
   const removed = await removeNotesByPetId(petId);
   if (!removed) {
-    return res.status(404).json({ error: "No behavior notes found for this pet ID" });
+    return res
+      .status(404)
+      .json({ error: "No behavior notes found for this pet ID" });
   }
 
   logActivity({
@@ -106,7 +123,12 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
 
   const resolvedAuthor = resolveAuthor(req, author);
   if (resolvedAuthor === null) {
-    return res.status(400).json({ error: "Device accounts must provide an author name of at least 2 characters" });
+    return res
+      .status(400)
+      .json({
+        error:
+          "Device accounts must provide an author name of at least 2 characters",
+      });
   }
 
   const newBehaviorNote: BehaviorNote = {
@@ -131,7 +153,12 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
     tag: "behaviorNote",
     actor: resolvedAuthor,
     action: "CREATED",
-    jsonData: { petId, content, author: resolvedAuthor, username: req.user!.username },
+    jsonData: {
+      petId,
+      content,
+      author: resolvedAuthor,
+      username: req.user!.username,
+    },
   });
 
   res.json({

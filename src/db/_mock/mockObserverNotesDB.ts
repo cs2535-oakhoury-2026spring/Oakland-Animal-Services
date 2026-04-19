@@ -1,4 +1,7 @@
-import { ObserverNoteSchema, type ObserverNote } from "../../models/ObserverNote.schema.js";
+import {
+  ObserverNoteSchema,
+  type ObserverNote,
+} from "../../models/ObserverNote.schema.js";
 import { ObserverNoteRepository } from "../../types/index.js";
 
 const seedData: ObserverNote[] = [
@@ -23,7 +26,10 @@ const seedData: ObserverNote[] = [
 export class MockObserverNoteRepository implements ObserverNoteRepository {
   private notes: ObserverNote[] = [...seedData];
 
-  async getObserverNotes(limit?: number, page?: number): Promise<ObserverNote[]> {
+  async getObserverNotes(
+    limit?: number,
+    page?: number,
+  ): Promise<ObserverNote[]> {
     if (limit == null || page == null) {
       return [...this.notes];
     }
@@ -46,7 +52,8 @@ export class MockObserverNoteRepository implements ObserverNoteRepository {
 
   async addObserverNote(note: ObserverNote): Promise<number> {
     ObserverNoteSchema.parse(note);
-    const uniqueId = note.id || note.timestamp.getTime() + Math.floor(Math.random() * 1000);
+    const uniqueId =
+      note.id || note.timestamp.getTime() + Math.floor(Math.random() * 1000);
     const created = { ...note, id: uniqueId };
     this.notes.push(created);
     return uniqueId;

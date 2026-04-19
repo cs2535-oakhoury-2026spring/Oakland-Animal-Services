@@ -39,7 +39,9 @@ export async function getObserverNotesByPetId(
   return _getObserverNotesByPetId(petId);
 }
 
-export async function getObserverNoteById(id: number): Promise<ObserverNote | null> {
+export async function getObserverNoteById(
+  id: number,
+): Promise<ObserverNote | null> {
   return _getObserverNoteById(id);
 }
 
