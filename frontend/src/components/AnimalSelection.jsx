@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { isCurrentAnimal, PLACEHOLDER_CAT, PLACEHOLDER_DOG } from "../constants.js";
+import { navigateOrOpenNewTab } from "../utils.js";
 import { useResponsive } from "../hooks.js";
 import Icons from "../Icons.jsx";
 import UserDropdown from "./UserDropdown.jsx";
@@ -119,7 +120,22 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
           {displayed.map((pet) => (
             <button
               key={pet.petId}
-              onClick={() => onSelect(pet.petId)}
+              onClick={(e) => {
+                const species = pet.species.toLowerCase();
+                const loc = pet.location.replace(new RegExp(`^${pet.species}\\s+`, 'i'), '').toLowerCase();
+                const url = loc && loc !== "unknown" && !loc.includes("foster")
+                  ? `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`
+                  : `/?petId=${pet.petId}`;
+                navigateOrOpenNewTab(e, url, () => onSelect(pet.petId));
+              }}
+              onAuxClick={(e) => {
+                const species = pet.species.toLowerCase();
+                const loc = pet.location.replace(new RegExp(`^${pet.species}\\s+`, 'i'), '').toLowerCase();
+                const url = loc && loc !== "unknown" && !loc.includes("foster")
+                  ? `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`
+                  : `/?petId=${pet.petId}`;
+                navigateOrOpenNewTab(e, url);
+              }}
               className="as-animal-card"
               style={{ padding: isDesktop ? 18 : 14 }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)"; e.currentTarget.style.opacity = "1"; }}

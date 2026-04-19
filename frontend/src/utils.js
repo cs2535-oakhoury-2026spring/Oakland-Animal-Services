@@ -104,6 +104,20 @@ export function decodeJwt(token) {
   }
 }
 
+export function navigateOrOpenNewTab(event, url, fallback) {
+  if (event.button === 1 || event.ctrlKey || event.metaKey) {
+    window.open(url, "_blank");
+    return true;
+  }
+
+  if (typeof fallback === "function") {
+    fallback();
+    return true;
+  }
+
+  return false;
+}
+
 // ─── Levenshtein Distance ─────────────────────────────────────────────────────
 // Used by both HighlightedText (fuzzy highlighting) and fuzzyMatchText (local filter).
 export function levenshtein(a, b) {

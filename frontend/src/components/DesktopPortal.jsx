@@ -108,7 +108,8 @@ export default function DesktopPortal({
                 <h1 className="dp-pet-name">{pet.name}</h1>
               </div>
               {pet.status && (() => {
-                const isAvail = CURRENT_STATUSES.has((pet.status || "").toLowerCase().trim());
+                const statusValue = (pet.status || "").toLowerCase().trim();
+                const isAvail = statusValue === "available";
                 const color = isAvail ? "var(--clr-status-resolved)" : "var(--clr-brick-red)";
                 return (
                   <span style={{

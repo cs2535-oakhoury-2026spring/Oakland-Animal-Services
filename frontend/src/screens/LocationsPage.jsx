@@ -3,6 +3,7 @@ import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import { useResponsive } from "../hooks.js";
 import { api } from "../api.js";
+import { navigateOrOpenNewTab } from "../utils.js";
 import Icons from "../Icons.jsx";
 import Skeleton from "../components/Skeleton.jsx";
 import UserDropdown from "../components/UserDropdown.jsx";
@@ -653,8 +654,14 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    window.location.href = `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+                  onClick={(e) => {
+                    const url = `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`;
+                    navigateOrOpenNewTab(e, url, () => {
+                      window.location.href = url;
+                    });
+                  }}
+                  onAuxClick={(e) => {
+                    navigateOrOpenNewTab(e, `/?type=${encodeURIComponent(loc.species)}&location=${encodeURIComponent(loc.location)}`);
                   }}
                   className="locations-page__kennel-open-btn"
                                  >

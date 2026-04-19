@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { HANDLER_LEVEL_COLORS } from "../constants.js";
 import { useResponsive } from "../hooks.js";
 import { api } from "../api.js";
+import { navigateOrOpenNewTab } from "../utils.js";
 import Icons from "../Icons.jsx";
 import Skeleton from "../components/Skeleton.jsx";
 import UserDropdown from "../components/UserDropdown.jsx";
@@ -188,17 +189,26 @@ export default function HomeScreen({ user, token, onLogout, darkMode, setDarkMod
           return (
             <button
               key={animal.id}
-              onClick={() => {
+              onClick={(e) => {
                 const species = animal.species.toLowerCase();
                 const loc = animal.location.replace(new RegExp(`^${animal.species}\\s+`, 'i'), '').toLowerCase();
-                if (loc && loc !== "unknown" && !loc.includes("foster")) {
-                  window.location.href = `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`;
-                } else {
-                  window.location.href = `/?petId=${animal.id}&page=${page}`;
-                }
+                const url = loc && loc !== "unknown" && !loc.includes("foster")
+                  ? `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`
+                  : `/?petId=${animal.id}&page=${page}`;
+                navigateOrOpenNewTab(e, url, () => {
+                  window.location.href = url;
+                });
+              }}
+              onAuxClick={(e) => {
+                const species = animal.species.toLowerCase();
+                const loc = animal.location.replace(new RegExp(`^${animal.species}\\s+`, 'i'), '').toLowerCase();
+                const url = loc && loc !== "unknown" && !loc.includes("foster")
+                  ? `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`
+                  : `/?petId=${animal.id}&page=${page}`;
+                navigateOrOpenNewTab(e, url);
               }}
               className="home-screen__card"
-                           aria-label={`View ${animal.name}'s profile`}
+              aria-label={`View ${animal.name}'s profile`}
             >
               <img
                 src={imgSrc}
