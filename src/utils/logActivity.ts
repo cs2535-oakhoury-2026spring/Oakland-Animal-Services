@@ -3,10 +3,10 @@ import { addActivityLog } from "../db/repositories/activityLogDB.js";
 import type { ActivityLog, ActivityTag } from "../models/ActivityLog.schema.js";
 
 export interface LogActivityParams {
-    tag: ActivityTag;
-    actor: string;
-    action: string;
-    jsonData?: Record<string, unknown>;
+  tag: ActivityTag;
+  actor: string;
+  action: string;
+  jsonData?: Record<string, unknown>;
 }
 
 /**
@@ -14,15 +14,17 @@ export interface LogActivityParams {
  * are printed to stderr but do not affect the calling request.
  */
 export function logActivity(params: LogActivityParams): void {
-    const now = new Date();
-    const log: ActivityLog = {
-        logId: randomUUID(),
-        date: now.toISOString().split("T")[0],
-        timestamp: now.toISOString(),
-        tag: params.tag,
-        actor: params.actor,
-        action: params.action,
-        jsonData: params.jsonData,
-    };
-    addActivityLog(log).catch(err => console.error("[ActivityLog] Failed to write log:", err));
+  const now = new Date();
+  const log: ActivityLog = {
+    logId: randomUUID(),
+    date: now.toISOString().split("T")[0],
+    timestamp: now.toISOString(),
+    tag: params.tag,
+    actor: params.actor,
+    action: params.action,
+    jsonData: params.jsonData,
+  };
+  addActivityLog(log).catch((err) =>
+    console.error("[ActivityLog] Failed to write log:", err),
+  );
 }

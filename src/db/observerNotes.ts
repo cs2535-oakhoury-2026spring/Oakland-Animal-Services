@@ -41,4 +41,3 @@ export async function updateObserverNoteStatus(
 export async function removeNotesByPetId(petId: number): Promise<boolean> {
   return REPO.removeNotesByPetId(petId);
 }
-

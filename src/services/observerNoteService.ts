@@ -1,4 +1,4 @@
-import { findSimilarNotes, NoteData } from "../utils/observerNoteSearch.js";
+import { findSimilarNotes, NoteData } from "../utils/noteSearcher.js";
 import {
   ObserverNoteSchema,
   type ObserverNote,

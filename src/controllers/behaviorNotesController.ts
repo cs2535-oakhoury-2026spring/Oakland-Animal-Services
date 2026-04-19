@@ -2,6 +2,12 @@ import { Request, Response } from "express";
 import { z } from "zod";
 import { resolveAuthor } from "../utils/resolveAuthor.js";
 import { logActivity } from "../utils/logActivity.js";
+import {
+  invalidIdResponse,
+  parsePositiveIntParam,
+  parsePositiveIntQuery,
+  validatePagingParameters,
+} from "../utils/noteControllerUtils.js";
 
 import {
   BehaviorNote,
@@ -14,33 +20,15 @@ import {
   getBehaviorNoteById,
   removeBehaviorNoteById,
   removeNotesByPetId,
-  getBehaviorNotesByPetId as _getBehaviorNotesByPetId,
-} from "../db/behaviorNotes.js";
+  getBehaviorNotesByPetId as getBehaviorNotesByPetIdService,
+} from "../services/behaviorNoteService.js";
 
 export async function listBehaviorNotes(req: Request, res: Response) {
-  const limitParam = req.query.limit;
-  const pageParam = req.query.page;
-
-  const limit =
-    typeof limitParam === "string" ? parseInt(limitParam, 10) : null;
-  const page = typeof pageParam === "string" ? parseInt(pageParam, 10) : null;
-
-  if ((limit != null && isNaN(limit)) || (page != null && isNaN(page))) {
-    return res.status(400).json({ error: "limit and page must be integers" });
-  }
-
-  if (limit != null && limit <= 0) {
-    return res.status(400).json({ error: "limit must be a positive number" });
-  }
-
-  if (page != null && page <= 0) {
-    return res.status(400).json({ error: "page must be a positive number" });
-  }
-
-  if (page != null && limit == null) {
-    return res
-      .status(400)
-      .json({ error: "limit is required when paging by page" });
+  const limit = parsePositiveIntQuery(req.query.limit);
+  const page = parsePositiveIntQuery(req.query.page);
+  const validationError = validatePagingParameters(limit, page);
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
   }
 
   const resolvedPage = limit != null && page == null ? 1 : page;
@@ -52,10 +40,9 @@ export async function listBehaviorNotes(req: Request, res: Response) {
 }
 
 export async function deleteBehaviorNote(req: Request, res: Response) {
-  const idParam = req.params.id;
-  const id = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
+  const id = parsePositiveIntParam(req.params.id);
   if (isNaN(id)) {
-    return res.status(400).json({ error: "Invalid behavior note ID" });
+    return invalidIdResponse(res, "behavior note");
   }
 
   const note = await getBehaviorNoteById(id);
@@ -77,23 +64,19 @@ export async function deleteBehaviorNote(req: Request, res: Response) {
 }
 
 export async function getBehaviorNotesByPetId(req: Request, res: Response) {
-  const petIdParam = req.params.petId;
-  const petId = typeof petIdParam === "string" ? parseInt(petIdParam) : NaN;
+  const petId = parsePositiveIntParam(req.params.petId);
   if (isNaN(petId)) {
-    return res.status(400).json({ error: "Invalid pet ID" });
+    return invalidIdResponse(res, "pet");
   }
-  const behaviorNotes = await _getBehaviorNotesByPetId(petId);
-  res.json({
-    success: true,
-    behaviorNotes,
-  });
+
+  const behaviorNotes = await getBehaviorNotesByPetIdService(petId);
+  res.json({ success: true, behaviorNotes });
 }
 
 export async function deleteBehaviorNotesByPetId(req: Request, res: Response) {
-  const petIdParam = req.params.petId;
-  const petId = typeof petIdParam === "string" ? parseInt(petIdParam, 10) : NaN;
+  const petId = parsePositiveIntParam(req.params.petId);
   if (isNaN(petId)) {
-    return res.status(400).json({ error: "Invalid pet ID" });
+    return invalidIdResponse(res, "pet");
   }
 
   const removed = await removeNotesByPetId(petId);
@@ -123,12 +106,10 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
 
   const resolvedAuthor = resolveAuthor(req, author);
   if (resolvedAuthor === null) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Device accounts must provide an author name of at least 2 characters",
-      });
+    return res.status(400).json({
+      error:
+        "Device accounts must provide an author name of at least 2 characters",
+    });
   }
 
   const newBehaviorNote: BehaviorNote = {

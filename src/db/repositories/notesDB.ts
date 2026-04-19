@@ -100,7 +100,9 @@ export abstract class BaseNoteDBRepository<
 
   async addNote(note: T): Promise<number> {
     const uniqueId =
-      note.id > 0 ? note.id : note.timestamp.getTime() + Math.floor(Math.random() * 1000);
+      note.id > 0
+        ? note.id
+        : note.timestamp.getTime() + Math.floor(Math.random() * 1000);
 
     const item = {
       ...note,
