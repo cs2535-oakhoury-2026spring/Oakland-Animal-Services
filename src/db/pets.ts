@@ -1,17 +1,12 @@
 import { type Pet, type PetLocation } from "../models/Pet.schema.js";
-import config from "../config/index.js";
 import { PetRepository } from "../types/index.js";
 import {
   RescueGroupPetRepository,
   type PaginatedAnimalsResult,
-} from "./_db/rescueGroupPetDB.js";
-import { MockPetRepository } from "./_mock/mockPetDB.js";
+} from "./repositories/rescueGroupPetDB.js";
 
 const rgRepo = new RescueGroupPetRepository();
-
-const REPO: PetRepository = !config.USE_MOCK_RG_DB
-  ? rgRepo
-  : new MockPetRepository();
+const REPO: PetRepository = rgRepo;
 
 export async function getPetById(id: number): Promise<Pet | undefined> {
   return REPO.getById(id);

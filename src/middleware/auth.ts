@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { verifyAccessToken, type JwtPayload } from "../services/auth.js";
-import { getUserById } from "../db/_db/usersDB.js";
+import { getUserById } from "../db/repositories/usersDB.js";
 
 // Extend Express Request to include the authenticated user
 declare global {

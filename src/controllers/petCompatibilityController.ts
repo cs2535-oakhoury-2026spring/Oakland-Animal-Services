@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getCompatibility, upsertCompatibility } from "../db/_db/petCompatibilityDB.js";
+import { getCompatibility, upsertCompatibility } from "../db/repositories/petCompatibilityDB.js";
 
 export async function getCompatibilityHandler(req: Request, res: Response) {
   const petId = parseInt(req.params.petId as string);

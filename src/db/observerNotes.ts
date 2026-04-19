@@ -1,41 +1,34 @@
-import {
-  ObserverNoteSchema,
-  type ObserverNote,
-} from "../models/ObserverNote.schema.js";
-import config from "../config/index.js";
+import { type ObserverNote } from "../models/ObserverNote.schema.js";
 import { ObserverNoteRepository } from "../types/index.js";
-import { MockObserverNoteRepository } from "./_mock/mockObserverNotesDB.js";
-import { ObserverNoteDBRepository } from "./_db/observerNotesDB.js";
+import { ObserverNoteDBRepository } from "./repositories/observerNotesDB.js";
 
-const REPO: ObserverNoteRepository = config.USE_MOCK_NOTES_DB
-  ? new MockObserverNoteRepository()
-  : new ObserverNoteDBRepository();
+const REPO: ObserverNoteRepository = new ObserverNoteDBRepository();
 
 export async function getAllObserverNotes(
   limit?: number,
   page?: number,
 ): Promise<ObserverNote[]> {
-  return REPO.getObserverNotes(limit, page);
+  return REPO.getNotes(limit, page);
 }
 
 export async function getObserverNotesByPetId(
   petId: number,
 ): Promise<ObserverNote[]> {
-  return REPO.getObserverNoteByPetId(petId);
+  return REPO.getNoteByPetId(petId);
 }
 
 export async function getObserverNoteById(
   id: number,
 ): Promise<ObserverNote | null> {
-  return REPO.getObserverNoteById(id);
+  return REPO.getNoteById(id);
 }
 
 export async function addObserverNote(note: ObserverNote): Promise<number> {
-  return REPO.addObserverNote(note);
+  return REPO.addNote(note);
 }
 
 export async function removeObserverNoteById(id: number): Promise<boolean> {
-  return REPO.removeObserverNoteById(id);
+  return REPO.removeNoteById(id);
 }
 
 export async function updateObserverNoteStatus(
@@ -49,10 +42,3 @@ export async function removeNotesByPetId(petId: number): Promise<boolean> {
   return REPO.removeNotesByPetId(petId);
 }
 
-export function seedObserverNotes(initial: ObserverNote[]): void {
-  if (REPO instanceof MockObserverNoteRepository) {
-    REPO.seedObserverNotes(initial);
-  } else {
-    throw new Error("Unable to seed observer notes for current repository");
-  }
-}

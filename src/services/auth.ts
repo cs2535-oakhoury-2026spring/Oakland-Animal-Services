@@ -4,13 +4,13 @@ import {
   getUserByUsername,
   getUserById,
   updateUser,
-} from "../db/_db/usersDB.js";
+} from "../db/repositories/usersDB.js";
 import {
   createRefreshToken,
   getRefreshToken,
   deleteRefreshToken,
   deleteAllRefreshTokensForUser,
-} from "../db/_db/refreshTokensDB.js";
+} from "../db/repositories/refreshTokensDB.js";
 import type { SafeUser, UserRole } from "../models/User.schema.js";
 
 const JWT_SECRET = process.env.JWT_SECRET!; // guaranteed by server.ts startup check

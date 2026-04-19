@@ -2,7 +2,6 @@ import {
   ObserverNote,
   findSimilarObserverNotes,
 } from "./services/observerNoteService.js";
-import { seedObserverNotes } from "./db/observerNotes.js";
 
 import { searchByLocation, getPetById } from "./db/pets.js";
 import { get } from "http";
@@ -24,36 +23,6 @@ getPetById(22144859).then((pet) => {
 //   console.log(petId);
 //   console.log();
 // });
-
-const sampleNotes: ObserverNote[] = [
-  {
-    id: 1,
-    status: "active",
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content: "blah balh balh dog ate homework",
-    author: "Dr. A",
-    petId: 1,
-  },
-  {
-    id: 2,
-    status: "active",
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content: "Cody has a limp on his left hind leg.",
-    author: "Dr. Smith",
-    petId: 1,
-  },
-  {
-    id: 3,
-    status: "active",
-    timestamp: new Date("2024-06-01T10:00:00Z"),
-    content:
-      "Cody has a red bump and limp on his left hind leg. Threw up and diarrhea and puked on the floor. Fought with Anky",
-    author: "Dr. John Hones",
-    petId: 1,
-  },
-];
-
-seedObserverNotes(sampleNotes);
 
 async function runSearch() {
   const searchNote = "left";

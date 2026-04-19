@@ -10,21 +10,17 @@ export interface PetRepository {
   ): Promise<PetLocation[] | undefined>;
 }
 
-export interface ObserverNoteRepository {
-  getObserverNotes(limit?: number, page?: number): Promise<ObserverNote[]>;
-  getObserverNoteByPetId(petId: number): Promise<ObserverNote[]>;
-  getObserverNoteById(id: number): Promise<ObserverNote | null>;
-  addObserverNote(note: ObserverNote): Promise<number>;
-  removeObserverNoteById(id: number): Promise<boolean>;
-  updateObserverNoteStatus(id: number, status: string): Promise<boolean>;
+export interface NoteRepository<T> {
+  getNotes(limit?: number, page?: number): Promise<T[]>;
+  getNoteByPetId(petId: number): Promise<T[]>;
+  getNoteById(id: number): Promise<T | null>;
+  addNote(note: T): Promise<number>;
+  removeNoteById(id: number): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
 }
 
-export interface BehaviorNoteRepository {
-  getBehaviorNotes(limit?: number, page?: number): Promise<BehaviorNote[]>;
-  getBehaviorNoteByPetId(petId: number): Promise<BehaviorNote[]>;
-  getBehaviorNoteById(id: number): Promise<BehaviorNote | null>;
-  addBehaviorNote(note: BehaviorNote): Promise<number>;
-  removeBehaviorNoteById(id: number): Promise<boolean>;
-  removeNotesByPetId(petId: number): Promise<boolean>;
+export interface ObserverNoteRepository extends NoteRepository<ObserverNote> {
+  updateObserverNoteStatus(id: number, status: string): Promise<boolean>;
 }
+
+export interface BehaviorNoteRepository extends NoteRepository<BehaviorNote> {}

@@ -7,8 +7,8 @@ import {
   updateUser,
   deleteUser,
   listUsers,
-} from "../db/_db/usersDB.js";
-import { deleteAllRefreshTokensForUser } from "../db/_db/refreshTokensDB.js";
+} from "../db/repositories/usersDB.js";
+import { deleteAllRefreshTokensForUser } from "../db/repositories/refreshTokensDB.js";
 import { logActivity } from "../utils/logActivity.js";
 
 const SALT_ROUNDS = 12;

@@ -29,13 +29,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "create-observer-notes-table": "node --loader ts-node/esm src/db/scripts/createObserverNotesTable.ts",
-    "create-behavior-notes-table": "node --loader ts-node/esm src/db/scripts/createBehaviorNotesTable.ts",
-    "create-compatibility-table": "node --loader ts-node/esm src/db/scripts/createPetCompatibilityTable.ts",
-    "create-notes-table": "node --loader ts-node/esm src/db/scripts/createMergedNotesTable.ts",
     "create-tables": "node --loader ts-node/esm src/db/scripts/createAllTables.ts",
-    "create-users-table": "node --loader ts-node/esm src/db/scripts/createUsersTable.ts",
-    "create-refresh-tokens-table": "node --loader ts-node/esm src/db/scripts/createRefreshTokensTable.ts",
     "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js",
     "client": "npm start --prefix frontend",

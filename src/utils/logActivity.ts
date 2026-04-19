@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { addActivityLog } from "../db/_db/activityLogDB.js";
+import { addActivityLog } from "../db/repositories/activityLogDB.js";
 import type { ActivityLog, ActivityTag } from "../models/ActivityLog.schema.js";
 
 export interface LogActivityParams {

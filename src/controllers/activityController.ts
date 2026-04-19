@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getActivityLogs } from "../db/_db/activityLogDB.js";
+import { getActivityLogs } from "../db/repositories/activityLogDB.js";
 import { ActivityTag } from "../models/ActivityLog.schema.js";
 
 const VALID_TAGS: ActivityTag[] = ["behaviorNote", "observerNote", "authEvent"];
