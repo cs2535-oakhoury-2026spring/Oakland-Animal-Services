@@ -125,12 +125,17 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .portal-pet-name {
   font-weight: 700;
   color: var(--clr-text-primary);
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .portal-pet-info-list {

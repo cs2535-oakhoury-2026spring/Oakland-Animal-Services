@@ -237,9 +237,9 @@
   font-weight: 600;
   color: var(--clr-text-primary);
   margin-bottom: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .as-animal-id {
