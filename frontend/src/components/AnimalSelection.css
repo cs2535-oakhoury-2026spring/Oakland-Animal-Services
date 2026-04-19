@@ -1,0 +1,261 @@
+/* AnimalSelection.css */
+
+.as-main {
+  font-family: inherit;
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+}
+
+/* ── Header ── */
+.as-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+}
+
+.as-header-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.as-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  min-height: 44px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.as-header-logo {
+  object-fit: contain;
+}
+
+.as-header-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.as-darkmode-btn {
+  background: none;
+  border: 1px solid var(--clr-card-border);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  min-width: 40px;
+  transition: all 0.15s;
+}
+
+/* ── Content ── */
+.as-content {
+  margin: 0 auto;
+}
+
+/* ── Heading ── */
+.as-heading-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--clr-warm-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.as-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.as-heading-h2 {
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 0;
+}
+
+.as-heading-location {
+  color: var(--clr-header-green);
+}
+
+/* ── Refresh button wrapper ── */
+.as-refresh-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.as-refresh-btn {
+  background: none;
+  border: 1px solid var(--clr-card-border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  min-width: 40px;
+  transition: all 0.15s;
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.as-refresh-btn:not(:disabled) {
+  cursor: pointer;
+}
+
+.as-refresh-btn:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.as-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: var(--clr-text-primary);
+  color: var(--clr-bg);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+.as-tooltip-arrow {
+  position: absolute;
+  bottom: 100%;
+  right: 12px;
+  border-width: 0 5px 5px;
+  border-style: solid;
+  border-color: transparent transparent var(--clr-text-primary) transparent;
+}
+
+/* ── Tabs ── */
+.as-tabs {
+  display: flex;
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  padding: 3px;
+  border: 1px solid var(--clr-card-border);
+}
+
+.as-tab-btn {
+  flex: 1;
+  padding: 10px 6px;
+  font-size: 13px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  min-height: 44px;
+  background: transparent;
+  color: var(--clr-warm-gray);
+  font-weight: 500;
+}
+
+.as-tab-btn.active {
+  font-weight: 700;
+  background-color: var(--clr-tab-active);
+}
+
+/* ── Empty state ── */
+.as-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--clr-warm-gray);
+  font-size: 15px;
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--clr-card-border);
+}
+
+/* ── Animal grid ── */
+.as-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.as-animal-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background-color: var(--clr-card-bg);
+  border-radius: 14px;
+  border: 1px solid var(--clr-card-border);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  width: 100%;
+  box-shadow: var(--shadow);
+  transition: transform 0.15s, box-shadow 0.15s;
+  min-height: 44px;
+}
+
+.as-animal-card.past {
+  opacity: 0.75;
+}
+
+.as-animal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  opacity: 1;
+}
+
+.as-animal-img {
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--clr-card-border);
+  flex-shrink: 0;
+}
+
+.as-animal-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.as-animal-name {
+  font-weight: 600;
+  color: var(--clr-text-primary);
+  margin-bottom: 3px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.as-animal-id {
+  font-size: 13px;
+  color: var(--clr-text-secondary);
+}
+
+.as-animal-species {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+.as-animal-status-badge {
+  margin-left: 6px;
+  color: var(--clr-brick-red);
+  font-weight: 600;
+}

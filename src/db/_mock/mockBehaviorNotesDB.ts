@@ -1,4 +1,7 @@
-import { BehaviorNoteSchema, type BehaviorNote } from "../../models/BehaviorNote.schema.js";
+import {
+  BehaviorNoteSchema,
+  type BehaviorNote,
+} from "../../models/BehaviorNote.schema.js";
 import { BehaviorNoteRepository } from "../../types/index.js";
 
 const seedData: BehaviorNote[] = [
@@ -21,7 +24,10 @@ const seedData: BehaviorNote[] = [
 export class MockBehaviorNoteRepository implements BehaviorNoteRepository {
   private notes: BehaviorNote[] = [...seedData];
 
-  async getBehaviorNotes(limit?: number, page?: number): Promise<BehaviorNote[]> {
+  async getBehaviorNotes(
+    limit?: number,
+    page?: number,
+  ): Promise<BehaviorNote[]> {
     if (limit == null || page == null) {
       return [...this.notes];
     }
@@ -38,10 +44,17 @@ export class MockBehaviorNoteRepository implements BehaviorNoteRepository {
     return this.notes.filter((note) => note.petId === petId);
   }
 
-  async addBehaviorNote(note: BehaviorNote): Promise<boolean> {
+  async addBehaviorNote(note: BehaviorNote): Promise<number> {
     BehaviorNoteSchema.parse(note);
-    this.notes.push(note);
-    return true;
+    const uniqueId =
+      note.id || note.timestamp.getTime() + Math.floor(Math.random() * 1000);
+    const created = { ...note, id: uniqueId };
+    this.notes.push(created);
+    return uniqueId;
+  }
+
+  async getBehaviorNoteById(id: number): Promise<BehaviorNote | null> {
+    return this.notes.find((note) => note.id === id) ?? null;
   }
 
   async removeBehaviorNoteById(id: number): Promise<boolean> {
@@ -49,7 +62,6 @@ export class MockBehaviorNoteRepository implements BehaviorNoteRepository {
     this.notes = this.notes.filter((note) => note.id !== id);
     return this.notes.length < originalLength;
   }
-
 
   async removeNotesByPetId(petId: number): Promise<boolean> {
     const originalLength = this.notes.length;

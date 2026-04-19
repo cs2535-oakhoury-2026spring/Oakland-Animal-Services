@@ -174,7 +174,7 @@ export function extractKeywords(
 
   function addKeyword(token: string) {
     if (token.length >= 2 && !seen.has(token)) {
-      seen.add(token);
+      seen.add(token); //TODO: Just leave a set then convert to an array.
       keywords.push(token);
     }
   }

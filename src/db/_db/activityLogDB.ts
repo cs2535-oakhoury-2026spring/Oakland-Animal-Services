@@ -1,0 +1,120 @@
+import { PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { docClient } from "../../config/index.js";
+import type {
+  ActivityLog,
+  ActivityTag,
+} from "../../models/ActivityLog.schema.js";
+
+const TABLE_NAME = "ActivityLog";
+const PARTITION_KEY = "ALL";
+
+export async function addActivityLog(log: ActivityLog): Promise<void> {
+  await docClient.send(
+    new PutCommand({
+      TableName: TABLE_NAME,
+      Item: {
+        pk: PARTITION_KEY,
+        sk: `${log.timestamp}#${log.logId}`,
+        ...log,
+      },
+    }),
+  );
+}
+
+export interface GetActivityLogsParams {
+  tags?: ActivityTag[];
+  actor?: string;
+  actions?: string[];
+  from?: string; // ISO date string (inclusive)
+  to?: string; // ISO date string (inclusive)
+  limit?: number;
+  page?: number;
+}
+
+export interface GetActivityLogsResult {
+  logs: ActivityLog[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
+export async function getActivityLogs(
+  params: GetActivityLogsParams,
+): Promise<GetActivityLogsResult> {
+  const { tags, actor, actions, from, to, limit = 20, page = 1 } = params;
+
+  const filterParts: string[] = [];
+  const exprValues: Record<string, any> = { ":pk": PARTITION_KEY };
+  const exprNames: Record<string, string> = {};
+
+  if (tags && tags.length > 0) {
+    const tagPlaceholders = tags.map((_, i) => `:tag${i}`).join(", ");
+    filterParts.push(`#tag IN (${tagPlaceholders})`);
+    exprNames["#tag"] = "tag";
+    tags.forEach((t, i) => {
+      exprValues[`:tag${i}`] = t;
+    });
+  }
+
+  if (actor) {
+    filterParts.push("actor = :actor");
+    exprValues[":actor"] = actor;
+  }
+
+  if (actions && actions.length > 0) {
+    const actionPlaceholders = actions.map((_, i) => `:action${i}`).join(", ");
+    filterParts.push(`#action IN (${actionPlaceholders})`);
+    exprNames["#action"] = "action";
+    actions.forEach((a, i) => {
+      exprValues[`:action${i}`] = a;
+    });
+  }
+
+  if (from) {
+    filterParts.push("#ts >= :from");
+    exprNames["#ts"] = "timestamp";
+    exprValues[":from"] = from;
+  }
+  if (to) {
+    if (!exprNames["#ts"]) exprNames["#ts"] = "timestamp";
+    filterParts.push("#ts <= :to");
+    exprValues[":to"] = to;
+  }
+
+  const filterExpression =
+    filterParts.length > 0 ? filterParts.join(" AND ") : undefined;
+  const hasExprNames = Object.keys(exprNames).length > 0;
+
+  let allItems: ActivityLog[] = [];
+  let lastKey: any = undefined;
+
+  do {
+    const result: any = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "pk = :pk",
+        ExpressionAttributeValues: exprValues,
+        ...(hasExprNames && { ExpressionAttributeNames: exprNames }),
+        ...(filterExpression && { FilterExpression: filterExpression }),
+        ScanIndexForward: false,
+        ExclusiveStartKey: lastKey,
+      }),
+    );
+    allItems.push(...((result.Items ?? []) as ActivityLog[]));
+    lastKey = result.LastEvaluatedKey;
+  } while (lastKey);
+
+  const total = allItems.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const safePage = Math.min(Math.max(1, page), totalPages);
+  const start = (safePage - 1) * limit;
+
+  return {
+    logs: allItems.slice(start, start + limit),
+    total,
+    totalPages,
+    page: safePage,
+    limit,
+  };
+}

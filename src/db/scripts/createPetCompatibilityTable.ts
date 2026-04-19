@@ -1,36 +1,22 @@
 import {
   CreateTableCommand,
   DescribeTableCommand,
-  DynamoDBClient,
 } from "@aws-sdk/client-dynamodb";
-import dotenv from "dotenv";
-dotenv.config();
-
-const client = new DynamoDBClient({
-  region: process.env.AWS_REGION ?? "us-east-1",
-  ...(process.env.AWS_ENDPOINT && {
-    endpoint: process.env.AWS_ENDPOINT,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "test",
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "test",
-    },
-  }),
-});
+import { dynamoClient } from "../../config/index.js";
+import { fileURLToPath } from "url";
 
 export const main = async () => {
   try {
-    await client.send(
+    await dynamoClient.send(
       new DescribeTableCommand({ TableName: "PetCompatibility" }),
     );
     console.log("Table 'PetCompatibility' already exists. Skipping creation.");
     return;
   } catch (err: any) {
-    if (err.name !== "ResourceNotFoundException") {
-      throw err;
-    }
+    if (err.name !== "ResourceNotFoundException") throw err;
   }
 
-  await client.send(
+  await dynamoClient.send(
     new CreateTableCommand({
       TableName: "PetCompatibility",
       AttributeDefinitions: [{ AttributeName: "petId", AttributeType: "N" }],
@@ -39,7 +25,14 @@ export const main = async () => {
     }),
   );
 
-  console.log("PetCompatibility table created.");
+  console.log("Table 'PetCompatibility' created.");
 };
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

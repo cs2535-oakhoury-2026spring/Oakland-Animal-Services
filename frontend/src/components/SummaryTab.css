@@ -1,0 +1,109 @@
+.summary-tab {
+  padding: 12px 16px 100px;
+}
+
+.summary-tab__card {
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--clr-card-border);
+  box-shadow: var(--shadow);
+}
+
+.summary-tab__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--clr-text-primary);
+  margin: 0 0 8px 0;
+}
+
+.summary-tab__description {
+  font-size: 13px;
+  color: var(--clr-text-secondary);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+.summary-tab__field {
+  margin-bottom: 16px;
+}
+
+.summary-tab__label {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 500;
+}
+
+.summary-tab__textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--clr-input-border);
+  background-color: var(--clr-input-bg);
+  color: var(--clr-text-primary);
+  font-size: 14px;
+  outline: none;
+  min-height: 100px;
+  resize: vertical;
+  box-sizing: border-box;
+  line-height: 1.6;
+}
+
+.summary-tab__hint {
+  font-size: 11px;
+  color: var(--clr-warm-gray);
+  margin-top: 6px;
+}
+
+.summary-tab__submit {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background-color 0.2s ease;
+}
+
+.summary-tab__submit:disabled {
+  opacity: 0.5;
+}
+
+.summary-tab__response {
+  margin-top: 20px;
+  padding: 16px;
+  background-color: var(--clr-input-bg);
+  border-radius: 10px;
+  border: 1px solid var(--clr-card-border);
+}
+
+.summary-tab__response-label {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-tab__response-body {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--clr-text-primary);
+  white-space: pre-wrap;
+}
+
+.summary-tab__empty {
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  font-style: italic;
+}

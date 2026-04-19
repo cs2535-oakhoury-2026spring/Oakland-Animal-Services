@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
 import { z } from "zod";
+import { resolveAuthor } from "../utils/resolveAuthor.js";
+import { logActivity } from "../utils/logActivity.js";
 import {
   getAllObserverNotes,
   addObserverNote,
+  getObserverNoteById as getObserverNoteByIdService,
   getObserverNotesByPetId as getObserverNotesByPetIdService,
   removeObserverNoteById,
   updateObserverNoteStatus,
@@ -14,23 +17,14 @@ import {
   ObserverNoteSchema,
 } from "../models/ObserverNote.schema.js";
 
-/**
- * Retrieves a paginated list of observer notes.
- * 
- * @param req - Express request object containing optional query parameters:
- *              `limit` (number of notes per page) and `page` (page number).
- * @param res - Express response object.
- * @returns A JSON response with success status and the list of observer notes.
- *
- * noteType is not exposed in the API and is set inside the observer notes
- * repository before persistence.
- */
 export async function listObserverNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
   const pageParam = req.query.page;
 
-  const limit = typeof limitParam === "string" ? parseInt(limitParam, 10) : undefined;
-  const page = typeof pageParam === "string" ? parseInt(pageParam, 10) : undefined;
+  const limit =
+    typeof limitParam === "string" ? parseInt(limitParam, 10) : undefined;
+  const page =
+    typeof pageParam === "string" ? parseInt(pageParam, 10) : undefined;
 
   if ((limit != null && isNaN(limit)) || (page != null && isNaN(page))) {
     return res.status(400).json({ error: "limit and page must be integers" });
@@ -45,7 +39,9 @@ export async function listObserverNotes(req: Request, res: Response) {
   }
 
   if (page != null && limit == null) {
-    return res.status(400).json({ error: "limit is required when paging by page" });
+    return res
+      .status(400)
+      .json({ error: "limit is required when paging by page" });
   }
 
   const resolvedPage = limit != null && page == null ? 1 : page;
@@ -53,13 +49,6 @@ export async function listObserverNotes(req: Request, res: Response) {
   res.json({ success: true, observerNotes });
 }
 
-/**
- * Deletes an observer note by its unique identifier.
- * 
- * @param req - Express request object containing the note `id` in path parameters.
- * @param res - Express response object.
- * @returns A JSON response indicating success or an error message if the note was not found.
- */
 export async function deleteObserverNote(req: Request, res: Response) {
   const idParam = req.params.id;
   const id = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
@@ -67,22 +56,29 @@ export async function deleteObserverNote(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid observer note ID" });
   }
 
+  const note = await getObserverNoteByIdService(id);
   const removed = await removeObserverNoteById(id);
   if (!removed) {
     return res.status(404).json({ error: "Observer note not found" });
   }
 
+  logActivity({
+    tag: "observerNote",
+    actor: req.user!.username,
+    action: "DELETED",
+    jsonData: note
+      ? {
+          noteId: id,
+          petId: note.petId,
+          content: note.content,
+          status: note.status,
+        }
+      : { noteId: id },
+  });
+
   res.json({ success: true, message: "Observer note deleted" });
 }
 
-/**
- * Updates the status of an existing observer note.
- * 
- * @param req - Express request object containing the note `id` in path parameters 
- *              and the new `status` in the request body.
- * @param res - Express response object.
- * @returns A JSON response indicating success or an error message.
- */
 export async function patchObserverNoteStatus(req: Request, res: Response) {
   const idParam = req.params.id;
   const id = typeof idParam === "string" ? parseInt(idParam, 10) : NaN;
@@ -101,24 +97,29 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
     if (!updated) {
       return res.status(404).json({ error: "Observer note not found" });
     }
+
+    const note = await getObserverNoteByIdService(id);
+    const jsonData = note
+      ? { noteId: id, status, petId: note.petId, content: note.content }
+      : { noteId: id, status };
+
+    logActivity({
+      tag: "observerNote",
+      actor: req.user!.username,
+      action: "STATUS_CHANGED",
+      jsonData,
+    });
+
     res.json({ success: true, message: "Observer note status updated" });
   } catch (error) {
     return res
       .status(500)
-      .json({ error: error instanceof Error ? error.message : "Unknown error" });
+      .json({
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
   }
 }
 
-/**
- * Retrieves all observer notes associated with a specific pet ID.
- *
- * Results come from the shared Notes table but are filtered to observer notes
- * by the repository layer.
- * 
- * @param req - Express request object containing the `petId` in path parameters.
- * @param res - Express response object.
- * @returns A JSON response with success status and the list of notes for the pet.
- */
 export async function getObserverNotesByPetId(req: Request, res: Response) {
   const petIdParam = req.params.petId;
   const petId = typeof petIdParam === "string" ? parseInt(petIdParam) : NaN;
@@ -132,15 +133,6 @@ export async function getObserverNotesByPetId(req: Request, res: Response) {
   });
 }
 
-/**
- * Deletes all observer notes associated with a specific pet ID.
- *
- * Only observer notes are removed from the merged table.
- * 
- * @param req - Express request object containing the `petId` in path parameters.
- * @param res - Express response object.
- * @returns A JSON response indicating success or an error if no notes were found.
- */
 export async function deleteObserverNotesByPetId(req: Request, res: Response) {
   const petIdParam = req.params.petId;
   const petId = typeof petIdParam === "string" ? parseInt(petIdParam, 10) : NaN;
@@ -150,41 +142,69 @@ export async function deleteObserverNotesByPetId(req: Request, res: Response) {
 
   const removed = await removeNotesByPetId(petId);
   if (!removed) {
-    return res.status(404).json({ error: "No observer notes found for this pet ID" });
+    return res
+      .status(404)
+      .json({ error: "No observer notes found for this pet ID" });
   }
+
+  logActivity({
+    tag: "observerNote",
+    actor: req.user!.username,
+    action: "BULK_DELETED",
+    jsonData: { petId },
+  });
 
   res.json({ success: true, message: "Observer notes deleted for pet" });
 }
 
-/**
- * Validates and uploads a new observer note.
- * 
- * @param req - Express request object containing `content`, `author`, and `petId` in the body.
- * @param res - Express response object.
- * noteType is not accepted from the request and is assigned in the repository.
- * @returns A JSON response with the created observer note or validation errors.
- */
 export async function uploadObserverNote(req: Request, res: Response) {
   const parseResult = ObserverNoteCreateSchema.safeParse(req.body);
   if (!parseResult.success) {
     return res.status(400).json({ error: z.treeifyError(parseResult.error) });
   }
 
-  const { title, content, author, petId } = parseResult.data;
+  const { title, content, author, petId, status } = parseResult.data;
+
+  const resolvedAuthor = resolveAuthor(req, author);
+  if (resolvedAuthor === null) {
+    return res
+      .status(400)
+      .json({
+        error:
+          "Device accounts must provide an author name of at least 2 characters",
+      });
+  }
+
   const newObserverNote: ObserverNote = {
     id: 0, // set later.
     // noteType is assigned in the repository layer.
     timestamp: new Date(),
-    status: "RAISED",
+    status: status ?? "RAISED",
     title,
     content,
-    author,
+    author: resolvedAuthor,
     petId,
   };
 
   ObserverNoteSchema.parse(newObserverNote);
 
-  await addObserverNote(newObserverNote);
+  const createdId = await addObserverNote(newObserverNote);
+  if (!createdId) {
+    return res.status(500).json({ error: "Failed to create observer note" });
+  }
+  newObserverNote.id = createdId;
+
+  logActivity({
+    tag: "observerNote",
+    actor: resolvedAuthor,
+    action: "CREATED",
+    jsonData: {
+      petId,
+      content,
+      author: resolvedAuthor,
+      username: req.user!.username,
+    },
+  });
 
   res.json({
     success: true,

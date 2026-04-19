@@ -37,4 +37,5 @@ const client = new DynamoDBClient({
   }),
 });
 
+export const dynamoClient = client;
 export const docClient = DynamoDBDocumentClient.from(client);

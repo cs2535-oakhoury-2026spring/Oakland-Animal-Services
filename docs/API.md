@@ -1,6 +1,17 @@
 # Oakland Animal Services API
 
 --------------------------
+# Access Levels
+
+| Role | Level |
+|------|-------|
+| `volunteer` / `device` | 1 — Standard access |
+| `staff` | 2 — Elevated access |
+| `admin` | 3 — Full access |
+
+All endpoints require a valid access token (`Authorization: Bearer <accessToken>`), except `/api/auth/*`.
+
+--------------------------
 # Types
 
 ### Pet
@@ -43,11 +54,100 @@
 --------------------------
 # End Points
 
+## Auth
 
+### POST `/api/auth/login`
+
+- Access: Public
+- Description: Log in with username and password. Sets an httpOnly `refreshToken` cookie valid for 30 days.
+- Body JSON:
+  - `username` (string, required)
+  - `password` (string, required)
+- Success: `200` with `{ accessToken: string, user: SafeUser }`
+- Error: `400` for missing fields, `401` for invalid credentials
+
+### POST `/api/auth/refresh`
+
+- Access: Public (requires `refreshToken` cookie)
+- Description: Silently obtain a new access token. Called automatically by the client when the access token expires.
+- Success: `200` with `{ accessToken: string }`
+- Error: `401` if refresh token is missing, expired, or invalidated (e.g. after password reset)
+
+### POST `/api/auth/logout`
+
+- Access: Public (requires `refreshToken` cookie)
+- Description: Log out and invalidate the refresh token. Clears the cookie.
+- Success: `200` with `{ success: true }`
+
+### GET `/api/auth/me`
+
+- Access: **Level 1** (volunteer, device, staff, admin)
+- Description: Returns the currently authenticated user's info decoded from the access token. No DB lookup — use this to determine what UI to show.
+- Success: `200` with `{ user: { userId, username, role, deviceName?, mustChangePassword } }`
+
+### POST `/api/auth/change-password`
+
+- Access: **Level 1** (volunteer, device, staff) — not available for admin (managed via `.env`)
+- Description: Change the current user's password. Invalidates all active sessions and requires re-login.
+- Body JSON:
+  - `currentPassword` (string, required)
+  - `newPassword` (string, required)
+- Success: `200` with `{ success: true }`
+- Error: `400` if fields missing or user is admin, `401` if current password is incorrect
+
+--------------------------
+## Users
+
+### POST `/api/users`
+
+- Access: **Level 2** (staff, admin) — staff can only create `volunteer` with `expiresAt` required
+- Description: Create a new user. Password is temporary; user must change it on first login.
+- Body JSON:
+  - `username` (string, required)
+  - `password` (string, required)
+  - `role` (`staff` | `volunteer` | `device`, required)
+  - `deviceName` (string, required if role is `device`)
+  - `expiresAt` (string, required if role is `volunteer`) — ISO date string
+- Success: `201` with `{ success: true, user: SafeUser }`
+- Error: `400` for validation failure, `403` if staff tries to create non-volunteer, `409` if username taken
+
+### GET `/api/users`
+
+- Access: **Level 3** (admin only)
+- Description: List all users.
+- Success: `200` with `{ success: true, users: SafeUser[] }`
+
+### PUT `/api/users/:userId/password`
+
+- Access: **Level 2** (staff, admin) — staff can only reset volunteers
+- Description: Reset a user's password. Sets `mustChangePassword` to true and logs out all active sessions for that user.
+- Body JSON:
+  - `password` (string, required) — new temporary password
+- Success: `200` with `{ success: true }`
+- Error: `400` for missing password, `403` if staff tries to reset non-volunteer, `404` if user not found
+
+### PATCH `/api/users/:userId`
+
+- Access: **Level 2** (staff, admin) — staff can only update volunteers
+- Description: Update a user's details (e.g. extend volunteer expiry date).
+- Body JSON (all optional):
+  - `expiresAt` (string) — new expiry date ISO string
+- Success: `200` with `{ success: true, user: SafeUser }`
+- Error: `403` if staff tries to update non-volunteer, `404` if user not found
+
+### DELETE `/api/users/:userId`
+
+- Access: **Level 2** (staff, admin) — staff can only delete volunteers
+- Description: Delete a user and invalidate all their active sessions.
+- Success: `200` with `{ success: true }`
+- Error: `403` if staff tries to delete non-volunteer, `404` if user not found
+
+--------------------------
 ## Pets
 
 ### GET `/api/pets/:petId`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Get a single pet by petId.
 - Path param:
   - `petId` (number, required)
@@ -56,6 +156,7 @@
 
 ### GET `/api/location/:petType/:location`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Lookup pet location ID by species and location (dog/cat).
 - Path params:
   - `petType` (`dog` or `cat`, required)
@@ -86,6 +187,7 @@ Example:
 
 ### GET `/api/observer-notes?limit=10&page=1`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: List observer notes with optional pagination.
 - Query params:
   - `limit` (number, optional)
@@ -120,6 +222,7 @@ Example:
 
 ### GET `/api/pets/:petId/observer-notes`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: List observer notes for one pet.
 - Path param:
   - `petId` (number, required)
@@ -128,16 +231,22 @@ Example:
 
 ### POST `/api/observer-notes`
 
-- Description: Add a new observer note.
+- Access: **Level 1** (volunteer, device, staff, admin)
+- Description: Add a new observer note. The `author` field is resolved server-side from the authenticated user — device accounts must supply a name.
 - Body JSON:
   - `content` (string, required)
-  - `author` (string, required)
   - `petId` (number, required)
+  - `author` (string, required if role is `device`, min 2 characters) — the person using the shared device. Ignored for all other roles.
+  - `title` (string, optional)
+- Author resolution:
+  - `staff` / `volunteer`: author set to `username`
+  - `device`: author set to `"Author (DeviceName)"` e.g. `"Jane (DogIpad1)"`
 - Success: `200` with `{ success: true, message: string, observerNote: ObserverNote }`
-- Error: `400` for validation failure
+- Error: `400` for validation failure or device account missing/short author
 
 ### DELETE `/api/observer-notes/:id`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Delete an observer note by id.
 - Path param:
   - `id` (number, required)
@@ -146,6 +255,7 @@ Example:
 
 ### PATCH `/api/observer-notes/:id/status`
 
+- Access: **Level 2** (staff, admin)
 - Description: Update status for an observer note.
 - Path param:
   - `id` (number, required)
@@ -156,6 +266,7 @@ Example:
 
 ### DELETE `/api/pets/:petId/observer-notes`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Delete all observer notes for a given pet.
 - Path param:
   - `petId` (number, required)
@@ -166,6 +277,7 @@ Example:
 
 ### POST `/api/pets/:petId/behavior-notes/summarize`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Summarize behavior notes for a specific pet into concise text.
 - Path params:
   - `petId` (number, required)
@@ -188,6 +300,7 @@ Example:
 
 ### POST `/api/search`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Filter all observer notes by query text; if `petId` is provided, filter by pet.
 - Body JSON:
   - `query` (string, required)
@@ -229,10 +342,53 @@ Example:
 }
 ```
 
+## Activity Log
+
+### GET `/api/activity`
+
+- Access: **Level 2** (staff, admin)
+- Description: Paginated activity feed of note and auth events. Staff can only query note tags; admin can query all tags including `authEvent`.
+- Query params:
+  - `tags` (string, optional) — comma-separated: `behaviorNote`, `observerNote`, `authEvent`
+  - `actor` (string, optional) — filter by username
+  - `action` (string, optional) — filter by action name
+  - `from` (string, optional) — ISO date string, inclusive lower bound on timestamp
+  - `to` (string, optional) — ISO date string, inclusive upper bound on timestamp
+  - `limit` (number, optional, default 20)
+  - `page` (number, optional, default 1)
+- Success: `200` with `{ success: true, logs: ActivityLog[] }`
+- Error: `400` for invalid tags/pagination, `403` if staff requests `authEvent` tag
+
+#### ActivityLog object
+- `logId: string` — UUID
+- `date: string` — YYYY-MM-DD
+- `timestamp: string` — ISO string (newest first)
+- `tag: "behaviorNote" | "observerNote" | "authEvent"`
+- `actor: string` — username of who performed the action
+- `action: string`
+- `jsonData?: object` — event-specific data
+
+#### Actions logged per tag
+| Tag | Action | jsonData fields |
+|-----|--------|----------------|
+| `behaviorNote` | `CREATED` | `petId`, `content` |
+| `behaviorNote` | `DELETED` | `noteId` |
+| `behaviorNote` | `BULK_DELETED` | `petId` |
+| `observerNote` | `CREATED` | `petId`, `content` |
+| `observerNote` | `DELETED` | `noteId` |
+| `observerNote` | `BULK_DELETED` | `petId` |
+| `observerNote` | `STATUS_CHANGED` | `noteId`, `status` |
+| `authEvent` | `PASSWORD_CHANGED` | — |
+| `authEvent` | `USER_CREATED` | `username`, `role` |
+| `authEvent` | `USER_UPDATED` | `targetUserId`, `expiresAt` |
+| `authEvent` | `USER_DELETED` | `targetUserId`, `targetUsername`, `role` |
+
+--------------------------
 ## Behavior Notes
 
 ### GET `/api/behavior-notes?limit=10&page=1`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: List behavior notes with optional pagination.
 - Query params:
   - `limit` (number, optional)
@@ -242,6 +398,7 @@ Example:
 
 ### GET `/api/pets/:petId/behavior-notes`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: List behavior notes for a single pet.
 - Path params:
   - `petId` (number, required)
@@ -250,16 +407,22 @@ Example:
 
 ### POST `/api/behavior-notes`
 
-- Description: Add a new behavior note.
+- Access: **Level 1** (volunteer, device, staff, admin)
+- Description: Add a new behavior note. The `author` field is resolved server-side from the authenticated user — device accounts must supply a name.
 - Body JSON:
   - `content` (string, required)
-  - `author` (string, required)
   - `petId` (number, required)
+  - `author` (string, required if role is `device`, min 2 characters) — the person using the shared device. Ignored for all other roles.
+  - `title` (string, optional)
+- Author resolution:
+  - `staff` / `volunteer`: author set to `username`
+  - `device`: author set to `"Author (DeviceName)"` e.g. `"Jane (DogIpad1)"`
 - Success: `200` with `{ success: true, message: string, behaviorNote: BehaviorNote }`
-- Error: `400` for validation failure
+- Error: `400` for validation failure or device account missing/short author
 
 ### DELETE `/api/behavior-notes/:id`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Delete a behavior note by id.
 - Path params:
   - `id` (number, required)
@@ -268,6 +431,7 @@ Example:
 
 ### DELETE `/api/pets/:petId/behavior-notes`
 
+- Access: **Level 1** (volunteer, device, staff, admin)
 - Description: Delete all behavior notes for a given pet.
 - Path params:
   - `petId` (number, required)

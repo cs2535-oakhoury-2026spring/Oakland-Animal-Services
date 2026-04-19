@@ -1,0 +1,526 @@
+/* ─── Activity Log Screen ────────────────────────────────────────────────────*/
+
+.activity-log-screen {
+  min-height: 100vh;
+  background-color: var(--clr-bg);
+  padding-bottom: 48px;
+}
+
+/* Top bar */
+.activity-log-screen__topbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+}
+
+.activity-log-screen__topbar-left {
+  flex: 1;
+}
+
+.activity-log-screen__logo {
+  height: 36px;
+  object-fit: contain;
+}
+
+.activity-log-screen__topbar-right {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.activity-log-screen__theme-btn {
+  background: none;
+  border: 1px solid var(--clr-card-border);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  min-width: 40px;
+}
+
+/* Content */
+.activity-log-screen__content {
+  margin: 0 auto;
+}
+
+.activity-log-screen__content--desktop {
+  max-width: 1100px;
+  padding: 24px 28px 0;
+}
+
+.activity-log-screen__content--mobile {
+  max-width: 700px;
+  padding: 20px 16px 0;
+}
+
+/* Header row */
+.activity-log-screen__header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.activity-log-screen__back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.activity-log-screen__title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.activity-log-screen__title {
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  margin: 0;
+}
+
+.activity-log-screen__description {
+  font-size: 14px;
+  color: var(--clr-text-secondary);
+  margin: 0 0 20px 34px;
+}
+
+/* Filters card */
+.activity-log-screen__filters {
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--clr-card-border);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+
+.activity-log-screen__filters--desktop {
+  padding: 18px 20px;
+}
+
+.activity-log-screen__filters--mobile {
+  padding: 14px 16px;
+}
+
+.activity-log-screen__filter-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.activity-log-screen__filter-label {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.activity-log-screen__filter-input {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-input-border);
+  background-color: var(--clr-input-bg);
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.activity-log-screen__action-autocomplete {
+  position: relative;
+}
+
+.activity-log-screen__actor-autocomplete {
+  position: relative;
+}
+
+.activity-log-screen__action-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-card-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.activity-log-screen__action-suggestion-btn {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.activity-log-screen__action-suggestion-btn:hover {
+  cursor: pointer;
+  background-color: var(--clr-input-bg);
+}
+
+.activity-log-screen__actor-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-card-border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.activity-log-screen__actor-suggestion-btn {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.activity-log-screen__actor-suggestion-btn:hover {
+  cursor: pointer;
+  background-color: var(--clr-input-bg);
+}
+
+/* Toggle row */
+.activity-log-screen__toggle-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.activity-log-screen__toggle-heading {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  font-weight: 500;
+}
+
+.activity-log-screen__toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--clr-text-primary);
+  cursor: pointer;
+}
+
+.activity-log-screen__toggle-label input {
+  cursor: pointer;
+}
+
+/* Filter action buttons */
+.activity-log-screen__filter-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.activity-log-screen__apply-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--clr-header-green);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 36px;
+}
+
+.activity-log-screen__apply-btn:enabled {
+  cursor: pointer;
+}
+
+.activity-log-screen__apply-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.activity-log-screen__clear-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.activity-log-screen__export-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  min-height: 36px;
+}
+
+.activity-log-screen__export-btn:enabled {
+  cursor: pointer;
+}
+
+.activity-log-screen__export-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* Results count */
+.activity-log-screen__count {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+}
+
+.activity-log-screen__count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+/* Error alert */
+.activity-log-screen__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.activity-log-screen__error-text {
+  font-size: 14px;
+  color: #BE3A2B;
+}
+
+/* Loading skeletons */
+.activity-log-screen__skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Empty state */
+.activity-log-screen__empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--clr-warm-gray);
+  font-size: 14px;
+  background-color: var(--clr-card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--clr-card-border);
+}
+
+/* Log list */
+.activity-log-screen__log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.activity-log-screen__log-row {
+  background-color: var(--clr-card-bg);
+  border-radius: 10px;
+  border: 1px solid var(--clr-card-border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.activity-log-screen__log-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  flex-wrap: wrap;
+}
+
+.activity-log-screen__pet-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 84px;
+  max-width: 96px;
+  text-align: center;
+}
+
+.activity-log-screen__pet-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  line-height: 1.2;
+}
+
+.activity-log-screen__pet-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--clr-card-border);
+}
+
+.activity-log-screen__log-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-log-screen__log-action {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--clr-text-primary);
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.activity-log-screen__log-action--desktop {
+  white-space: nowrap;
+}
+
+.activity-log-screen__log-meta {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+  margin-top: 1px;
+}
+
+.activity-log-screen__log-chevron {
+  flex: 0 0 auto;
+}
+
+.activity-log-screen__log-detail {
+  padding: 0 14px 12px;
+  border-top: 1px solid var(--clr-card-border);
+}
+
+.activity-log-screen__animal-btn {
+  min-height: 32px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: center;
+}
+
+.activity-log-screen__animal-btn:enabled {
+  cursor: pointer;
+}
+
+.activity-log-screen__note-preview {
+  margin-top: 10px;
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.activity-log-screen__log-note-full {
+  margin-bottom: 10px;
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.activity-log-screen__log-pre {
+  font-size: 12px;
+  color: var(--clr-text-secondary);
+  background-color: var(--clr-input-bg);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 0;
+  overflow: auto;
+  max-height: 200px;
+  font-family: monospace;
+}
+
+/* Pagination */
+.activity-log-screen__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.activity-log-screen__pagination--top {
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+.activity-log-screen__page-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  font-size: 13px;
+  min-height: 36px;
+}
+
+.activity-log-screen__page-btn:enabled {
+  cursor: pointer;
+  color: var(--clr-text-primary);
+}
+
+.activity-log-screen__page-btn:disabled {
+  cursor: not-allowed;
+  color: var(--clr-warm-gray);
+}
+
+.activity-log-screen__page-info {
+  font-size: 13px;
+  color: var(--clr-warm-gray);
+  padding: 0 8px;
+}
+
+.activity-log-screen__page-select-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.activity-log-screen__page-select-label {
+  font-size: 12px;
+  color: var(--clr-warm-gray);
+}
+
+.activity-log-screen__page-select {
+  min-height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--clr-card-border);
+  background-color: var(--clr-card-bg);
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  padding: 4px 8px;
+}
