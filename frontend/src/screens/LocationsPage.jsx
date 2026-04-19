@@ -234,6 +234,10 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
     });
   };
 
+  const visibleCustomKeys = visibleLocations
+    .filter((loc) => loc.custom)
+    .map((loc) => `${loc.species}|${loc.location}`);
+
   const selectAllVisibleKennels = () => {
     setSelectedKennels((prev) => Array.from(new Set([...prev, ...visibleKeys])));
   };
@@ -241,6 +245,15 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   const clearVisibleKennels = () => {
     const visibleSet = new Set(visibleKeys);
     setSelectedKennels((prev) => prev.filter((k) => !visibleSet.has(k)));
+  };
+
+  const selectVisibleCustomKennels = () => {
+    setSelectedKennels((prev) => Array.from(new Set([...prev, ...visibleCustomKeys])));
+  };
+
+  const clearVisibleCustomKennels = () => {
+    const customSet = new Set(visibleCustomKeys);
+    setSelectedKennels((prev) => prev.filter((k) => !customSet.has(k)));
   };
 
   const toggleKennel = (key) => {
@@ -441,12 +454,22 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
                   <button onClick={clearVisibleKennels} className="locations-page__action-btn">
                     Clear Visible Kennels
                   </button>
+                  {customLocations.length > 0 && (
+                    <>
+                      <button onClick={selectVisibleCustomKennels} className="locations-page__action-btn">
+                        Select Custom
+                      </button>
+                      <button onClick={clearVisibleCustomKennels} className="locations-page__action-btn">
+                        Clear Custom
+                      </button>
+                    </>
+                  )}
                   <button
                     onClick={exportSelectedToPdf}
                     disabled={exportingPdf || selectedExportLocations.length === 0}
                     className="locations-page__export-btn"
-                                     >
-                    {exportingPdf ? "Exporting..." : `Export ${selectedExportLocations.length} To PDF`}
+                  >
+                    {exportingPdf ? "Exporting..." : "Export To PDF"}
                   </button>
                 </div>
                 <div className="locations-page__hint">
