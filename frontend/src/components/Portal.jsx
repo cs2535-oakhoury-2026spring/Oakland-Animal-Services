@@ -131,7 +131,10 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     }, 300);
   }, [behaviorNotes]);
 
-  const handleNoteCreated = (n) => setNotes((prev) => [n, ...prev]);
+  const handleNoteCreated = (n) => {
+    if (!n || n.id == null) return;
+    setNotes((prev) => [n, ...prev]);
+  };
 
   const updateMedicalNoteState = useCallback((noteId, updater) => {
     setNotes((prev) => prev.map((n) => (n.id === noteId ? updater(n) : n)));
@@ -184,7 +187,11 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     setPendingDeleteMedicalNote(null);
     setDeleteDontShowAgainChecked(false);
   };
-  const handleBehaviorNoteCreated = (n) => setBehaviorNotes((prev) => [n, ...prev]);
+  const handleBehaviorNoteCreated = (n) => {
+    if (!n || n.id == null) return;
+    setBehaviorNotes((prev) => [n, ...prev]);
+  };
+
   const removeBehaviorNoteState = useCallback((noteId) => {
     setBehaviorNotes((prev) => prev.filter((n) => n.id !== noteId));
     setBehaviorSearchResults((prev) => {

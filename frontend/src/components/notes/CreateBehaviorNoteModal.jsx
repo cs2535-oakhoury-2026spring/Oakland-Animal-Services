@@ -55,8 +55,14 @@ export default function CreateBehaviorNoteModal({ petId, userName, userRole, onC
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    const created = await api.createBehaviorNote({ petId, by: finalUserName, body, case: caseName });
-    onSubmit(created); onClose();
+    try {
+      const created = await api.createBehaviorNote({ petId, by: finalUserName, body, case: caseName });
+      onSubmit(created);
+      onClose();
+    } catch (err) {
+      console.warn("Failed to create behavior note", err);
+      alert("Unable to create behavior note. Please try again.");
+    }
   };
 
   const showSidePanel = isDesktop && similarNotes.length > 0;

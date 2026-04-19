@@ -38,10 +38,16 @@ export class MockBehaviorNoteRepository implements BehaviorNoteRepository {
     return this.notes.filter((note) => note.petId === petId);
   }
 
-  async addBehaviorNote(note: BehaviorNote): Promise<boolean> {
+  async addBehaviorNote(note: BehaviorNote): Promise<number> {
     BehaviorNoteSchema.parse(note);
-    this.notes.push(note);
-    return true;
+    const uniqueId = note.id || note.timestamp.getTime() + Math.floor(Math.random() * 1000);
+    const created = { ...note, id: uniqueId };
+    this.notes.push(created);
+    return uniqueId;
+  }
+
+  async getBehaviorNoteById(id: number): Promise<BehaviorNote | null> {
+    return this.notes.find((note) => note.id === id) ?? null;
   }
 
   async removeBehaviorNoteById(id: number): Promise<boolean> {

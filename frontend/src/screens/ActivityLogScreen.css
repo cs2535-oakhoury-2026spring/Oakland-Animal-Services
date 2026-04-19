@@ -351,27 +351,52 @@
 
 .activity-log-screen__log-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   padding: 12px 14px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
-.activity-log-screen__log-tag {
-  flex: 0 0 auto;
+.activity-log-screen__pet-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 84px;
+  max-width: 96px;
+  text-align: center;
+}
+
+.activity-log-screen__pet-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--clr-text-primary);
+  line-height: 1.2;
+}
+
+.activity-log-screen__pet-image {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--clr-card-border);
 }
 
 .activity-log-screen__log-body {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .activity-log-screen__log-action {
   font-size: 13px;
   font-weight: 600;
   color: var(--clr-text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .activity-log-screen__log-action--desktop {
@@ -403,10 +428,28 @@
   font-size: 12px;
   font-weight: 600;
   flex: 0 0 auto;
+  margin-left: auto;
+  align-self: center;
 }
 
 .activity-log-screen__animal-btn:enabled {
   cursor: pointer;
+}
+
+.activity-log-screen__note-preview {
+  margin-top: 10px;
+  color: var(--clr-text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.activity-log-screen__log-note-full {
+  margin-bottom: 10px;
+  color: var(--clr-text-primary);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
 .activity-log-screen__log-pre {

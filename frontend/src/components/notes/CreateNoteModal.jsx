@@ -57,8 +57,14 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
-    const created = await api.createNote({ petId, by: finalUserName, type: "medical", body, case: caseName, status: canSetStatus ? status : "Raised" });
-    onSubmit(created); onClose();
+    try {
+      const created = await api.createNote({ petId, by: finalUserName, type: "medical", body, case: caseName, status: canSetStatus ? status : "Raised" });
+      onSubmit(created);
+      onClose();
+    } catch (err) {
+      console.warn("Failed to create observation note", err);
+      alert("Unable to create observation. Please try again.");
+    }
   };
 
   const showSidePanel = isDesktop && similarNotes.length > 0;

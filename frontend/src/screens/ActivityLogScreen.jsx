@@ -32,6 +32,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
   const [showActionSuggestions, setShowActionSuggestions] = useState(false);
 
   const [expandedLog, setExpandedLog] = useState(null);
+  const [petCache, setPetCache] = useState({});
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -170,11 +171,61 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
   const tagBadge = (tag) => {
     const t = tagColors[tag] || { bg: "var(--clr-input-bg)", text: "var(--clr-warm-gray)", label: tag };
     return (
-      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, backgroundColor: t.bg, color: t.text, whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 20, backgroundColor: t.bg, color: t.text, whiteSpace: "nowrap", marginLeft: 8 }}>
         {t.label}
       </span>
     );
   };
+
+  const getLogPetImage = (log) => {
+    const petId = getLogPetId(log);
+    if (!petId) return null;
+    return petCache[petId]?.imageUrl || null;
+  };
+
+  const getLogPetLabel = (log) => {
+    const petId = getLogPetId(log);
+    if (!petId) return null;
+    return petCache[petId]?.name || petId;
+  };
+
+  const getLogNoteText = (log) => {
+    if (!log?.jsonData) return null;
+    return log.jsonData.content || log.jsonData.note || log.jsonData.body || log.jsonData.message || null;
+  };
+
+  useEffect(() => {
+    if (!Array.isArray(logs) || logs.length === 0) return;
+    const animalPetIds = Array.from(new Set(
+      logs
+        .map(getLogPetId)
+        .filter(Boolean),
+    ));
+    const missingPetIds = animalPetIds.filter((petId) => !petCache[petId]);
+    if (missingPetIds.length === 0) return;
+
+    let active = true;
+    Promise.all(
+      missingPetIds.map((petId) =>
+        api.getPet(petId)
+          .then((pet) => ({ petId, pet }))
+          .catch(() => null),
+      ),
+    ).then((results) => {
+      if (!active) return;
+      setPetCache((prev) => {
+        const next = { ...prev };
+        results.forEach((item) => {
+          if (item?.petId && item.pet) next[item.petId] = item.pet;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [logs, petCache]);
 
   const actionSuggestions = useMemo(() => {
     const observedActions = Array.isArray(logs)
@@ -464,8 +515,8 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
             {logs.map((log) => {
               const isExpanded = expandedLog === log.logId;
               const hasData = log.jsonData && Object.keys(log.jsonData).length > 0;
-              const isAnimalRelated = log.tag === "behaviorNote" || log.tag === "observerNote";
               const petId = getLogPetId(log);
+              const isAnimalRelated = Boolean(petId);
               return (
                 <div key={log.logId} className="activity-log-screen__log-row">
                   <div
@@ -473,14 +524,31 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
                     style={{ cursor: hasData ? "pointer" : "default" }}
                     onClick={() => hasData && setExpandedLog(isExpanded ? null : log.logId)}
                   >
-                    <div className="activity-log-screen__log-tag">{tagBadge(log.tag)}</div>
+                    {isAnimalRelated && petId && (
+                      <div className="activity-log-screen__pet-card">
+                        <div className="activity-log-screen__pet-name">{getLogPetLabel(log)}</div>
+                        {getLogPetImage(log) ? (
+                          <img
+                            src={getLogPetImage(log)}
+                            alt={`${getLogPetLabel(log)} photo`}
+                            className="activity-log-screen__pet-image"
+                          />
+                        ) : null}
+                      </div>
+                    )}
                     <div className="activity-log-screen__log-body">
                       <div className={`activity-log-screen__log-action${isDesktop ? " activity-log-screen__log-action--desktop" : ""}`}>
                         {log.action}
+                        {tagBadge(log.tag)}
                       </div>
                       <div className="activity-log-screen__log-meta">
                         by <strong>{log.actor}</strong> · {formatTimestamp(log.timestamp)}
                       </div>
+                      {getLogNoteText(log) && (
+                        <div className="activity-log-screen__note-preview">
+                          {getLogNoteText(log)}
+                        </div>
+                      )}
                     </div>
                     {isAnimalRelated && petId && (
                       <button
@@ -501,6 +569,11 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
                   </div>
                   {isExpanded && hasData && (
                     <div className="activity-log-screen__log-detail">
+                      {getLogNoteText(log) ? (
+                        <div className="activity-log-screen__log-note-full">
+                          {getLogNoteText(log)}
+                        </div>
+                      ) : null}
                       <pre className="activity-log-screen__log-pre">
                         {JSON.stringify(log.jsonData, null, 2)}
                       </pre>

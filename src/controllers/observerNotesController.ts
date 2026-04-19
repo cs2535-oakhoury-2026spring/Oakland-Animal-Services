@@ -5,6 +5,7 @@ import { logActivity } from "../utils/logActivity.js";
 import {
   getAllObserverNotes,
   addObserverNote,
+  getObserverNoteById as getObserverNoteByIdService,
   getObserverNotesByPetId as getObserverNotesByPetIdService,
   removeObserverNoteById,
   updateObserverNoteStatus,
@@ -51,6 +52,7 @@ export async function deleteObserverNote(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid observer note ID" });
   }
 
+  const note = await getObserverNoteByIdService(id);
   const removed = await removeObserverNoteById(id);
   if (!removed) {
     return res.status(404).json({ error: "Observer note not found" });
@@ -60,7 +62,9 @@ export async function deleteObserverNote(req: Request, res: Response) {
     tag: "observerNote",
     actor: req.user!.username,
     action: "DELETED",
-    jsonData: { noteId: id },
+    jsonData: note
+      ? { noteId: id, petId: note.petId, content: note.content, status: note.status }
+      : { noteId: id },
   });
 
   res.json({ success: true, message: "Observer note deleted" });
@@ -85,11 +89,16 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
       return res.status(404).json({ error: "Observer note not found" });
     }
 
+    const note = await getObserverNoteByIdService(id);
+    const jsonData = note
+      ? { noteId: id, status, petId: note.petId, content: note.content }
+      : { noteId: id, status };
+
     logActivity({
       tag: "observerNote",
       actor: req.user!.username,
       action: "STATUS_CHANGED",
-      jsonData: { noteId: id, status },
+      jsonData,
     });
 
     res.json({ success: true, message: "Observer note status updated" });
@@ -161,7 +170,11 @@ export async function uploadObserverNote(req: Request, res: Response) {
 
   ObserverNoteSchema.parse(newObserverNote);
 
-  await addObserverNote(newObserverNote);
+  const createdId = await addObserverNote(newObserverNote);
+  if (!createdId) {
+    return res.status(500).json({ error: "Failed to create observer note" });
+  }
+  newObserverNote.id = createdId;
 
   logActivity({
     tag: "observerNote",

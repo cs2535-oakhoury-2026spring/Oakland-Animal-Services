@@ -86,6 +86,26 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
     }
   }
 
+  async getBehaviorNoteById(id: number): Promise<BehaviorNote | null> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "id-index",
+        KeyConditionExpression: "id = :id",
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues: {
+          ":id": id,
+          ":noteType": NOTE_TYPE,
+        },
+      });
+      const result = await docClient.send(command);
+      return result.Items?.[0] ? (result.Items[0] as BehaviorNote) : null;
+    } catch (error) {
+      console.error("Error fetching behavior note by id:", error);
+      return null;
+    }
+  }
+
   /**
     * Inserts a new behavior note into the merged Notes table.
     *
@@ -94,7 +114,7 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
     * @param note - The BehaviorNote object to add, including content, author, petId, and timestamp.
    * @returns A promise resolving to true if the insert succeeded, false otherwise.
    */
-  async addBehaviorNote(note: BehaviorNote): Promise<boolean> {
+  async addBehaviorNote(note: BehaviorNote): Promise<number> {
     try {
       // Generate a unique ID using timestamp and random number
       const uniqueId = note.timestamp.getTime() + Math.floor(Math.random() * 1000);
@@ -113,10 +133,10 @@ export class BehaviorNoteDBRepository implements BehaviorNoteRepository {
       });
 
       await docClient.send(command);
-      return true;
+      return uniqueId;
     } catch (error) {
       console.error("Error adding behavior note:", error);
-      return false;
+      return 0;
     }
   }
 

@@ -8,7 +8,7 @@ import {
   BehaviorNoteCreateSchema,
   BehaviorNoteSchema,
 } from "../models/BehaviorNote.schema.js";
-import { addBehaviorNote, getAllBehaviorNotes, removeBehaviorNoteById, removeNotesByPetId,getBehaviorNotesByPetId as _getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
+import { addBehaviorNote, getAllBehaviorNotes, getBehaviorNoteById, removeBehaviorNoteById, removeNotesByPetId,getBehaviorNotesByPetId as _getBehaviorNotesByPetId } from "../db/behaviorNotes.js";
 
 export async function listBehaviorNotes(req: Request, res: Response) {
   const limitParam = req.query.limit;
@@ -45,6 +45,7 @@ export async function deleteBehaviorNote(req: Request, res: Response) {
     return res.status(400).json({ error: "Invalid behavior note ID" });
   }
 
+  const note = await getBehaviorNoteById(id);
   const removed = await removeBehaviorNoteById(id);
   if (!removed) {
     return res.status(404).json({ error: "Behavior note not found" });
@@ -54,7 +55,7 @@ export async function deleteBehaviorNote(req: Request, res: Response) {
     tag: "behaviorNote",
     actor: req.user!.username,
     action: "DELETED",
-    jsonData: { noteId: id },
+    jsonData: note ? { noteId: id, petId: note.petId, content: note.content } : { noteId: id },
   });
 
   res.json({ success: true, message: "Behavior note deleted" });
@@ -120,7 +121,11 @@ export async function uploadBehaviorNote(req: Request, res: Response) {
 
   BehaviorNoteSchema.parse(newBehaviorNote);
 
-  await addBehaviorNote(newBehaviorNote);
+  const createdId = await addBehaviorNote(newBehaviorNote);
+  if (!createdId) {
+    return res.status(500).json({ error: "Failed to create behavior note" });
+  }
+  newBehaviorNote.id = createdId;
 
   logActivity({
     tag: "behaviorNote",

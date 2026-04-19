@@ -24,7 +24,13 @@ export async function getObserverNotesByPetId(
   return REPO.getObserverNoteByPetId(petId);
 }
 
-export async function addObserverNote(note: ObserverNote): Promise<boolean> {
+export async function getObserverNoteById(
+  id: number,
+): Promise<ObserverNote | null> {
+  return REPO.getObserverNoteById(id);
+}
+
+export async function addObserverNote(note: ObserverNote): Promise<number> {
   return REPO.addObserverNote(note);
 }
 

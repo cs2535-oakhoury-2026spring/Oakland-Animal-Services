@@ -13,7 +13,8 @@ export interface PetRepository {
 export interface ObserverNoteRepository {
   getObserverNotes(limit?:number,page?:number): Promise<ObserverNote[]>;
   getObserverNoteByPetId(petId: number): Promise<ObserverNote[]>;
-  addObserverNote(note: ObserverNote): Promise<boolean>;
+  getObserverNoteById(id: number): Promise<ObserverNote | null>;
+  addObserverNote(note: ObserverNote): Promise<number>;
   removeObserverNoteById(id: number): Promise<boolean>;
   updateObserverNoteStatus(id: number, status: string): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
@@ -23,7 +24,8 @@ export interface ObserverNoteRepository {
 export interface BehaviorNoteRepository {
   getBehaviorNotes(limit?: number, page?: number): Promise<BehaviorNote[]>;
   getBehaviorNoteByPetId(petId: number): Promise<BehaviorNote[]>;
-  addBehaviorNote(note: BehaviorNote): Promise<boolean>;
+  getBehaviorNoteById(id: number): Promise<BehaviorNote | null>;
+  addBehaviorNote(note: BehaviorNote): Promise<number>;
   removeBehaviorNoteById(id: number): Promise<boolean>;
   removeNotesByPetId(petId: number): Promise<boolean>;
 

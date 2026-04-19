@@ -6,6 +6,7 @@ import {
 import {
   getAllObserverNotes as _getAllObserverNotes,
   addObserverNote as _addObserverNote,
+  getObserverNoteById as _getObserverNoteById,
   getObserverNotesByPetId as _getObserverNotesByPetId,
   removeObserverNoteById as _removeObserverNoteById,
   removeNotesByPetId as _removeNotesByPetId,
@@ -38,6 +39,10 @@ export async function getObserverNotesByPetId(
   return _getObserverNotesByPetId(petId);
 }
 
+export async function getObserverNoteById(id: number): Promise<ObserverNote | null> {
+  return _getObserverNoteById(id);
+}
+
 export async function removeObserverNoteById(id: number): Promise<boolean> {
   return _removeObserverNoteById(id);
 }
@@ -53,7 +58,7 @@ export async function updateObserverNoteStatus(
   return _updateObserverNoteStatus(id, status);
 }
 
-export async function addObserverNote(note: ObserverNote): Promise<boolean> {
+export async function addObserverNote(note: ObserverNote): Promise<number> {
   return _addObserverNote(note);
 }
 

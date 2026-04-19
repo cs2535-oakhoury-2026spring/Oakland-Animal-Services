@@ -90,6 +90,26 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
     }
   }
 
+  async getObserverNoteById(id: number): Promise<ObserverNote | null> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "id-index",
+        KeyConditionExpression: "id = :id",
+        FilterExpression: "noteType = :noteType",
+        ExpressionAttributeValues: {
+          ":id": id,
+          ":noteType": NOTE_TYPE,
+        },
+      });
+      const result = await docClient.send(command);
+      const item = result.Items?.[0];
+      return item ? (item as ObserverNote) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
   /**
     * Inserts a new observer note into the merged Notes table.
     *
@@ -98,7 +118,7 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
     * @param note - The ObserverNote object to add, including content, author, petId, timestamp, and optional status.
    * @returns A promise resolving to true if the insert succeeded, false otherwise.
    */
-  async addObserverNote(note: ObserverNote): Promise<boolean> {
+  async addObserverNote(note: ObserverNote): Promise<number> {
     try {
       // Generate a unique ID using timestamp and random number
       const uniqueId = note.timestamp.getTime() + Math.floor(Math.random() * 1000);
@@ -118,10 +138,10 @@ export class ObserverNoteDBRepository implements ObserverNoteRepository {
       });
 
       await docClient.send(command);
-      return true;
+      return uniqueId;
     } catch (error) {
       console.error("Error adding observer note:", error);
-      return false;
+      return 0;
     }
   }
 

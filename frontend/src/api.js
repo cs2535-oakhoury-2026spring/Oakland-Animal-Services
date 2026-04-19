@@ -247,16 +247,16 @@ export const api = {
       });
       if (!res.ok) throw new Error("Failed to create note");
       const data = await res.json();
-      if (data.success && data.observerNote) {
+      if (data.success && data.observerNote && data.observerNote.id != null) {
         return transformObserverNote(
           { ...data.observerNote, status: note.status },
           0,
         );
       }
-      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+      throw new Error("Failed to create observer note");
     } catch (err) {
-      console.warn("createNote: falling back to mock", err);
-      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+      console.warn("createNote failed", err);
+      throw err;
     }
   },
 
@@ -302,9 +302,9 @@ export const api = {
       });
       if (!res.ok) throw new Error("Failed to create behavior note");
       const data = await res.json();
-      if (data.success && data.behaviorNote) {
+      if (data.success && data.behaviorNote && data.behaviorNote.id != null) {
         return {
-          id: data.behaviorNote.id || Date.now(),
+          id: data.behaviorNote.id,
           petId: String(data.behaviorNote.petId),
           case: data.behaviorNote.title || note.case,
           by: data.behaviorNote.author || note.by,
@@ -312,10 +312,10 @@ export const api = {
           createdAt: data.behaviorNote.timestamp || new Date().toISOString(),
         };
       }
-      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+      throw new Error("Failed to create behavior note");
     } catch (err) {
-      console.warn("createBehaviorNote: falling back to mock", err);
-      return { ...note, id: Date.now(), createdAt: new Date().toISOString() };
+      console.warn("createBehaviorNote failed", err);
+      throw err;
     }
   },
 
