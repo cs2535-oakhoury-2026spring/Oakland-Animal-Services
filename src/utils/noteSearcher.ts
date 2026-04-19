@@ -150,6 +150,47 @@ const NORMALIZATION_EXCLUSIONS = new Set([
   "fore",
 ]);
 
+function addNormalization(
+  normalizations: Map<string, string>,
+  lower: string,
+) {
+  if (normalizations.has(lower) || NORMALIZATION_EXCLUSIONS.has(lower)) {
+    return;
+  }
+
+  const singular = toSingular(lower);
+  if (singular !== lower) {
+    normalizations.set(lower, singular);
+    return;
+  }
+
+  if (lower.endsWith("ing") && lower.length > 4) {
+    normalizations.set(lower, lower.slice(0, -3));
+  } else if (lower.endsWith("ed") && lower.length > 3) {
+    normalizations.set(lower, lower.slice(0, -2));
+  }
+}
+
+function tokenizeText(
+  text: string,
+  normalizations: Map<string, string>,
+): Array<{ text: string; lower: string }> {
+  const tokens: Array<{ text: string; lower: string }> = [];
+  const words = text.match(/\w+/g) || [];
+
+  words.forEach((word) => {
+    const lower = word.toLowerCase();
+    tokens.push({ text: word, lower });
+    addNormalization(normalizations, lower);
+  });
+
+  return tokens;
+}
+
+function getNoteKey(note: ObserverNote): string {
+  return `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
+}
+
 export type NoteData = {
   tokens: Array<{ text: string; lower: string }>;
   titleTokens: Array<{ text: string; lower: string }>;
@@ -174,7 +215,7 @@ export function extractKeywords(
 
   function addKeyword(token: string) {
     if (token.length >= 2 && !seen.has(token)) {
-      seen.add(token); //TODO: Just leave a set then convert to an array.
+      seen.add(token);
       keywords.push(token);
     }
   }
@@ -223,24 +264,20 @@ function findMatchIndices(
   let searchPos = 0;
 
   tokens.forEach((token) => {
+    const tokenStart = lowerText.indexOf(token.lower, searchPos);
+    if (tokenStart === -1) return;
+
     const normalizedToken = normalizations.get(token.lower) || token.lower;
     const distance = levenshteinDistance(normalizedToken, lowerKeyword);
 
     if (distance <= maxDistance) {
-      const tokenStart = lowerText.indexOf(token.lower, searchPos);
-      if (tokenStart !== -1) {
-        indices.push({
-          start: tokenStart,
-          end: tokenStart + token.text.length,
-        });
-        searchPos = tokenStart + token.text.length;
-      }
-    } else {
-      const tokenStart = lowerText.indexOf(token.lower, searchPos);
-      if (tokenStart !== -1) {
-        searchPos = tokenStart + token.text.length;
-      }
+      indices.push({
+        start: tokenStart,
+        end: tokenStart + token.text.length,
+      });
     }
+
+    searchPos = tokenStart + token.text.length;
   });
 
   return indices;
@@ -305,70 +342,21 @@ export function findSimilarNotes(
     noteDataCache?: Map<string, NoteData>;
   } = {},
 ): SimilarNoteResult[] {
-  const startOverallTime = performance.now();
   const { nameToExclude, maxResults, noteDataCache } = options;
-  console.log(
-    `[NoteSearch] ── START ──────────────────────────────\n` +
-      `  query      : "${searchNote}"\n` +
-      `  notes      : ${allNotes.length}\n` +
-      `  maxResults : ${maxResults ?? "unlimited"}\n` +
-      `  exclude    : ${nameToExclude ?? "none"}\n` +
-      `  cache size : ${noteDataCache?.size ?? 0} entries`,
-  );
-  const startExtractTime = performance.now();
   const keywords = extractKeywords(searchNote, nameToExclude);
-  const endExtractTime = performance.now();
-  console.log(
-    `[NoteSearch] keywords (${keywords.length}) in ${(endExtractTime - startExtractTime).toFixed(2)} ms: [${keywords.join(", ")}]`,
-  );
   if (keywords.length === 0) return [];
 
   const noteDataMap = noteDataCache || new Map<string, NoteData>();
-  const sizeBeforePreprocess = noteDataMap.size;
-  const startTime = performance.now();
 
   // Preprocess all notes to extract tokens and normalizations, using cache if available
   allNotes.forEach((note) => {
-    const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
+    const noteKey = getNoteKey(note);
     if (noteDataMap.has(noteKey)) return;
 
     const normalizations = new Map<string, string>();
-    const tokens: Array<{ text: string; lower: string }> = [];
-
-    const words = note.content.match(/\w+/g) || [];
-    words.forEach((word) => {
-      const lower = word.toLowerCase();
-      tokens.push({ text: word, lower });
-
-      if (!normalizations.has(lower) && !NORMALIZATION_EXCLUSIONS.has(lower)) {
-        const singular = toSingular(lower);
-        if (singular !== lower) {
-          normalizations.set(lower, singular);
-        } else if (lower.endsWith("ing") && lower.length > 4) {
-          normalizations.set(lower, lower.slice(0, -3));
-        } else if (lower.endsWith("ed") && lower.length > 3) {
-          normalizations.set(lower, lower.slice(0, -2));
-        }
-      }
-    });
-
-    // Also tokenize the title and add its normalizations to the same map
+    const tokens = tokenizeText(note.content, normalizations);
     const titleText = (note.title || "").trim();
-    const titleTokens: Array<{ text: string; lower: string }> = [];
-    (titleText.match(/\w+/g) || []).forEach((word) => {
-      const lower = word.toLowerCase();
-      titleTokens.push({ text: word, lower });
-      if (!normalizations.has(lower) && !NORMALIZATION_EXCLUSIONS.has(lower)) {
-        const singular = toSingular(lower);
-        if (singular !== lower) {
-          normalizations.set(lower, singular);
-        } else if (lower.endsWith("ing") && lower.length > 4) {
-          normalizations.set(lower, lower.slice(0, -3));
-        } else if (lower.endsWith("ed") && lower.length > 3) {
-          normalizations.set(lower, lower.slice(0, -2));
-        }
-      }
-    });
+    const titleTokens = tokenizeText(titleText, normalizations);
 
     noteDataMap.set(noteKey, {
       tokens,
@@ -378,13 +366,6 @@ export function findSimilarNotes(
       lowerTitle: titleText.toLowerCase(),
     });
   });
-
-  const endTime = performance.now();
-  const freshCount = noteDataMap.size - sizeBeforePreprocess;
-  console.log(
-    `[NoteSearch] preprocess: ${(endTime - startTime).toFixed(2)} ms` +
-    ` — ${allNotes.length - freshCount} from cache, ${freshCount} freshly built`,
-  );
 
   const noteMatches = new Map<
     string,
@@ -402,10 +383,9 @@ export function findSimilarNotes(
       matchedTitleIndices: Set<number>;
     }
   >();
-  const startFindTime = performance.now();
   // Find matches for each keyword in each note
   allNotes.forEach((note) => {
-    const noteKey = `${note.author}|${note.timestamp}|${note.title}|${note.content}`;
+    const noteKey = getNoteKey(note);
     const noteData = noteDataMap.get(noteKey)!;
 
     keywords.forEach((keyword) => {
@@ -459,29 +439,11 @@ export function findSimilarNotes(
       }
     });
   });
-  const endFindTime = performance.now();
-  console.log(
-    `[NoteSearch] matching: ${(endFindTime - startFindTime).toFixed(2)} ms` +
-    ` — ${noteMatches.size}/${allNotes.length} notes matched across ${keywords.length} keywords`,
-  );
 
   // Compile results with highlighted content and sort by relevance and recency
   const results: SimilarNoteResult[] = Array.from(noteMatches.values())
     .map((match) => {
-      const seenPositions = new Set<string>();
-      const uniqueKeywords = Array.from(match.matchedKeywords.values()).filter(
-        (kw) => {
-          const posKey = kw.positions
-            .map((p) => `${p.start}-${p.end}`)
-            .join("|");
-          if (seenPositions.has(posKey)) {
-            return false;
-          }
-          seenPositions.add(posKey);
-          return true;
-        },
-      );
-
+      const matchedKeywords = Array.from(match.matchedKeywords.values());
       const highlightedContent = highlightMatches(
         match.note.content,
         match.matchedIndices,
@@ -492,8 +454,8 @@ export function findSimilarNotes(
       );
       return {
         observerNote: match.note,
-        matchCount: uniqueKeywords.length,
-        matchedKeywords: uniqueKeywords.map((kw) => ({
+        matchCount: matchedKeywords.length,
+        matchedKeywords: matchedKeywords.map((kw) => ({
           keyword: kw.keyword,
           positions: kw.positions,
         })),
@@ -513,15 +475,6 @@ export function findSimilarNotes(
       return matchDiff;
     });
 
-  const endOverallTime = performance.now();
   const returned = maxResults ? results.slice(0, maxResults) : results;
-  console.log(
-    `[NoteSearch] ── DONE ───────────────────────────────\n` +
-    `  total time : ${(endOverallTime - startOverallTime).toFixed(2)} ms\n` +
-    `  results    : ${returned.length} returned (${results.length} total matches)\n` +
-    (returned.length > 0
-      ? `  top result : "${returned[0].observerNote.title}" — ${returned[0].matchCount} keyword(s) matched`
-      : `  top result : none`),
-  );
-  return maxResults ? results.slice(0, maxResults) : results;
+  return returned;
 }
