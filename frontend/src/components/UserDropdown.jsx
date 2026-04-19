@@ -101,7 +101,7 @@ export default function UserDropdown({ user, onLogout, token, compact = false, o
             {navItem("All Animals", <Icons.arrowRight size={14} color="var(--clr-warm-gray)" />, "/", !currentPath || currentPath === "?")}
             {navItem("Kennel Locations", <Icons.qrCode size={14} color="var(--clr-warm-gray)" />, "/?view=locations", currentPath.includes("view=locations"))}
             {isStaffOrAdmin && navItem("Activity Log", <Icons.clipboardList size={14} color="var(--clr-warm-gray)" />, "/?view=activity", currentPath.includes("view=activity"))}
-            {isStaffOrAdmin && navItem("Volunteer Management", <Icons.users size={14} color="var(--clr-warm-gray)" />, "/?view=users", currentPath.includes("view=users"))}
+            {isStaffOrAdmin && navItem("User Management", <Icons.users size={14} color="var(--clr-warm-gray)" />, "/?view=users", currentPath.includes("view=users"))}
           </div>
           <div className="ud-section-bottom">
             {onChangePassword && (
