@@ -23,6 +23,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   const [notes, setNotes] = useState([]);
   const [behaviorNotes, setBehaviorNotes] = useState([]);
   const [activeTab, setActiveTab] = useState("summary");
+  const [fetchError, setFetchError] = useState("");
   const [, setPrevTab] = useState("summary");
   const [slideDirection, setSlideDirection] = useState("right");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -56,11 +57,22 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [petData, notesData, bNotes] = await Promise.all([api.getPet(petId), api.getNotes(petId), api.getBehaviorNotes(petId)]);
-      setPet(petData);
-      setNotes(notesData);
-      setBehaviorNotes(bNotes);
-      setLoading(false);
+      setFetchError("");
+      try {
+        const [petData, notesData, bNotes] = await Promise.all([
+          api.getPet(petId),
+          api.getNotes(petId),
+          api.getBehaviorNotes(petId),
+        ]);
+        setPet(petData);
+        setNotes(notesData);
+        setBehaviorNotes(bNotes);
+      } catch (err) {
+        console.error("Failed to load pet data", err);
+        setFetchError(err?.message || "Pet not found");
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [petId]);
 
@@ -267,6 +279,29 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   const filteredBehaviorNotes = behaviorSearchQuery.trim()
     ? (behaviorSearchResults ?? behaviorNotes)
     : behaviorNotes;
+
+  if (fetchError) {
+    return (
+      <main className="portal-error" style={{ maxWidth: r.containerWidth, margin: "0 auto", padding: r.padding }}>
+        <div className="portal-error__inner">
+          <div className="portal-error__icon">
+            <Icons.alertCircle size={42} color="var(--clr-brick-red)" />
+          </div>
+          <h1 className="portal-error__title">Pet Not Found</h1>
+          <p className="portal-error__message">
+            {fetchError || "We couldn’t find that animal record. Please check the ID or ACR and try again."}
+          </p>
+          <button
+            className="portal-error__back-btn"
+            onClick={() => { window.location.href = "/"; }}
+            aria-label="Back to home"
+          >
+            <Icons.back size={14} /> Back to Home
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   if (loading || !pet) {
     return (

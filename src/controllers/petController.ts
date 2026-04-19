@@ -49,12 +49,12 @@ function revalidateLocation(
  * @returns A JSON response with the pet object or a 404 error if not found.
  */
 export async function getPet(req: Request, res: Response) {
-  const petIdParam = req.params.petId;
-  const petId = typeof petIdParam === "string" ? parseInt(petIdParam) : NaN;
-  if (isNaN(petId)) {
-    return res.status(400).json({ error: "Invalid pet ID" });
+  const petIdentifier = req.params.petId;
+  if (!petIdentifier || typeof petIdentifier !== "string") {
+    return res.status(400).json({ error: "Invalid pet identifier" });
   }
-  const pet = await getPetById(petId);
+
+  const pet = await getPetById(petIdentifier);
   if (!pet) {
     return res.status(404).json({ error: "Pet not found" });
   }
@@ -95,7 +95,7 @@ export async function getPetByLocation(req: Request, res: Response) {
     return res.json({ success: true, pets: cached.pets });
   }
 
-  const pet = await searchByLocation(petType, location);
+  const pet = await searchByLocation(petType, location, refresh);
 
   if (!pet) {
     return res.status(404).json({ error: "Pet not found" });

@@ -98,7 +98,7 @@ export default function UserDropdown({ user, onLogout, token, compact = false, o
             <div className="ud-user-role">{user?.role}</div>
           </div>
           <div className="ud-section">
-            {navItem("All Animals", <Icons.arrowRight size={14} color="var(--clr-warm-gray)" />, "/", !currentPath || currentPath === "?")}
+            {navItem("Available Animals", <Icons.arrowRight size={14} color="var(--clr-warm-gray)" />, "/", !currentPath || currentPath === "?")}
             {navItem("Kennel Locations", <Icons.qrCode size={14} color="var(--clr-warm-gray)" />, "/?view=locations", currentPath.includes("view=locations"))}
             {isStaffOrAdmin && navItem("Activity Log", <Icons.clipboardList size={14} color="var(--clr-warm-gray)" />, "/?view=activity", currentPath.includes("view=activity"))}
             {isStaffOrAdmin && navItem("User Management", <Icons.users size={14} color="var(--clr-warm-gray)" />, "/?view=users", currentPath.includes("view=users"))}

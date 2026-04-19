@@ -45,6 +45,16 @@ function handleApiError(res, data) {
 
 export const noteDataCache = new Map();
 
+const PET_CACHE_TTL_MS = 60000; // 1 minute
+const petListCache = {
+  timestamp: 0,
+  pages: new Map(),
+  allAnimals: null,
+};
+
+const isPetCacheValid = () =>
+  Date.now() - petListCache.timestamp < PET_CACHE_TTL_MS;
+
 export const mockPets = [
   {
     petId: "12345678910",
@@ -103,7 +113,10 @@ export const api = {
   getPet: async (petId) => {
     try {
       const res = await fetch(`/api/pets/${petId}`, { headers: authH() });
-      if (!res.ok) throw new Error("Failed to fetch pet");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to fetch pet (status ${res.status})`);
+      }
       const data = await res.json();
       if (data.success && data.pet) {
         const p = data.pet;
@@ -138,8 +151,11 @@ export const api = {
       }
       throw new Error("Invalid response");
     } catch (err) {
-      console.warn("getPet: falling back to mock data", err);
-      return mockPets.find((p) => p.petId === String(petId)) || mockPets[0];
+      if (err instanceof TypeError) {
+        console.warn("getPet: falling back to mock data", err);
+        return mockPets.find((p) => p.petId === String(petId)) || mockPets[0];
+      }
+      throw err;
     }
   },
 
@@ -369,8 +385,13 @@ export const api = {
     }
   },
 
-  getAllAnimals: async (page = 1, limit = 50) => {
+  getAllAnimals: async (page = 1, limit = 50, refresh = false) => {
     try {
+      const cacheKey = `${page}:${limit}`;
+      if (!refresh && isPetCacheValid() && petListCache.pages.has(cacheKey)) {
+        return petListCache.pages.get(cacheKey);
+      }
+
       const res = await fetch(`/api/animals/all?page=${page}&limit=${limit}`, {
         headers: authH(),
       });
@@ -380,13 +401,24 @@ export const api = {
       }
       const data = await res.json();
       if (data.success && Array.isArray(data.animals)) {
-        return {
+        const result = {
           animals: data.animals,
           page: data.page || page,
           limit: data.limit || limit,
           total: data.total || data.animals.length,
           totalPages: data.totalPages || 1,
         };
+
+        if (!refresh) {
+          if (!isPetCacheValid()) {
+            petListCache.timestamp = Date.now();
+            petListCache.pages.clear();
+            petListCache.allAnimals = null;
+          }
+          petListCache.pages.set(cacheKey, result);
+        }
+
+        return result;
       }
       throw new Error("Invalid response");
     } catch (err) {
@@ -395,25 +427,39 @@ export const api = {
     }
   },
 
-  getAllAnimalsAllPages: async (limit = 400) => {
-    const first = await api.getAllAnimals(1, limit);
+  getAllAnimalsAllPages: async (limit = 400, refresh = false) => {
+    if (
+      !refresh &&
+      isPetCacheValid() &&
+      Array.isArray(petListCache.allAnimals)
+    ) {
+      return petListCache.allAnimals;
+    }
+
+    const first = await api.getAllAnimals(1, limit, refresh);
     if (!first) return null;
 
     const totalPages = first.totalPages || 1;
-    if (totalPages <= 1) return first.animals || [];
-
-    const rest = await Promise.all(
-      Array.from({ length: totalPages - 1 }, (_, i) =>
-        api.getAllAnimals(i + 2, limit),
-      ),
-    );
-
     const merged = [...(first.animals || [])];
-    rest.forEach((pageResult) => {
-      if (pageResult && Array.isArray(pageResult.animals)) {
-        merged.push(...pageResult.animals);
-      }
-    });
+
+    if (totalPages > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          api.getAllAnimals(i + 2, limit, refresh),
+        ),
+      );
+
+      rest.forEach((pageResult) => {
+        if (pageResult && Array.isArray(pageResult.animals)) {
+          merged.push(...pageResult.animals);
+        }
+      });
+    }
+
+    if (!refresh) {
+      petListCache.timestamp = Date.now();
+      petListCache.allAnimals = merged;
+    }
 
     return merged;
   },

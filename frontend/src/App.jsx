@@ -189,7 +189,7 @@ export default function App() {
     if (urlPetId) { setSelectedPetId(urlPetId); return; }
     setLocationError(null);
     api.getPetsByLocation(petType, kennelLocation)
-      .then((pets) => { setAnimals(pets); if (pets.length === 1) setSelectedPetId(pets[0].petId); })
+      .then((pets) => { setAnimals(pets); })
       .catch((err) => { setLocationError(err.message); });
   }, [accessToken, urlPetId, petType, kennelLocation]);
 
@@ -262,7 +262,7 @@ export default function App() {
     return <ErrorScreen error={locationError} onLogout={handleLogout} />;
   }
 
-  if (!selectedPetId && animals.length > 1) {
+  if (!selectedPetId && animals.length > 0) {
     return <AnimalSelection animals={animals} onSelect={handleSelectPet} user={currentUser} token={accessToken} onLogout={handleLogout} onBack={() => { window.location.href = "/"; }} darkMode={darkMode} setDarkMode={toggleDarkMode} onRefresh={handleRefresh} refreshing={refreshing} onChangePassword={() => setShowChangePassword(true)} />;
   }
 

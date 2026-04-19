@@ -101,6 +101,13 @@ function extractPictures(record: any): string[] | undefined {
     .filter((u) => typeof u === "string");
 }
 
+function getFirstRecord(data: any): any {
+  if (!data) return undefined;
+  if (Array.isArray(data)) return data[0];
+  const keys = Object.keys(data);
+  return keys.length ? data[keys[0]] : undefined;
+}
+
 /**
  * Computes the age of a pet in years based on birthdate or general age field.
  *
@@ -263,13 +270,48 @@ function parsePet(record: any): Pet | undefined {
  * @implements {PetRepository}
  */
 export class RescueGroupPetRepository implements PetRepository {
+  private allAnimalsCache: {
+    expiresAt: number;
+    animals: AllAnimalEntry[];
+    index: Map<string, PetLocation[]>;
+  } | null = null;
+  private static readonly ALL_ANIMALS_CACHE_TTL_MS = 60_000;
+
+  private normalizeLocationKey(species: string, location: string): string {
+    const normalizedSpecies = (species || "").toLowerCase().trim();
+    let normalizedLocation = (location || "")
+      .toLowerCase()
+      .replace(/-/g, " ")
+      .trim();
+
+    const prefix = `${normalizedSpecies} `;
+    if (normalizedSpecies && normalizedLocation.startsWith(prefix)) {
+      normalizedLocation = normalizedLocation.slice(prefix.length).trim();
+    }
+
+    return `${normalizedSpecies}|${normalizedLocation}`;
+  }
+
   /**
    * Retrieves a specific pet by its unique identifier from the Rescue Groups API.
    *
    * @param {number} id - The unique identifier of the pet to retrieve.
    * @returns {Promise<Pet | undefined>} The pet data or undefined if not found/error.
    */
-  async getById(id: number): Promise<Pet | undefined> {
+  async getById(id: number | string): Promise<Pet | undefined> {
+    const rawId = String(id || "").trim();
+    if (!rawId) return undefined;
+
+    const numericId = Number(rawId);
+    if (rawId && Number.isFinite(numericId)) {
+      const pet = await this.getByAnimalId(Math.floor(numericId));
+      if (pet) return pet;
+    }
+
+    return this.getByRescueId(rawId);
+  }
+
+  private async getByAnimalId(id: number): Promise<Pet | undefined> {
     const payload = {
       objectType: "animals",
       objectAction: "view",
@@ -279,12 +321,96 @@ export class RescueGroupPetRepository implements PetRepository {
 
     try {
       const response = await rescueGroupsClient.post("", payload);
-      const record = response.data?.animals?.[0] || response.data?.data?.[0];
+      const record =
+        response.data?.animals?.[0] || getFirstRecord(response.data?.data);
       return parsePet(record);
     } catch (err) {
-      console.error("RG repo getById failed", err);
+      console.error("RG repo getByAnimalId failed", err);
       return undefined;
     }
+  }
+
+  private async getByRescueId(rescueId: string): Promise<Pet | undefined> {
+    const payload = {
+      objectType: "animals",
+      objectAction: "search",
+      search: {
+        resultStart: 0,
+        resultLimit: 1,
+        resultSort: "animalUpdatedDate",
+        resultOrder: "desc",
+        filters: [
+          {
+            fieldName: "animalRescueID",
+            operation: "equals",
+            criteria: rescueId,
+          },
+        ],
+        fields: GET_FIELDS,
+      },
+    };
+
+    try {
+      const response = await rescueGroupsClient.post("", payload);
+      const record = getFirstRecord(response.data?.data);
+      return parsePet(record);
+    } catch (err) {
+      console.error("RG repo getByRescueId failed", err);
+      return undefined;
+    }
+  }
+
+  private isAllAnimalsCacheValid(): boolean {
+    return (
+      !!this.allAnimalsCache && Date.now() < this.allAnimalsCache.expiresAt
+    );
+  }
+
+  private async getAllAvailableAnimalsCached(): Promise<AllAnimalEntry[]> {
+    if (this.isAllAnimalsCacheValid()) {
+      return this.allAnimalsCache!.animals;
+    }
+
+    const animals = await this.fetchAllAnimals();
+    const index = new Map<string, PetLocation[]>();
+
+    for (const animal of animals) {
+      if (!animal.species || !animal.location) continue;
+      const key = this.normalizeLocationKey(animal.species, animal.location);
+      if (!key) continue;
+
+      const entry: PetLocation = {
+        id: animal.id,
+        name: animal.name,
+        image: animal.image,
+        status: animal.status,
+        species: animal.species,
+        summary: animal.summary || animal.location || animal.name,
+      };
+
+      const existing = index.get(key);
+      if (existing) {
+        existing.push(entry);
+      } else {
+        index.set(key, [entry]);
+      }
+    }
+
+    this.allAnimalsCache = {
+      expiresAt: Date.now() + RescueGroupPetRepository.ALL_ANIMALS_CACHE_TTL_MS,
+      animals,
+      index,
+    };
+    return animals;
+  }
+
+  private async searchByLocationCached(
+    species: string,
+    location: string,
+  ): Promise<PetLocation[] | undefined> {
+    const key = this.normalizeLocationKey(species, location);
+    await this.getAllAvailableAnimalsCached();
+    return this.allAnimalsCache?.index.get(key);
   }
 
   private async searchByLocationInternal(
@@ -362,7 +488,18 @@ export class RescueGroupPetRepository implements PetRepository {
   async searchByLocation(
     petType: string,
     location: string,
+    refresh: boolean = false,
   ): Promise<PetLocation[] | undefined> {
+    if (!refresh) {
+      const cachedResults = await this.searchByLocationCached(
+        petType,
+        location,
+      );
+      if (cachedResults && cachedResults.length > 0) {
+        return cachedResults;
+      }
+    }
+
     const directResults = await this.searchByLocationInternal(
       petType,
       location,
@@ -371,34 +508,108 @@ export class RescueGroupPetRepository implements PetRepository {
       return directResults;
     }
 
-    const statuses = [
-      "Available",
-      "Foster",
-      "Not Available",
-      "Adopted",
-      "Hold",
-      "Stray Hold",
-      "Deceased",
-      "Transferred",
+    return undefined;
+  }
+
+  private getResultTotal(response: any): number | undefined {
+    const maybeValue =
+      response?.data?.resultTotal ??
+      response?.data?.pagination?.resultTotal ??
+      response?.data?.pagination?.total ??
+      response?.data?.total ??
+      response?.resultTotal;
+
+    if (typeof maybeValue === "number") return maybeValue;
+    if (typeof maybeValue === "string") {
+      const parsed = Number(maybeValue);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+
+    return undefined;
+  }
+
+  private async fetchAnimalsPage(
+    page: number,
+    limit: number,
+  ): Promise<{ animals: AllAnimalEntry[]; total?: number }> {
+    const safePage = Number.isFinite(page) && page > 0 ? Math.floor(page) : 1;
+    const safeLimit =
+      Number.isFinite(limit) && limit > 0
+        ? Math.min(Math.floor(limit), 200)
+        : 50;
+    const resultStart = (safePage - 1) * safeLimit;
+    const allFields = [
+      "animalID",
+      "animalName",
+      "animalSpecies",
+      "animalStatus",
+      "animalSummary",
+      "animalThumbnailUrl",
+      "animalPictures",
+      "animalOthernames",
+      "animalGeneralAge",
+      "animalPrimaryBreed",
+      "animalRescueID",
     ];
-    const results = new Map<number, PetLocation>();
 
-    await Promise.all(
-      statuses.map((s) =>
-        this.searchByLocationInternal(petType, location, s).then((found) => {
-          if (found)
-            found.forEach((p) => {
-              if (!results.has(p.id)) results.set(p.id, p);
-            });
-        }),
-      ),
-    );
+    const payload = {
+      objectType: "animals",
+      objectAction: "search",
+      search: {
+        resultStart,
+        resultLimit: safeLimit,
+        resultSort: "animalName",
+        resultOrder: "asc",
+        filters: [
+          {
+            fieldName: "animalStatus",
+            operation: "equals",
+            criteria: "Available",
+          },
+          {
+            fieldName: "animalSummary",
+            operation: "contains",
+            criteria: "Oakland Animal Services",
+          },
+        ],
+        fields: allFields,
+      },
+    };
 
-    return results.size > 0 ? Array.from(results.values()) : undefined;
+    try {
+      const response = await rescueGroupsClient.post("", payload);
+      const pets: Record<string, any> = response?.data?.data || {};
+      const animals: AllAnimalEntry[] = [];
+
+      for (const key in pets) {
+        const record = pets[key];
+        const pictures = extractPictures(record);
+        animals.push({
+          id: parseInt(record.animalID, 10),
+          name: record.animalName || `Animal #${record.animalID}`,
+          species: record.animalSpecies || "Unknown",
+          status: record.animalStatus || "Unknown",
+          location: parseLocationFromSummary(record.animalSummary) || "Unknown",
+          image: record.animalThumbnailUrl || pictures?.[0] || undefined,
+          handlerLevel: (record.animalOthernames || "green").toLowerCase(),
+          breed: record.animalPrimaryBreed || undefined,
+          generalAge: record.animalGeneralAge || undefined,
+          rescueId: record.animalRescueID || undefined,
+        });
+      }
+
+      return {
+        animals,
+        total: this.getResultTotal(response),
+      };
+    } catch (err) {
+      console.error("RG repo fetchAnimalsPage failed", err);
+      return { animals: [] };
+    }
   }
 
   private async fetchAllAnimals(): Promise<AllAnimalEntry[]> {
-    const statuses = ["Available", "Foster"];
+    const statuses = ["Available"];
     const allFields = [
       "animalID",
       "animalName",
@@ -422,7 +633,7 @@ export class RescueGroupPetRepository implements PetRepository {
           objectAction: "search",
           search: {
             resultStart: 0,
-            resultLimit: 200,
+            resultLimit: 400,
             resultSort: "animalName",
             resultOrder: "asc",
             filters: [
@@ -459,6 +670,7 @@ export class RescueGroupPetRepository implements PetRepository {
             breed: record.animalPrimaryBreed || undefined,
             generalAge: record.animalGeneralAge || undefined,
             rescueId: record.animalRescueID || undefined,
+            summary: record.animalSummary || record.animalDescription || "",
           });
         }
       } catch (err) {
@@ -478,6 +690,21 @@ export class RescueGroupPetRepository implements PetRepository {
       Number.isFinite(limit) && limit > 0
         ? Math.min(Math.floor(limit), 200)
         : 50;
+
+    const pageResult = await this.fetchAnimalsPage(safePage, safeLimit);
+
+    if (typeof pageResult.total === "number") {
+      const total = pageResult.total;
+      const totalPages = Math.max(1, Math.ceil(total / safeLimit));
+      const clampedPage = Math.min(safePage, totalPages);
+      return {
+        animals: pageResult.animals,
+        page: clampedPage,
+        limit: safeLimit,
+        total,
+        totalPages,
+      };
+    }
 
     const allAnimals = await this.fetchAllAnimals();
     const total = allAnimals.length;
@@ -507,6 +734,7 @@ export interface AllAnimalEntry {
   breed?: string;
   generalAge?: string;
   rescueId?: string;
+  summary?: string;
 }
 
 export interface PaginatedAnimalsResult {

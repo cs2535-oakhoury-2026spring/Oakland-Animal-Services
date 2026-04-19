@@ -1,20 +1,23 @@
 # Oakland Animal Services API
 
---------------------------
+---
+
 # Access Levels
 
-| Role | Level |
-|------|-------|
+| Role                   | Level               |
+| ---------------------- | ------------------- |
 | `volunteer` / `device` | 1 — Standard access |
-| `staff` | 2 — Elevated access |
-| `admin` | 3 — Full access |
+| `staff`                | 2 — Elevated access |
+| `admin`                | 3 — Full access     |
 
 All endpoints require a valid access token (`Authorization: Bearer <accessToken>`), except `/api/auth/*`.
 
---------------------------
+---
+
 # Types
 
 ### Pet
+
 - `id: number`
 - `name: string`
 - `age: number`
@@ -35,15 +38,19 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - `colorDetails: string | null`
 - `specialNeeds: string | null`
 
---------------------------
+---
+
 ### LocationPet
+
 - `id: number`
 - `name: string`
 - `summary: string`
 - `image?: string | null`
 
---------------------------
+---
+
 ### ObserverNote
+
 - `id: number`
 - `status?: string`
 - `timestamp: string`
@@ -51,7 +58,8 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - `author: string`
 - `petId: number`
 
---------------------------
+---
+
 # End Points
 
 ## Auth
@@ -95,7 +103,8 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - Success: `200` with `{ success: true }`
 - Error: `400` if fields missing or user is admin, `401` if current password is incorrect
 
---------------------------
+---
+
 ## Users
 
 ### POST `/api/users`
@@ -142,17 +151,18 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - Success: `200` with `{ success: true }`
 - Error: `403` if staff tries to delete non-volunteer, `404` if user not found
 
---------------------------
+---
+
 ## Pets
 
 ### GET `/api/pets/:petId`
 
 - Access: **Level 1** (volunteer, device, staff, admin)
-- Description: Get a single pet by petId.
+- Description: Get a single pet by identifier.
 - Path param:
-  - `petId` (number, required)
+  - `petId` (number or string, required) — accepts either the RescueGroups numeric animal ID or the ACR/rescue ID string.
 - Success: `200` with `{ success: true, pet: Pet }`
-- Error: `400` for invalid petId, `404` if not found
+- Error: `400` for invalid identifier, `404` if not found
 
 ### GET `/api/location/:petType/:location`
 
@@ -168,6 +178,7 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - Error: `400` for invalid petType/location or missing params, `404` if not found
 
 Example:
+
 ```json
 {
   "success": true,
@@ -182,7 +193,6 @@ Example:
 }
 ```
 
-
 ## ObserverNotes
 
 ### GET `/api/observer-notes?limit=10&page=1`
@@ -196,6 +206,7 @@ Example:
 - Error: `400` for invalid query values
 
 Example:
+
 ```json
 {
   "success": true,
@@ -289,6 +300,7 @@ Example:
   - `500` if summarization service fails
 
 Example:
+
 ```json
 {
   "success": true,
@@ -314,6 +326,7 @@ Example:
 - Error: `400` if required fields are missing or invalid
 
 Example:
+
 ```json
 {
   "success": true,
@@ -360,6 +373,7 @@ Example:
 - Error: `400` for invalid tags/pagination, `403` if staff requests `authEvent` tag
 
 #### ActivityLog object
+
 - `logId: string` — UUID
 - `date: string` — YYYY-MM-DD
 - `timestamp: string` — ISO string (newest first)
@@ -369,21 +383,23 @@ Example:
 - `jsonData?: object` — event-specific data
 
 #### Actions logged per tag
-| Tag | Action | jsonData fields |
-|-----|--------|----------------|
-| `behaviorNote` | `CREATED` | `petId`, `content` |
-| `behaviorNote` | `DELETED` | `noteId` |
-| `behaviorNote` | `BULK_DELETED` | `petId` |
-| `observerNote` | `CREATED` | `petId`, `content` |
-| `observerNote` | `DELETED` | `noteId` |
-| `observerNote` | `BULK_DELETED` | `petId` |
-| `observerNote` | `STATUS_CHANGED` | `noteId`, `status` |
-| `authEvent` | `PASSWORD_CHANGED` | — |
-| `authEvent` | `USER_CREATED` | `username`, `role` |
-| `authEvent` | `USER_UPDATED` | `targetUserId`, `expiresAt` |
-| `authEvent` | `USER_DELETED` | `targetUserId`, `targetUsername`, `role` |
 
---------------------------
+| Tag            | Action             | jsonData fields                          |
+| -------------- | ------------------ | ---------------------------------------- |
+| `behaviorNote` | `CREATED`          | `petId`, `content`                       |
+| `behaviorNote` | `DELETED`          | `noteId`                                 |
+| `behaviorNote` | `BULK_DELETED`     | `petId`                                  |
+| `observerNote` | `CREATED`          | `petId`, `content`                       |
+| `observerNote` | `DELETED`          | `noteId`                                 |
+| `observerNote` | `BULK_DELETED`     | `petId`                                  |
+| `observerNote` | `STATUS_CHANGED`   | `noteId`, `status`                       |
+| `authEvent`    | `PASSWORD_CHANGED` | —                                        |
+| `authEvent`    | `USER_CREATED`     | `username`, `role`                       |
+| `authEvent`    | `USER_UPDATED`     | `targetUserId`, `expiresAt`              |
+| `authEvent`    | `USER_DELETED`     | `targetUserId`, `targetUsername`, `role` |
+
+---
+
 ## Behavior Notes
 
 ### GET `/api/behavior-notes?limit=10&page=1`
@@ -437,4 +453,3 @@ Example:
   - `petId` (number, required)
 - Success: `200` with `{ success: true, message: "Behavior notes deleted for pet" }`
 - Error: `400` for invalid id, `404` if no notes exist for that pet
-

@@ -2,12 +2,15 @@ import { type Pet, type PetLocation } from "../models/Pet.schema.js";
 import { type ObserverNote } from "../models/ObserverNote.schema.js";
 import { type BehaviorNote } from "../models/BehaviorNote.schema.js";
 
+
 export interface PetRepository {
-  getById(id: number): Promise<Pet | undefined>;
+  getById(id: number | string): Promise<Pet | undefined>;
   searchByLocation(
     petType: string,
     location: string,
+    refresh?: boolean,
   ): Promise<PetLocation[] | undefined>;
+
 }
 
 export interface NoteRepository<T> {

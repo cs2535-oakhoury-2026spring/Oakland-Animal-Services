@@ -15,6 +15,7 @@ export default function HomeScreen({ user, token, onLogout, darkMode, setDarkMod
   const initialPageParam = Number(new URLSearchParams(window.location.search).get("page") || "1");
   const initialPage = Number.isFinite(initialPageParam) && initialPageParam > 0 ? Math.floor(initialPageParam) : 1;
   const [animals, setAnimals] = useState(null);
+  const [allAnimals, setAllAnimals] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [loadError, setLoadError] = useState(false);
   const [page, setPage] = useState(initialPage);
@@ -33,23 +34,39 @@ export default function HomeScreen({ user, token, onLogout, darkMode, setDarkMod
 
   useEffect(() => {
     setLoadError(false);
-    api.getAllAnimals(page, PAGE_SIZE).then((result) => {
+
+    if (!searchQuery.trim()) {
+      setAllAnimals(null);
+      api.getAllAnimals(page, PAGE_SIZE).then((result) => {
+        if (result === null) {
+          setLoadError(true);
+          setAnimals([]);
+          setTotalAnimals(0);
+          setTotalPages(1);
+        } else {
+          setAnimals(result.animals || []);
+          setTotalAnimals(result.total || 0);
+          setTotalPages(result.totalPages || 1);
+        }
+      });
+      return;
+    }
+
+    api.getAllAnimalsAllPages(PAGE_SIZE).then((result) => {
       if (result === null) {
         setLoadError(true);
-        setAnimals([]);
-        setTotalAnimals(0);
-        setTotalPages(1);
+        setAllAnimals([]);
       } else {
-        setAnimals(result.animals || []);
-        setTotalAnimals(result.total || 0);
-        setTotalPages(result.totalPages || 1);
+        setAllAnimals(result || []);
       }
     });
-  }, [page]);
+  }, [page, searchQuery]);
+
+  const sourceAnimals = searchQuery.trim() ? allAnimals : animals;
 
   // Client-side filter: apply search query across all returned animals
-  const filtered = animals
-    ? animals.filter((a) => {
+  const filtered = sourceAnimals
+    ? sourceAnimals.filter((a) => {
         if (!searchQuery.trim()) return true;
         const q = searchQuery.toLowerCase();
         return (
@@ -101,16 +118,16 @@ export default function HomeScreen({ user, token, onLogout, darkMode, setDarkMod
       <div className={`home-screen__content home-screen__content--${isDesktop ? "desktop" : "mobile"}`}>
         {/* Title */}
         <div className="home-screen__title-row">
-          <h2 className="home-screen__title" style={{ fontSize: isDesktop ? 26 : 22 }}>All Animals</h2>
-          {animals && (
+          <h2 className="home-screen__title" style={{ fontSize: isDesktop ? 26 : 22 }}>Available Animals</h2>
+          {sourceAnimals && (
             <span className="home-screen__count">
               {searchQuery.trim()
-                ? `${filtered.length} matches on this page`
+                ? `${filtered.length} matches`
                 : `${totalAnimals} animals · page ${page} of ${totalPages}`}
             </span>
           )}
         </div>
-        <p className="home-screen__description">All animals currently at Oakland Animal Services</p>
+        <p className="home-screen__description">Animals currently at Oakland Animal Services</p>
 
         <button
           onClick={() => { window.location.href = "/?view=locations"; }}
@@ -174,7 +191,7 @@ export default function HomeScreen({ user, token, onLogout, darkMode, setDarkMod
               onClick={() => {
                 const species = animal.species.toLowerCase();
                 const loc = animal.location.replace(new RegExp(`^${animal.species}\\s+`, 'i'), '').toLowerCase();
-                if (loc && loc !== "unknown" && loc !== "in foster") {
+                if (loc && loc !== "unknown" && !loc.includes("foster")) {
                   window.location.href = `/?type=${encodeURIComponent(species)}&location=${encodeURIComponent(loc)}`;
                 } else {
                   window.location.href = `/?petId=${animal.id}&page=${page}`;

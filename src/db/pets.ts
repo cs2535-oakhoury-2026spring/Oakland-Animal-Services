@@ -8,15 +8,18 @@ import {
 const rgRepo = new RescueGroupPetRepository();
 const REPO: PetRepository = rgRepo;
 
-export async function getPetById(id: number): Promise<Pet | undefined> {
+export async function getPetById(
+  id: number | string,
+): Promise<Pet | undefined> {
   return REPO.getById(id);
 }
 
 export async function searchByLocation(
   petType: string,
   location: string,
+  refresh: boolean = false,
 ): Promise<PetLocation[] | undefined> {
-  return REPO.searchByLocation(petType, location);
+  return REPO.searchByLocation(petType, location, refresh);
 }
 
 export async function getAllAnimals(

@@ -7,7 +7,7 @@ import './AnimalSelection.css';
 
 // ─── Animal Selection Screen ─────────────────────────────────────────────────
 // Only shown when multiple animals share the same kennel location.
-// Current = Available or Foster (or unknown — can't confirm otherwise)
+// Current = Available (or unknown — can't confirm otherwise)
 // Past = anything explicitly non-available: Not Available, Adopted, Deceased, Hold, etc.
 
 // If a QR code URL leads to a kennel with 1 animal, this screen is skipped.
@@ -18,9 +18,7 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
   const maxWidth = isDesktop ? 860 : 480;
 
   const currentAnimals = animals.filter(isCurrentAnimal);
-  const pastAnimals = animals.filter((p) => !isCurrentAnimal(p));
-  const [tab, setTab] = useState("current");
-  const displayed = tab === "current" ? currentAnimals : pastAnimals;
+  const displayed = currentAnimals;
 
   const imgSize = isDesktop ? 72 : 64;
   const [showRefreshTip, setShowRefreshTip] = useState(false);
@@ -72,9 +70,14 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
         <div style={{ marginBottom: isDesktop ? 20 : 14 }}>
           <div className="as-heading-label">Location</div>
           <div className="as-heading-row">
-            <h2 className="as-heading-h2" style={{ fontSize: isDesktop ? 26 : 20 }}>
-              Select an Animal: <span className="as-heading-location">{location}</span>
-            </h2>
+            <div>
+              <h2 className="as-heading-h2" style={{ fontSize: isDesktop ? 26 : 20 }}>
+                Select an Animal: <span className="as-heading-location">{location}</span>
+              </h2>
+              <div className="as-heading-subtitle">
+                {currentAnimals.length} current animal{currentAnimals.length === 1 ? "" : "s"} assigned to this kennel
+              </div>
+            </div>
             {onRefresh && (
               <div className="as-refresh-wrapper">
                 <button
@@ -101,27 +104,10 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
             )}
           </div>
         </div>
-        {/* Current / Past tabs */}
-        <nav className="as-tabs" style={{ marginBottom: isDesktop ? 24 : 16 }}>
-          {[{ key: "current", label: "Current", count: currentAnimals.length }, { key: "past", label: "Past", count: pastAnimals.length }].map(({ key, label, count }) => {
-            const active = tab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`as-tab-btn${active ? " active" : ""}`}
-                style={{ color: active ? (darkMode ? "#8eff8e" : "var(--clr-header-green)") : "var(--clr-warm-gray)" }}
-              >
-                {label} ({count})
-              </button>
-            );
-          })}
-        </nav>
-
         {/* Empty state */}
         {displayed.length === 0 && (
           <div className="as-empty">
-            {tab === "current" ? "No animals currently assigned to this kennel." : "No past animals found at this location."}
+            No animals currently assigned to this kennel.
           </div>
         )}
 
@@ -134,10 +120,10 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
             <button
               key={pet.petId}
               onClick={() => onSelect(pet.petId)}
-              className={`as-animal-card${tab === "past" ? " past" : ""}`}
+              className="as-animal-card"
               style={{ padding: isDesktop ? 18 : 14 }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)"; e.currentTarget.style.opacity = "1"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "var(--shadow)"; e.currentTarget.style.opacity = tab === "past" ? "0.75" : "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "var(--shadow)"; e.currentTarget.style.opacity = "1"; }}
               aria-label={`View ${pet.name}'s profile`}
             >
               <img
@@ -152,9 +138,6 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
                 <div className="as-animal-id">ID: {pet.petId}</div>
                 <div className="as-animal-species">
                   {pet.species}
-                  {tab === "past" && pet.status && pet.status !== "Unknown" && (
-                    <span className="as-animal-status-badge">· {pet.status}</span>
-                  )}
                 </div>
               </div>
               <Icons.arrowRight size={18} color="var(--clr-warm-gray)" />

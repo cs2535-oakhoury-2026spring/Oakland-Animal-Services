@@ -105,6 +105,9 @@
 /* Search bar */
 .home-screen__search-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
@@ -116,7 +119,10 @@
 }
 
 .home-screen__search-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: 46px;
   padding: 12px 16px 12px 38px;
   border-radius: 10px;
   border: 1px solid var(--clr-input-border);
@@ -126,6 +132,18 @@
   outline: none;
   box-sizing: border-box;
   transition: border-color 0.2s;
+}
+
+.home-screen__search-wrap .home-screen__nav-btn {
+  height: 46px;
+  min-height: 0;
+  align-self: center;
+  margin: 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Animal list / grid */
