@@ -3,6 +3,26 @@ import { useFocusTrap, useEscapeKey } from "../../hooks.js";
 import { api } from "../../api.js";
 import "./BatchImportModal.css";
 
+function sanitizeCsvText(rawText) {
+  if (typeof rawText !== "string") return "";
+  const text = rawText.replace(/^\uFEFF/, "");
+  const lines = text.replace(/\r/g, "").split("\n");
+  while (lines.length > 0 && lines[0].trim() === "") {
+    lines.shift();
+  }
+  if (lines.length > 1) {
+    const firstLine = lines[0].trim();
+    const fileNameLike = /^[^,]+\.(csv|txt|xls|xlsx)$/i;
+    if (fileNameLike.test(firstLine)) {
+      lines.shift();
+      while (lines.length > 0 && lines[0].trim() === "") {
+        lines.shift();
+      }
+    }
+  }
+  return lines.join("\n");
+}
+
 // ─── Batch Import Modal ───────────────────────────────────────────────────────
 export default function BatchImportModal({ token, onClose, onDone }) {
   const [csvText, setCsvText] = useState("");
@@ -17,7 +37,11 @@ export default function BatchImportModal({ token, onClose, onDone }) {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setCsvText(ev.target.result);
+    reader.onload = (ev) => {
+      const result = ev.target?.result;
+      const sanitized = sanitizeCsvText(result);
+      setCsvText(sanitized);
+    };
     reader.readAsText(file);
   };
 
