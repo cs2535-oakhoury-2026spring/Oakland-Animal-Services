@@ -19,9 +19,7 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
   const focusTrapRef = useFocusTrap(true);
   useEscapeKey(onClose, true);
 
-  const canSubmit = role === "device" 
-    ? deviceName.trim() && devicePassword.length >= 8 && !loading
-    : username.trim() && password.length >= 8 && !loading;
+  const canSubmit = username.trim() && (role === "device" ? devicePassword.length >= 8 && deviceName.trim() : password.length >= 8) && !loading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +28,7 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
     setError("");
     try {
       let payload = {
-        username: role === "device" ? `device-${deviceName.trim().toLowerCase().replace(/\s+/g, "-")}` : username.trim(),
+        username: username.trim(),
         password: role === "device" ? devicePassword : password,
         role,
       };
@@ -71,15 +69,15 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
             </>
           )}
 
+          <>
+            <label className="create-user-modal__label">Username</label>
+            <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" className="create-user-modal__field create-user-modal__field--spaced" autoFocus autoComplete="off" aria-label="Username" />
+          </>
+
           {role === "device" && (
             <>
               <label className="create-user-modal__label">Device Name</label>
-              <input type="text" value={deviceName} onChange={(e) => { setDeviceName(e.target.value); setError(""); }} placeholder="e.g. Kiosk-1" className="create-user-modal__field create-user-modal__field--spaced" autoFocus aria-label="Device name" />
-              {deviceName && (
-                <div className="create-user-modal__helper-text">
-                  Username will be: <strong>device-{deviceName.trim().toLowerCase().replace(/\s+/g, "-")}</strong>
-                </div>
-              )}
+              <input type="text" value={deviceName} onChange={(e) => { setDeviceName(e.target.value); setError(""); }} placeholder="e.g. Kiosk-1" className="create-user-modal__field create-user-modal__field--spaced" aria-label="Device name" />
 
               <label className="create-user-modal__label">Password (min 8 characters)</label>
               <div className="create-user-modal__pw-wrap">
@@ -94,9 +92,6 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
 
           {role !== "device" && (
             <>
-              <label className="create-user-modal__label">Username</label>
-              <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" className="create-user-modal__field create-user-modal__field--spaced" autoFocus autoComplete="off" aria-label="Username" />
-
               <label className="create-user-modal__label">Temporary Password</label>
               <div className="create-user-modal__pw-wrap">
                 <input type={showPassword ? "text" : "password"} value={password} onChange={(e) => { setPassword(e.target.value); setError(""); }} placeholder="Min 8 characters" className="create-user-modal__field create-user-modal__pw-input" autoComplete="new-password" aria-label="Password" />
