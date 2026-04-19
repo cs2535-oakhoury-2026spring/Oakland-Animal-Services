@@ -135,7 +135,10 @@ export async function resetPasswordHandler(
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.password, SALT_ROUNDS);
-  await updateUser(userId, { passwordHash, mustChangePassword: true });
+  await updateUser(userId, {
+    passwordHash,
+    mustChangePassword: target.role !== "device",
+  });
   await deleteAllRefreshTokensForUser(userId);
 
   logActivity({
