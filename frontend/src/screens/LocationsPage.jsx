@@ -6,6 +6,7 @@ import { api } from "../api.js";
 import Icons from "../Icons.jsx";
 import Skeleton from "../components/Skeleton.jsx";
 import UserDropdown from "../components/UserDropdown.jsx";
+import LocationUploadModal from "./LocationUploadModal.jsx";
 import "./LocationsPage.css";
 
 // ─── Locations Page ───────────────────────────────────────────────────────────
@@ -16,6 +17,8 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   const [locationSearch, setLocationSearch] = useState("");
   const [selectedSpecies, setSelectedSpecies] = useState([]);
   const [selectedKennels, setSelectedKennels] = useState([]);
+  const [customLocations, setCustomLocations] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
   const [qrSizePx, setQrSizePx] = useState(180);
   const [paperSize, setPaperSize] = useState("letter");
   const [includeLocationText, setIncludeLocationText] = useState(true);
@@ -74,11 +77,23 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   }, []);
 
   const isDesktop = r.width >= 768;
-  const speciesOptions = locations ? Array.from(new Set(locations.map((s) => s.species))).sort() : [];
+  const allLocations = locations ? [...locations, ...customLocations] : customLocations;
+
+  const collator = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
+  const compareLocationEntries = (a, b) => {
+    if (a.custom && !b.custom) return -1;
+    if (!a.custom && b.custom) return 1;
+    const speciesCompare = collator.compare(a.species, b.species);
+    if (speciesCompare !== 0) return speciesCompare;
+    return collator.compare(a.location, b.location);
+  };
+
+  const sortedLocations = allLocations ? [...allLocations].sort(compareLocationEntries) : [];
+  const speciesOptions = sortedLocations ? Array.from(new Set(sortedLocations.map((s) => s.species))).sort(collator.compare) : [];
   const speciesFilterSet = new Set(selectedSpecies);
   const searchQuery = locationSearch.trim().toLowerCase();
-  const visibleLocations = locations
-    ? locations.filter((loc) => selectedSpecies.length === 0 || speciesFilterSet.has(loc.species))
+  const visibleLocations = sortedLocations
+    ? sortedLocations.filter((loc) => selectedSpecies.length === 0 || speciesFilterSet.has(loc.species))
         .filter((loc) => {
           if (!searchQuery) return true;
           return (
@@ -144,6 +159,12 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
       : layout.margin;
   };
 
+  const getDisplayLabel = (loc) => {
+    if (loc.custom && loc.label) return loc.label;
+    if (includeAnimalTypeText) return `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`;
+    return loc.location.toUpperCase();
+  };
+
   const previewLayout = computePdfLayout();
   const previewItems = selectedExportLocations.slice(0, previewLayout.itemsPerPage);
   const totalPdfPages = Math.max(1, Math.ceil(selectedExportLocations.length / previewLayout.itemsPerPage));
@@ -193,6 +214,26 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
     );
   };
 
+  const handleImportedLocations = (importedLocations) => {
+    const existingKeys = new Set(customLocations.map((entry) => `${entry.species}|${entry.location}`));
+    const additions = importedLocations.filter(
+      (entry) => !existingKeys.has(`${entry.species}|${entry.location}`),
+    );
+    if (additions.length === 0) return;
+
+    setCustomLocations((prev) => [...prev, ...additions]);
+    setSelectedSpecies((prev) => {
+      const speciesSet = new Set(prev);
+      additions.forEach((entry) => speciesSet.add(entry.species));
+      return Array.from(speciesSet);
+    });
+    setSelectedKennels((prev) => {
+      const keySet = new Set(prev);
+      additions.forEach((entry) => keySet.add(`${entry.species}|${entry.location}`));
+      return Array.from(keySet);
+    });
+  };
+
   const selectAllVisibleKennels = () => {
     setSelectedKennels((prev) => Array.from(new Set([...prev, ...visibleKeys])));
   };
@@ -209,7 +250,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
   };
 
   const exportSelectedToPdf = async () => {
-    if (!locations || locations.length === 0 || selectedKennels.length === 0 || exportingPdf) return;
+    if (!locations || (locations.length === 0 && customLocations.length === 0) || selectedKennels.length === 0 || exportingPdf) return;
 
     const selectedSet = new Set(selectedKennels);
     const toExport = visibleLocations.filter((loc) => selectedSet.has(`${loc.species}|${loc.location}`));
@@ -251,9 +292,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
         doc.addImage(qrDataUrl, "PNG", drawX, y, layout.qrSizePt, layout.qrSizePt);
 
         if (includeLocationText) {
-          const label = includeAnimalTypeText
-            ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
-            : loc.location.toUpperCase();
+          const label = getDisplayLabel(loc);
           doc.setFontSize(9);
           doc.text(label, drawX + layout.qrSizePt / 2, y + layout.qrSizePt + 12, {
             align: "center",
@@ -307,7 +346,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
           </button>
         </div>
 
-        {locations && !loadError && locations.length > 0 && (
+        {locations !== null && !loadError && allLocations.length > 0 && (
           <div className="locations-page__search-wrap">
             <div className="locations-page__search-icon">
               <Icons.search size={15} color="var(--clr-warm-gray)" />
@@ -323,9 +362,21 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
           </div>
         )}
 
-        {locations && !loadError && locations.length > 0 && (
+        {locations !== null && !loadError && (
           <div className="locations-page__export-panel">
             <div className="locations-page__export-title">Export Locations To PDF</div>
+            <div className="locations-page__custom-entry-panel">
+            <button
+              type="button"
+              onClick={() => setShowUploadModal(true)}
+              className="locations-page__action-btn"
+            >
+              Upload locations CSV
+            </button>
+            <div className="locations-page__hint" style={{ marginTop: 10 }}>
+              Upload a CSV file with columns <code>animalType,location</code> to add custom kennel locations.
+            </div>
+          </div>
             <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "minmax(0, 1fr) 300px" : "1fr", gap: 14, alignItems: "start" }}>
               <div>
                 <div className="locations-page__species-filter">
@@ -428,9 +479,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
                       const y = (pageStartY + row * previewLayout.cellHeight) * scale;
                       const qrPx = previewLayout.qrSizePt * scale;
                       const key = `${loc.species}|${loc.location}`;
-                      const label = includeAnimalTypeText
-                        ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
-                        : loc.location.toUpperCase();
+                      const label = getDisplayLabel(loc);
 
                       return (
                         <div key={key} style={{ position: "absolute", left: x, top: y, width: qrPx, textAlign: "center" }}>
@@ -459,6 +508,13 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
               </div>
             </div>
           </div>
+        )}
+
+        {showUploadModal && (
+          <LocationUploadModal
+            onClose={() => setShowUploadModal(false)}
+            onImport={handleImportedLocations}
+          />
         )}
 
         {previewExpanded && (
@@ -500,9 +556,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
                     const y = (pageStartY + row * previewLayout.cellHeight) * scale;
                     const qrPx = previewLayout.qrSizePt * scale;
                     const key = `${loc.species}|${loc.location}`;
-                    const label = includeAnimalTypeText
-                      ? `${loc.species.toUpperCase()} ${loc.location.toUpperCase()}`
-                      : loc.location.toUpperCase();
+                    const label = getDisplayLabel(loc);
 
                     return (
                       <div key={key} style={{ position: "absolute", left: x, top: y, width: qrPx, textAlign: "center" }}>
@@ -546,13 +600,13 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
           </div>
         )}
 
-        {locations && !loadError && locations.length === 0 && (
+        {locations !== null && !loadError && allLocations.length === 0 && (
           <div className="locations-page__message">
             No kennel locations available right now.
           </div>
         )}
 
-        {locations && !loadError && visibleLocations.length > 0 && (
+        {locations !== null && !loadError && visibleLocations.length > 0 && (
           <div className="locations-page__kennel-grid" style={{ gridTemplateColumns: isDesktop ? "repeat(2, 1fr)" : "1fr" }}>
             {visibleLocations.map((loc) => (
               <div
@@ -567,7 +621,13 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
                 />
                 <div>
                   <div className="locations-page__kennel-name">{loc.label}</div>
-                  <div className="locations-page__kennel-count">{loc.count} animals currently in this location</div>
+                  <div className="locations-page__kennel-count">
+                    {loc.custom
+                      ? "Custom location"
+                      : loc.count === 1
+                      ? "1 animal currently in this location"
+                      : `${loc.count} animals currently in this location`}
+                  </div>
                 </div>
                 <button
                   onClick={() => {
@@ -583,7 +643,7 @@ export default function LocationsPage({ user, token, onLogout, darkMode, setDark
           </div>
         )}
 
-        {locations && !loadError && locations.length > 0 && visibleLocations.length === 0 && (
+        {locations !== null && !loadError && allLocations.length > 0 && visibleLocations.length === 0 && (
           <div className="locations-page__message locations-page__message--sm">
             {searchQuery
               ? "No kennels match your search and selected animal types."
