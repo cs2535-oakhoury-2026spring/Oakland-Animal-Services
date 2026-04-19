@@ -150,10 +150,7 @@ const NORMALIZATION_EXCLUSIONS = new Set([
   "fore",
 ]);
 
-function addNormalization(
-  normalizations: Map<string, string>,
-  lower: string,
-) {
+function addNormalization(normalizations: Map<string, string>, lower: string) {
   if (normalizations.has(lower) || NORMALIZATION_EXCLUSIONS.has(lower)) {
     return;
   }

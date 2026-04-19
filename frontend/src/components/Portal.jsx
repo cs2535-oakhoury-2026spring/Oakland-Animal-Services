@@ -64,6 +64,32 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     })();
   }, [petId]);
 
+  const computeMedicalSearchResults = useCallback((query, notesList) => {
+    if (!query.trim()) return null;
+
+    const mapped = notesList.map((n) => ({
+      id: n.id,
+      petId: n.petId,
+      title: n.case,
+      content: n.body,
+      author: n.by,
+      timestamp: new Date(n.createdAt),
+      status: n.status,
+      type: n.type,
+    }));
+    const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
+    const enriched = results.map((r) => {
+      const existing = notesList.find((n) => n.id === r.observerNote.id);
+      return {
+        ...existing,
+        highlightedBody: r.highlightedContent || "",
+        highlightedCase: r.highlightedTitle || "",
+        matchCount: r.matchCount || 0,
+      };
+    });
+    return enriched.length > 0 ? enriched : null;
+  }, []);
+
   // Client-side search for medical notes with keyword highlighting
   const handleMedicalSearch = useCallback((query) => {
     setSearchQuery(query);
@@ -75,32 +101,36 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     }
     setIsSearching(true);
     searchTimerRef.current = setTimeout(() => {
-      const mapped = notes.map((n) => ({
-        id: n.id,
-        petId: n.petId,
-        title: n.case,
-        content: n.body,
-        author: n.by,
-        timestamp: new Date(n.createdAt),
-        status: n.status,
-        type: n.type,
-      }));
-      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
-      const enriched = results.map((r) => {
-        const existing = notes.find((n) => n.id === r.observerNote.id);
-        return {
-          ...existing,
-          highlightedBody: r.highlightedContent || "",
-          highlightedCase: r.highlightedTitle || "",
-          matchCount: r.matchCount || 0,
-        };
-      });
-      setSearchResults(enriched.length > 0 ? enriched : null);
+      setSearchResults(computeMedicalSearchResults(query, notes));
       setIsSearching(false);
     }, 300);
-  }, [notes]);
+  }, [computeMedicalSearchResults, notes]);
 
   const behaviorSearchTimerRef = useRef(null);
+  const computeBehaviorSearchResults = useCallback((query, notesList) => {
+    if (!query.trim()) return null;
+
+    const mapped = notesList.map((n) => ({
+      id: n.id,
+      petId: n.petId,
+      title: n.case,
+      content: n.body,
+      author: n.by,
+      timestamp: new Date(n.createdAt),
+    }));
+    const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
+    const enriched = results.map((r) => {
+      const existing = notesList.find((n) => n.id === r.observerNote.id);
+      return {
+        ...existing,
+        highlightedBody: r.highlightedContent || "",
+        highlightedCase: r.highlightedTitle || "",
+        matchCount: r.matchCount || 0,
+      };
+    });
+    return enriched.length > 0 ? enriched : null;
+  }, []);
+
   const handleBehaviorSearch = useCallback((query) => {
     setBehaviorSearchQuery(query);
     if (behaviorSearchTimerRef.current) clearTimeout(behaviorSearchTimerRef.current);
@@ -109,31 +139,19 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
       return;
     }
     behaviorSearchTimerRef.current = setTimeout(() => {
-      const mapped = behaviorNotes.map((n) => ({
-        id: n.id,
-        petId: n.petId,
-        title: n.case,
-        content: n.body,
-        author: n.by,
-        timestamp: new Date(n.createdAt),
-      }));
-      const results = findSimilarNotes(query, mapped, { noteDataCache, maxResults: 50 });
-      const enriched = results.map((r) => {
-        const existing = behaviorNotes.find((n) => n.id === r.observerNote.id);
-        return {
-          ...existing,
-          highlightedBody: r.highlightedContent || "",
-          highlightedCase: r.highlightedTitle || "",
-          matchCount: r.matchCount || 0,
-        };
-      });
-      setBehaviorSearchResults(enriched.length > 0 ? enriched : null);
+      setBehaviorSearchResults(computeBehaviorSearchResults(query, behaviorNotes));
     }, 300);
-  }, [behaviorNotes]);
+  }, [behaviorNotes, computeBehaviorSearchResults]);
 
   const handleNoteCreated = (n) => {
     if (!n || n.id == null) return;
-    setNotes((prev) => [n, ...prev]);
+    setNotes((prev) => {
+      const next = [n, ...prev];
+      if (searchQuery.trim()) {
+        setSearchResults(computeMedicalSearchResults(searchQuery, next));
+      }
+      return next;
+    });
   };
 
   const updateMedicalNoteState = useCallback((noteId, updater) => {
@@ -189,7 +207,13 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   };
   const handleBehaviorNoteCreated = (n) => {
     if (!n || n.id == null) return;
-    setBehaviorNotes((prev) => [n, ...prev]);
+    setBehaviorNotes((prev) => {
+      const next = [n, ...prev];
+      if (behaviorSearchQuery.trim()) {
+        setBehaviorSearchResults(computeBehaviorSearchResults(behaviorSearchQuery, next));
+      }
+      return next;
+    });
   };
 
   const removeBehaviorNoteState = useCallback((noteId) => {
