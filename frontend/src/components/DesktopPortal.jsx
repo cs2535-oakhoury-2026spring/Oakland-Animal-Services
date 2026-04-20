@@ -35,6 +35,7 @@ export default function DesktopPortal({
   handleConfirmDeleteBehaviorNote,
   handleNoteCreated,
   handleToggleMedicalStatus,
+  handleMedicalStaffCommentUpdate,
   handleRequestDeleteMedicalNote,
   handleRequestDeleteBehaviorNote,
   handleBehaviorNoteCreated,
@@ -265,25 +266,17 @@ export default function DesktopPortal({
               <div className="dp-notes-list">
                 {filteredNotes.length > 0 ? (
                   <>
-                    {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
+                    {filteredNotes.map((note) => (
                       <MedicalNoteCard
                         key={note.id}
                         note={note}
                         userRole={user.role}
                         onToggleStatus={handleToggleMedicalStatus}
                         onDelete={handleRequestDeleteMedicalNote}
+                        onStaffCommentUpdate={handleMedicalStaffCommentUpdate}
                         searchQuery={searchQuery}
                       />
                     ))}
-                    {filteredNotes.length > medicalNotesVisible && (
-                      <button
-                        onClick={() => setMedicalNotesVisible(prev => prev + NOTES_PER_PAGE)}
-                        className="dp-load-more-btn"
-                                               aria-label="Load more observations"
-                      >
-                        Load More ({filteredNotes.length - medicalNotesVisible} remaining)
-                      </button>
-                    )}
                   </>
                 ) : (
                   <div className="dp-empty-state">
@@ -324,7 +317,7 @@ export default function DesktopPortal({
               <div className="dp-notes-list">
                 {filteredBehaviorNotes.length > 0 ? (
                   <>
-                    {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
+                    {filteredBehaviorNotes.map((note) => (
                       <BehaviorNoteCard
                         key={note.id}
                         note={note}
@@ -334,15 +327,6 @@ export default function DesktopPortal({
                         searchQuery={behaviorSearchQuery}
                       />
                     ))}
-                    {filteredBehaviorNotes.length > behaviorNotesVisible && (
-                      <button
-                        onClick={() => setBehaviorNotesVisible(prev => prev + NOTES_PER_PAGE)}
-                        className="dp-load-more-btn"
-                                               aria-label="Load more behavior notes"
-                      >
-                        Load More ({filteredBehaviorNotes.length - behaviorNotesVisible} remaining)
-                      </button>
-                    )}
                   </>
                 ) : (
                   <div className="dp-empty-state">

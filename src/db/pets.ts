@@ -3,7 +3,7 @@ import { PetRepository } from "../types/index.js";
 import {
   RescueGroupPetRepository,
   type PaginatedAnimalsResult,
-} from "./repositories/rescueGroupPetDB.js";
+} from "./rescueGroups/rescueGroupPetDB.js";
 
 const rgRepo = new RescueGroupPetRepository();
 const REPO: PetRepository = rgRepo;

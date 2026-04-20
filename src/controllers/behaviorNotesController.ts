@@ -30,7 +30,7 @@ export async function listBehaviorNotes(req: Request, res: Response) {
   if (validationError) {
     return res.status(400).json({ error: validationError });
   }
-
+  
   const resolvedPage = limit != null && page == null ? 1 : page;
   const behaviorNotes = await getAllBehaviorNotes(
     limit ?? 10,

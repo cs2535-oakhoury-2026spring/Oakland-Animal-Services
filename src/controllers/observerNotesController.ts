@@ -15,11 +15,12 @@ import {
   getObserverNotesByPetId as getObserverNotesByPetIdService,
   removeObserverNoteById,
   updateObserverNoteStatus,
+  updateObserverNoteStaffComment,
   removeNotesByPetId,
-  ObserverNote,
 } from "../services/observerNoteService.js";
 import {
   ObserverNoteCreateSchema,
+  type ObserverNote,
   ObserverNoteSchema,
 } from "../models/ObserverNote.schema.js";
 
@@ -96,6 +97,60 @@ export async function patchObserverNoteStatus(req: Request, res: Response) {
     });
 
     res.json({ success: true, message: "Observer note status updated" });
+  } catch (error) {
+    return res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+
+export async function patchObserverNoteStaffComment(
+  req: Request,
+  res: Response,
+) {
+  const id = parsePositiveIntParam(req.params.id);
+
+  if (isNaN(id)) {
+    return invalidIdResponse(res, "observer note");
+  }
+
+  const { comment } = req.body;
+  if (typeof comment !== "string" || comment.trim() === "") {
+    return res.status(400).json({ error: "Invalid or missing comment" });
+  }
+
+  try {
+    const updated = await updateObserverNoteStaffComment(
+      id,
+      comment.trim(),
+      req.user!.username,
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Observer note not found" });
+    }
+
+    const note = await getObserverNoteByIdService(id);
+    const jsonData = note
+      ? {
+          noteId: id,
+          petId: note.petId,
+          content: note.content,
+          comment,
+        }
+      : { noteId: id, comment };
+
+    logActivity({
+      tag: "observerNote",
+      actor: req.user!.username,
+      action: "STAFF_COMMENT_UPDATED",
+      jsonData,
+    });
+
+    return res.json({
+      success: true,
+      message: "Observer note staff comment updated",
+    });
   } catch (error) {
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",

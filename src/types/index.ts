@@ -26,6 +26,11 @@ export interface NoteRepository<T> {
 
 export interface ObserverNoteRepository extends NoteRepository<ObserverNote> {
   updateObserverNoteStatus(id: number, status: string): Promise<boolean>;
+  updateObserverNoteStaffComment(
+    id: number,
+    comment: string,
+    actor: string,
+  ): Promise<boolean>;
 }
 
 export interface BehaviorNoteRepository extends NoteRepository<BehaviorNote> {}

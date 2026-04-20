@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const StaffCommentSchema = z.object({
+  text: z.string().min(1),
+  from: z.string().min(1),
+  at: z.string().datetime(),
+  editedBy: z.string().min(1).optional(),
+  editedAt: z.string().datetime().optional(),
+});
+
 export const ObserverNoteSchema = z.object({
   id: z.number().int(),
   status: z.string().optional(),
@@ -8,6 +16,7 @@ export const ObserverNoteSchema = z.object({
   content: z.string().min(1),
   author: z.string().min(1),
   petId: z.number().int(),
+  staffComment: StaffCommentSchema.optional(),
 });
 
 export const ObserverNoteCreateSchema = z.object({
@@ -20,3 +29,4 @@ export const ObserverNoteCreateSchema = z.object({
 
 export type ObserverNote = z.infer<typeof ObserverNoteSchema>;
 export type ObserverNoteCreate = z.infer<typeof ObserverNoteCreateSchema>;
+export type StaffComment = z.infer<typeof StaffCommentSchema>;

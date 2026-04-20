@@ -1,8 +1,21 @@
 import { type BehaviorNote } from "../models/BehaviorNote.schema.js";
 import { BehaviorNoteRepository } from "../types/index.js";
 import { BehaviorNoteDBRepository } from "./repositories/behaviorNotesDB.js";
+import config from "../config/index.js";
+import { RescueGroupBehaviorNotesRepository } from "./rescueGroups/rescueGroupBehaviorNotesDB.js";
 
-const REPO: BehaviorNoteRepository = new BehaviorNoteDBRepository();
+const REPO: BehaviorNoteRepository = config.useAwsNotes
+  ? new BehaviorNoteDBRepository()
+  : new RescueGroupBehaviorNotesRepository();
+
+if (
+  !config.useAwsNotes &&
+  (!config.rescueGroups.endpoint || !config.rescueGroups.bearer)
+) {
+  console.warn(
+    "USE_AWS_NOTES=false but RESCUE_GROUPS_ENDPOINT or RESCUE_GROUPS_BEARER is missing.",
+  );
+}
 
 export async function getAllBehaviorNotes(
   limit?: number,
