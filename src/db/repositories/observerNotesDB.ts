@@ -84,7 +84,9 @@ export class ObserverNoteDBRepository
       const existing = item.staffComment;
       const nowIso = new Date().toISOString();
       const nextStaffComment =
-        existing && typeof existing === "object" && typeof existing.from === "string"
+        existing &&
+        typeof existing === "object" &&
+        typeof existing.from === "string"
           ? {
               ...existing,
               text: comment,

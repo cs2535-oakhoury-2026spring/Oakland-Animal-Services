@@ -124,7 +124,9 @@ export const api = {
       const res = await fetch(`/api/pets/${petId}`, { headers: authH() });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to fetch pet (status ${res.status})`);
+        throw new Error(
+          errorData.error || `Failed to fetch pet (status ${res.status})`,
+        );
       }
       const data = await res.json();
       if (data.success && data.pet) {

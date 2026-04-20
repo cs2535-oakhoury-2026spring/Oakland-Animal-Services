@@ -63,7 +63,9 @@ export type ParsedComment = {
   };
 };
 
-function parseStaffComment(raw: any): ParsedComment["staffComment"] | undefined {
+function parseStaffComment(
+  raw: any,
+): ParsedComment["staffComment"] | undefined {
   if (!raw || typeof raw !== "object") return undefined;
 
   if (

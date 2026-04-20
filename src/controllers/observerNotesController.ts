@@ -147,7 +147,10 @@ export async function patchObserverNoteStaffComment(
       jsonData,
     });
 
-    return res.json({ success: true, message: "Observer note staff comment updated" });
+    return res.json({
+      success: true,
+      message: "Observer note staff comment updated",
+    });
   } catch (error) {
     return res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
