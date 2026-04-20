@@ -13,6 +13,7 @@ export default function CreateBehaviorNoteModal({ petId, userName, userRole, onC
   const [deviceUserName, setDeviceUserName] = useState(userRole === "device" ? "" : userName);
   const [isListening, setIsListening] = useState(false);
   const [similarNotes, setSimilarNotes] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const searchTimerRef = useRef(null);
   const recognitionRef = useRef(null);
   const { width } = useResponsive();
@@ -54,7 +55,8 @@ export default function CreateBehaviorNoteModal({ petId, userName, userRole, onC
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const created = await api.createBehaviorNote({ petId, by: finalUserName, body, case: caseName });
       onSubmit(created);
@@ -62,6 +64,8 @@ export default function CreateBehaviorNoteModal({ petId, userName, userRole, onC
     } catch (err) {
       console.warn("Failed to create behavior note", err);
       alert("Unable to create behavior note. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -79,8 +83,10 @@ export default function CreateBehaviorNoteModal({ petId, userName, userRole, onC
 
   const buttons = (
     <div className="create-behavior-note-modal__actions">
-      <button className="create-behavior-note-modal__btn-cancel" onClick={onClose}>Cancel</button>
-      <button className="create-behavior-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit}>Submit</button>
+      <button className="create-behavior-note-modal__btn-cancel" onClick={onClose} disabled={isSubmitting}>Cancel</button>
+      <button className="create-behavior-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit"}
+      </button>
     </div>
   );
 

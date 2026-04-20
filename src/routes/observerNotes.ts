@@ -5,6 +5,7 @@ import {
   getObserverNotesByPetId,
   deleteObserverNote,
   patchObserverNoteStatus,
+  patchObserverNoteStaffComment,
   deleteObserverNotesByPetId,
 } from "../controllers/observerNotesController.js";
 import { authenticate, requireStaff } from "../middleware/auth.js";
@@ -16,5 +17,6 @@ router.post("/api/observer-notes", authenticate, uploadObserverNote);
 router.delete("/api/observer-notes/:id", authenticate, deleteObserverNote);
 router.delete("/api/pets/:petId/observer-notes", authenticate, deleteObserverNotesByPetId);
 router.patch("/api/observer-notes/:id/status", authenticate, requireStaff, patchObserverNoteStatus);
+router.patch("/api/observer-notes/:id/staff-comment", authenticate, requireStaff, patchObserverNoteStaffComment);
 
 export default router;

@@ -8,7 +8,10 @@ const REPO: ObserverNoteRepository = config.useAwsNotes
   ? new ObserverNoteDBRepository()
   : new RescueGroupObserverNotesRepository();
 
-if (!config.useAwsNotes && (!config.rescueGroups.endpoint || !config.rescueGroups.bearer)) {
+if (
+  !config.useAwsNotes &&
+  (!config.rescueGroups.endpoint || !config.rescueGroups.bearer)
+) {
   console.warn(
     "USE_AWS_NOTES=false but RESCUE_GROUPS_ENDPOINT or RESCUE_GROUPS_BEARER is missing.",
   );
@@ -46,6 +49,14 @@ export async function updateObserverNoteStatus(
   status: string,
 ): Promise<boolean> {
   return REPO.updateObserverNoteStatus(id, status);
+}
+
+export async function updateObserverNoteStaffComment(
+  id: number,
+  comment: string,
+  actor: string,
+): Promise<boolean> {
+  return REPO.updateObserverNoteStaffComment(id, comment, actor);
 }
 
 export async function removeNotesByPetId(petId: number): Promise<boolean> {

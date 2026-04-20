@@ -196,6 +196,38 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     updateMedicalNoteState(note.id, (n) => ({ ...n, status: nextStatus }));
   };
 
+  const handleMedicalStaffCommentUpdate = async (note, comment) => {
+    const canManageMedical = user?.role === "admin" || user?.role === "staff";
+    if (!canManageMedical) return false;
+
+    const ok = await api.updateNoteStaffComment(note.id, comment);
+    if (!ok) return false;
+
+    const nowIso = new Date().toISOString();
+    updateMedicalNoteState(note.id, (n) => {
+      const existing = n.staffComment;
+      const staffComment = existing
+        ? {
+            ...existing,
+            text: comment,
+            editedBy: user.username,
+            editedAt: nowIso,
+          }
+        : {
+            text: comment,
+            from: user.username,
+            at: nowIso,
+          };
+
+      return {
+        ...n,
+        staffComment,
+      };
+    });
+
+    return true;
+  };
+
   const performDeleteMedicalNote = async (note) => {
     await api.deleteNote(note.id);
     removeMedicalNoteState(note.id);
@@ -377,6 +409,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
       handleConfirmDeleteBehaviorNote={handleConfirmDeleteBehaviorNote}
       handleNoteCreated={handleNoteCreated}
       handleToggleMedicalStatus={handleToggleMedicalStatus}
+      handleMedicalStaffCommentUpdate={handleMedicalStaffCommentUpdate}
       handleRequestDeleteMedicalNote={handleRequestDeleteMedicalNote}
       handleRequestDeleteBehaviorNote={handleRequestDeleteBehaviorNote}
       handleBehaviorNoteCreated={handleBehaviorNoteCreated}
@@ -534,8 +567,6 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
                 setSearchQuery("");
                 setSearchResults(null);
                 handleBehaviorSearch("");
-                setMedicalNotesVisible(NOTES_PER_PAGE);
-                setBehaviorNotesVisible(NOTES_PER_PAGE);
               }}
             >
               {tab.label}
@@ -578,33 +609,17 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
               <div className="portal-notes-area">
                 {filteredNotes.length > 0 ? (
                   <>
-                    {filteredNotes.slice(0, medicalNotesVisible).map((note) => (
+                    {filteredNotes.map((note) => (
                       <MedicalNoteCard
                         key={note.id}
                         note={note}
                         userRole={user.role}
                         onToggleStatus={handleToggleMedicalStatus}
                         onDelete={handleRequestDeleteMedicalNote}
+                        onStaffCommentUpdate={handleMedicalStaffCommentUpdate}
                         searchQuery={searchQuery}
                       />
                     ))}
-                    {filteredNotes.length > medicalNotesVisible && (
-                      <div className="portal-load-more-wrap">
-                        <div
-                          className="portal-load-more-fade"
-                          style={{ background: `linear-gradient(to bottom, transparent, var(--clr-bg))` }}
-                        />
-                        <div className="portal-load-more-inner">
-                          <button
-                            onClick={() => setMedicalNotesVisible(prev => prev + NOTES_PER_PAGE)}
-                            className="portal-load-more-btn"
-                                                       aria-label="Load more observations"
-                          >
-                            Load More ({filteredNotes.length - medicalNotesVisible} remaining)
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="portal-empty-state">
@@ -639,7 +654,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
               <div className="portal-notes-area">
                 {filteredBehaviorNotes.length > 0 ? (
                   <>
-                    {filteredBehaviorNotes.slice(0, behaviorNotesVisible).map((note) => (
+                    {filteredBehaviorNotes.map((note) => (
                       <BehaviorNoteCard
                         key={note.id}
                         note={note}
@@ -649,23 +664,6 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
                         searchQuery={behaviorSearchQuery}
                       />
                     ))}
-                    {filteredBehaviorNotes.length > behaviorNotesVisible && (
-                      <div className="portal-load-more-wrap">
-                        <div
-                          className="portal-load-more-fade"
-                          style={{ background: `linear-gradient(to bottom, transparent, var(--clr-bg))` }}
-                        />
-                        <div className="portal-load-more-inner">
-                          <button
-                            onClick={() => setBehaviorNotesVisible(prev => prev + NOTES_PER_PAGE)}
-                            className="portal-load-more-btn"
-                                                       aria-label="Load more behavior notes"
-                          >
-                            Load More ({filteredBehaviorNotes.length - behaviorNotesVisible} remaining)
-                          </button>
-                        </div>
-                      </div>
-                    )}
                   </>
                 ) : (
                   <div className="portal-empty-state">

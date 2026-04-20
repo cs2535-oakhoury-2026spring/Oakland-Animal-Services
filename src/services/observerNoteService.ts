@@ -11,6 +11,7 @@ import {
   removeObserverNoteById as _removeObserverNoteById,
   removeNotesByPetId as _removeNotesByPetId,
   updateObserverNoteStatus as _updateObserverNoteStatus,
+  updateObserverNoteStaffComment as _updateObserverNoteStaffComment,
 } from "../db/observerNotes.js";
 
 export type { ObserverNote };
@@ -58,6 +59,14 @@ export async function updateObserverNoteStatus(
   status: string,
 ): Promise<boolean> {
   return _updateObserverNoteStatus(id, status);
+}
+
+export async function updateObserverNoteStaffComment(
+  id: number,
+  comment: string,
+  actor: string,
+): Promise<boolean> {
+  return _updateObserverNoteStaffComment(id, comment, actor);
 }
 
 export async function addObserverNote(note: ObserverNote): Promise<number> {

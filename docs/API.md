@@ -275,6 +275,17 @@ Example:
 - Success: `200` with `{ success: true, message: "Observer note status updated" }`
 - Error: `400` for invalid id/status, `404` if not found
 
+### PATCH `/api/observer-notes/:id/staff-comment`
+
+- Access: **Level 2** (staff, admin)
+- Description: Add or update the staff comment on an observer note.
+- Path param:
+  - `id` (number, required)
+- Body JSON:
+  - `comment` (string, required)
+- Success: `200` with `{ success: true, message: "Observer note staff comment updated" }`
+- Error: `400` for invalid id/comment, `404` if not found
+
 ### DELETE `/api/pets/:petId/observer-notes`
 
 - Access: **Level 1** (volunteer, device, staff, admin)

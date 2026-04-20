@@ -99,6 +99,15 @@ export const transformObserverNote = (note, index) => ({
   type: note.type || "medical",
   body: note.content || note.body || "",
   createdAt: note.timestamp || note.createdAt || new Date().toISOString(),
+  staffComment: note.staffComment
+    ? {
+        text: note.staffComment.text || "",
+        from: note.staffComment.from || "",
+        at: note.staffComment.at || "",
+        editedBy: note.staffComment.editedBy || "",
+        editedAt: note.staffComment.editedAt || "",
+      }
+    : null,
 });
 
 const sortByNewestFirst = (notes) =>
@@ -219,6 +228,23 @@ export const api = {
       return data.success;
     } catch (err) {
       console.warn("updateNote failed", err);
+      return false;
+    }
+  },
+
+  // REAL — connected to PATCH /api/observer-notes/:id/staff-comment
+  updateNoteStaffComment: async (noteId, comment) => {
+    try {
+      const res = await fetch(`/api/observer-notes/${noteId}/staff-comment`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authH() },
+        body: JSON.stringify({ comment }),
+      });
+      if (!res.ok) throw new Error("Failed to update staff comment");
+      const data = await res.json();
+      return data.success;
+    } catch (err) {
+      console.warn("updateNoteStaffComment failed", err);
       return false;
     }
   },

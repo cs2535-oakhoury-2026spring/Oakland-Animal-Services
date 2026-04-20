@@ -25,6 +25,7 @@ export class RescueGroupObserverNotesRepository
       author: common.author,
       petId: common.petId,
       status: common.status ?? "RAISED",
+      staffComment: common.staffComment,
     };
   }
 
@@ -37,6 +38,7 @@ export class RescueGroupObserverNotesRepository
       content: note.content,
       author: note.author,
       status: note.status,
+      staffComment: note.staffComment,
     };
   }
 
@@ -52,6 +54,38 @@ export class RescueGroupObserverNotesRepository
     const updated: ObserverNote = {
       ...note,
       status,
+    };
+
+    return this.editJournalComment(uniqueId, this.serializeComment(updated));
+  }
+
+  async updateObserverNoteStaffComment(
+    uniqueId: number,
+    comment: string,
+    actor: string,
+  ): Promise<boolean> {
+    const note = await this.getNoteById(uniqueId);
+    if (!note) {
+      return false;
+    }
+
+    const nowIso = new Date().toISOString();
+    const nextStaffComment = note.staffComment
+      ? {
+          ...note.staffComment,
+          text: comment,
+          editedBy: actor,
+          editedAt: nowIso,
+        }
+      : {
+          text: comment,
+          from: actor,
+          at: nowIso,
+        };
+
+    const updated: ObserverNote = {
+      ...note,
+      staffComment: nextStaffComment,
     };
 
     return this.editJournalComment(uniqueId, this.serializeComment(updated));

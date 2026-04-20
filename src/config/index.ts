@@ -3,7 +3,10 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 dotenv.config();
 
-function parseBooleanEnv(value: string | undefined, defaultValue: boolean): boolean {
+function parseBooleanEnv(
+  value: string | undefined,
+  defaultValue: boolean,
+): boolean {
   if (value == null) return defaultValue;
   const normalized = value.trim().toLowerCase();
   if (["true", "1", "yes", "on"].includes(normalized)) return true;
@@ -23,7 +26,7 @@ export default {
   },
 
   useAwsNotes: parseBooleanEnv(process.env.USE_AWS_NOTES, true),
-  
+
   aws: {
     region: process.env.AWS_REGION ?? "us-east-1",
     endpoint: process.env.AWS_ENDPOINT ?? "http://localhost:4566",

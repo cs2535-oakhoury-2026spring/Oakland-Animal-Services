@@ -14,6 +14,7 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
   const [deviceUserName, setDeviceUserName] = useState(userRole === "device" ? "" : userName);
   const [isListening, setIsListening] = useState(false);
   const [similarNotes, setSimilarNotes] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const searchTimerRef = useRef(null);
   const recognitionRef = useRef(null);
   const canSetStatus = userRole === "medical";
@@ -56,7 +57,8 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
   };
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || isSubmitting) return;
+    setIsSubmitting(true);
     try {
       const created = await api.createNote({ petId, by: finalUserName, type: "medical", body, case: caseName, status: canSetStatus ? status : "Raised" });
       onSubmit(created);
@@ -64,6 +66,8 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
     } catch (err) {
       console.warn("Failed to create observation note", err);
       alert("Unable to create observation. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,8 +85,10 @@ export default function CreateNoteModal({ petId, userName, userRole, onClose, on
 
   const buttons = (
     <div className="create-note-modal__actions">
-      <button className="create-note-modal__btn-cancel" onClick={onClose}>Cancel</button>
-      <button className="create-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit}>Submit</button>
+      <button className="create-note-modal__btn-cancel" onClick={onClose} disabled={isSubmitting}>Cancel</button>
+      <button className="create-note-modal__btn-submit" onClick={handleSubmit} disabled={!canSubmit || isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit"}
+      </button>
     </div>
   );
 

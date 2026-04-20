@@ -8,7 +8,10 @@ const REPO: BehaviorNoteRepository = config.useAwsNotes
   ? new BehaviorNoteDBRepository()
   : new RescueGroupBehaviorNotesRepository();
 
-if (!config.useAwsNotes && (!config.rescueGroups.endpoint || !config.rescueGroups.bearer)) {
+if (
+  !config.useAwsNotes &&
+  (!config.rescueGroups.endpoint || !config.rescueGroups.bearer)
+) {
   console.warn(
     "USE_AWS_NOTES=false but RESCUE_GROUPS_ENDPOINT or RESCUE_GROUPS_BEARER is missing.",
   );

@@ -39,6 +39,13 @@ type StoredNotePayload = {
   content: string;
   author: string;
   status?: string;
+  staffComment?: {
+    text: string;
+    from: string;
+    at: string;
+    editedBy?: string;
+    editedAt?: string;
+  };
 };
 
 export type ParsedComment = {
@@ -47,7 +54,34 @@ export type ParsedComment = {
   content: string;
   author: string;
   status?: string;
+  staffComment?: {
+    text: string;
+    from: string;
+    at: string;
+    editedBy?: string;
+    editedAt?: string;
+  };
 };
+
+function parseStaffComment(raw: any): ParsedComment["staffComment"] | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+
+  if (
+    typeof raw.text !== "string" ||
+    typeof raw.from !== "string" ||
+    typeof raw.at !== "string"
+  ) {
+    return undefined;
+  }
+
+  return {
+    text: raw.text,
+    from: raw.from,
+    at: raw.at,
+    editedBy: typeof raw.editedBy === "string" ? raw.editedBy : undefined,
+    editedAt: typeof raw.editedAt === "string" ? raw.editedAt : undefined,
+  };
+}
 
 function formatDateForRG(date: Date): string {
   return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
@@ -108,28 +142,38 @@ export abstract class RescueGroupNotesBaseRepository<
         ) {
           return {
             createdAt:
-              typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
+              typeof parsed.createdAt === "string"
+                ? parsed.createdAt
+                : undefined,
             title: typeof parsed.title === "string" ? parsed.title : undefined,
             content: parsed.content,
             author:
-              typeof parsed.author === "string" && parsed.author.trim().length > 0
+              typeof parsed.author === "string" &&
+              parsed.author.trim().length > 0
                 ? parsed.author
                 : "Unknown",
-            status: typeof parsed.status === "string" ? parsed.status : undefined,
+            status:
+              typeof parsed.status === "string" ? parsed.status : undefined,
+            staffComment: parseStaffComment(parsed.staffComment),
           };
         }
 
         if (typeof parsed.content === "string") {
           return {
             createdAt:
-              typeof parsed.createdAt === "string" ? parsed.createdAt : undefined,
+              typeof parsed.createdAt === "string"
+                ? parsed.createdAt
+                : undefined,
             title: typeof parsed.title === "string" ? parsed.title : undefined,
             content: parsed.content,
             author:
-              typeof parsed.author === "string" && parsed.author.trim().length > 0
+              typeof parsed.author === "string" &&
+              parsed.author.trim().length > 0
                 ? parsed.author
                 : "Unknown",
-            status: typeof parsed.status === "string" ? parsed.status : undefined,
+            status:
+              typeof parsed.status === "string" ? parsed.status : undefined,
+            staffComment: parseStaffComment(parsed.staffComment),
           };
         }
       }
@@ -151,6 +195,13 @@ export abstract class RescueGroupNotesBaseRepository<
     content: string;
     author: string;
     status?: string;
+    staffComment?: {
+      text: string;
+      from: string;
+      at: string;
+      editedBy?: string;
+      editedAt?: string;
+    };
   } {
     const parsedComment = this.parseComment(entry.journalEntryComment);
 
@@ -171,6 +222,7 @@ export abstract class RescueGroupNotesBaseRepository<
       content: parsedComment.content,
       author: parsedComment.author,
       status: parsedComment.status,
+      staffComment: parsedComment.staffComment,
     };
   }
 
