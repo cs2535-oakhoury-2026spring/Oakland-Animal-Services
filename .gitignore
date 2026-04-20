@@ -66,4 +66,3 @@ package-lock.json
 dist/
 frontend/build/
 .env
-.env.*

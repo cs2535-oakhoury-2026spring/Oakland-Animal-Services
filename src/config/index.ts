@@ -3,6 +3,14 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 dotenv.config();
 
+function parseBooleanEnv(value: string | undefined, defaultValue: boolean): boolean {
+  if (value == null) return defaultValue;
+  const normalized = value.trim().toLowerCase();
+  if (["true", "1", "yes", "on"].includes(normalized)) return true;
+  if (["false", "0", "no", "off"].includes(normalized)) return false;
+  return defaultValue;
+}
+
 export default {
   port: Number(process.env.PORT) || 3000,
   LLM_API_KEY: process.env.OPENAI_API_KEY ?? "",
@@ -14,6 +22,8 @@ export default {
     bearer: process.env.RESCUE_GROUPS_BEARER ?? "",
   },
 
+  useAwsNotes: parseBooleanEnv(process.env.USE_AWS_NOTES, true),
+  
   aws: {
     region: process.env.AWS_REGION ?? "us-east-1",
     endpoint: process.env.AWS_ENDPOINT ?? "http://localhost:4566",
