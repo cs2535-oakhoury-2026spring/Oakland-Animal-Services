@@ -42,6 +42,8 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   const [isSearching, setIsSearching] = useState(false);
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState("");
+  const [aiRequestPending, setAiRequestPending] = useState(false);
+  const aiRequestPendingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [medicalNotesVisible, setMedicalNotesVisible] = useState(5);
   const [behaviorNotesVisible, setBehaviorNotesVisible] = useState(5);
@@ -261,14 +263,21 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
   };
 
   const handleAiQuery = async () => {
-    if (!aiQuery.trim()) return;
+    if (!aiQuery.trim() || aiRequestPendingRef.current) return;
+
+    aiRequestPendingRef.current = true;
+    setAiRequestPending(true);
     setAiResponse("Generating AI summary...");
+
     try {
       const summary = await api.getSummary(petId, aiQuery.trim());
       setAiResponse(summary);
     } catch (err) {
       console.error("AI query error:", err);
       setAiResponse("Failed to generate summary. Please try again.");
+    } finally {
+      aiRequestPendingRef.current = false;
+      setAiRequestPending(false);
     }
   };
 
@@ -350,7 +359,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
       searchQuery={searchQuery} handleMedicalSearch={handleMedicalSearch}
       behaviorSearchQuery={behaviorSearchQuery} handleBehaviorSearch={handleBehaviorSearch}
       isSearching={isSearching}
-      aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery}
+      aiQuery={aiQuery} setAiQuery={setAiQuery} aiResponse={aiResponse} handleAiQuery={handleAiQuery} aiLoading={aiRequestPending}
       medicalNotesVisible={medicalNotesVisible} setMedicalNotesVisible={setMedicalNotesVisible}
       behaviorNotesVisible={behaviorNotesVisible} setBehaviorNotesVisible={setBehaviorNotesVisible}
       NOTES_PER_PAGE={NOTES_PER_PAGE}
@@ -543,7 +552,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
           id={`panel-${activeTab}`}
           style={{ animation: `slide-${slideDirection} 0.3s ease-out` }}
         >
-          {activeTab === "summary" && <SummaryTab aiQuery={aiQuery} aiResponse={aiResponse} onQueryChange={setAiQuery} onSubmit={handleAiQuery} />}
+          {activeTab === "summary" && <SummaryTab aiQuery={aiQuery} aiResponse={aiResponse} onQueryChange={setAiQuery} onSubmit={handleAiQuery} aiLoading={aiRequestPending} />}
 
           {activeTab === "medical" && (
             <>

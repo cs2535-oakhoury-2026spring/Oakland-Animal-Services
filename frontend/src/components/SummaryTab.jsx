@@ -2,7 +2,7 @@ import { useRef } from "react";
 import './SummaryTab.css';
 
 // ─── Summary Tab (AI Chat Interface) ────────────────────────────────────────
-export default function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmit }) {
+export default function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmit, aiLoading }) {
   const textareaRef = useRef(null);
 
   const handleSubmit = () => {
@@ -41,9 +41,9 @@ export default function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmi
         <button
           className="summary-tab__submit"
           onClick={handleSubmit}
-          disabled={!aiQuery.trim()}
+          disabled={!aiQuery.trim() || aiLoading}
         >
-          Ask AI
+          {aiLoading ? "Generating..." : "Ask AI"}
         </button>
 
         {aiResponse && (

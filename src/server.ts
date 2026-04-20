@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import config from "./config/index.js";
 import petRouter from "./routes/pet.js";
@@ -26,8 +27,19 @@ const PORT = config.port;
 // needs Express to trust that proxy to read the client IP safely.
 app.set("trust proxy", 1);
 
+const generalRequestLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => req.method === "DELETE",
+  keyGenerator: (req) => String(req.user?.userId ?? req.ip ?? "anonymous"),
+  message: { error: "Too many requests, please try again in a minute." },
+});
+
 app.use(express.json());
 app.use(cookieParser());
+app.use(generalRequestLimiter);
 app.use(authRouter);
 app.use(usersRouter);
 app.use(activityRouter);

@@ -17,7 +17,7 @@ export default function DesktopPortal({
   searchQuery, handleMedicalSearch,
   behaviorSearchQuery, handleBehaviorSearch,
   isSearching,
-  aiQuery, setAiQuery, aiResponse, handleAiQuery,
+  aiQuery, setAiQuery, aiResponse, handleAiQuery, aiLoading,
   medicalNotesVisible, setMedicalNotesVisible,
   behaviorNotesVisible, setBehaviorNotesVisible,
   NOTES_PER_PAGE,
@@ -383,11 +383,11 @@ export default function DesktopPortal({
 
               <button
                 className="dp-summary-submit-btn"
-                style={{ opacity: !aiQuery.trim() ? 0.5 : 1 }}
+                style={{ opacity: !aiQuery.trim() || aiLoading ? 0.5 : 1 }}
                 onClick={handleAiQuery}
-                disabled={!aiQuery.trim()}
+                disabled={!aiQuery.trim() || aiLoading}
               >
-                Ask AI
+                {aiLoading ? "Generating..." : "Ask AI"}
               </button>
 
               {aiResponse && (
