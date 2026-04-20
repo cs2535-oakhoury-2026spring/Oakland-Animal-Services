@@ -2,6 +2,9 @@ import { type Pet, type PetLocation } from "../models/Pet.schema.js";
 import { type ObserverNote } from "../models/ObserverNote.schema.js";
 import { type BehaviorNote } from "../models/BehaviorNote.schema.js";
 
+export interface LLMClient {
+  summarize(params: { instruction: string; text: string }): Promise<string>;
+}
 
 export interface PetRepository {
   getById(id: number | string): Promise<Pet | undefined>;
@@ -10,7 +13,6 @@ export interface PetRepository {
     location: string,
     refresh?: boolean,
   ): Promise<PetLocation[] | undefined>;
-
 }
 
 export interface NoteRepository<T> {
