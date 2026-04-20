@@ -562,9 +562,9 @@ export class RescueGroupPetRepository implements PetRepository {
         resultOrder: "asc",
         filters: [
           {
-            fieldName: "animalStatus",
-            operation: "equals",
-            criteria: "Available",
+            fieldName: "animalStatusID",
+            operation: "contains",
+            criteria: ["1", "2", "16"],
           },
           {
             fieldName: "animalSummary",
@@ -638,9 +638,9 @@ export class RescueGroupPetRepository implements PetRepository {
             resultOrder: "asc",
             filters: [
               {
-                fieldName: "animalStatus",
-                operation: "equals",
-                criteria: status,
+                fieldName: "animalStatusID",
+                operation: "contains",
+                criteria: ["1", "2", "16"],
               },
               {
                 fieldName: "animalSummary",
