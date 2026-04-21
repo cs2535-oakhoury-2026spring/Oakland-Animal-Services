@@ -43,6 +43,8 @@ export default function DesktopPortal({
   darkMode, setDarkMode,
 }) {
   const [descExpanded, setDescExpanded] = useState(false);
+  const [includeBehaviorNotes, setIncludeBehaviorNotes] = useState(true);
+  const [includeObserverNotes, setIncludeObserverNotes] = useState(true);
 
   const tabs = [
     { key: "medical", label: "Medical Observations" },
@@ -350,6 +352,27 @@ export default function DesktopPortal({
                 Ask questions about medical observations, behavior notes, or anything related to {pet.name}.
               </p>
 
+              <div style={{ marginBottom: 16, padding: 12, backgroundColor: "var(--clr-input-bg)", borderRadius: 10, border: "1px solid var(--clr-card-border)", display: "flex", gap: 16 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", userSelect: "none" }}>
+                  <input
+                    type="checkbox"
+                    checked={includeObserverNotes}
+                    onChange={(e) => setIncludeObserverNotes(e.target.checked)}
+                    style={{ cursor: "pointer", accentColor: "var(--clr-header-green)" }}
+                  />
+                  <span>Medical/Observer Notes</span>
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", userSelect: "none" }}>
+                  <input
+                    type="checkbox"
+                    checked={includeBehaviorNotes}
+                    onChange={(e) => setIncludeBehaviorNotes(e.target.checked)}
+                    style={{ cursor: "pointer", accentColor: "var(--clr-header-green)" }}
+                  />
+                  <span>Behavior Notes</span>
+                </label>
+              </div>
+
               <div style={{ marginBottom: 16 }}>
                 <label className="dp-summary-label">Your Question</label>
                 <textarea
@@ -368,7 +391,7 @@ export default function DesktopPortal({
               <button
                 className="dp-summary-submit-btn"
                 style={{ opacity: !aiQuery.trim() || aiLoading ? 0.5 : 1 }}
-                onClick={handleAiQuery}
+                onClick={() => handleAiQuery({ includeBehaviorNotes, includeObserverNotes })}
                 disabled={!aiQuery.trim() || aiLoading}
               >
                 {aiLoading ? "Generating..." : "Ask AI"}
