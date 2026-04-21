@@ -178,11 +178,9 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     }
   };
 
-  const isExpiredVolunteer = (u) => (
-    u.role === "volunteer" && u.expiresAt && new Date(u.expiresAt) < new Date()
-  );
-
-  const expiredVolunteerIds = filteredUsers.filter(isExpiredVolunteer).map((u) => u.userId);
+  const expiredVolunteerIds = filteredUsers
+    .filter((u) => u.role === "volunteer" && u.expiresAt && new Date(u.expiresAt) < new Date())
+    .map((u) => u.userId);
   const tagMatchedIds = tagFilterSet.size > 0 ? filteredUsers.map((u) => u.userId) : [];
   const selectedUsers = filteredUsers.filter((u) => selectedUserIds.includes(u.userId));
 
@@ -286,7 +284,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
 
   const handleBulkDelete = async () => {
     if (selectedUserIds.length === 0) return;
-    const shouldDelete = window.confirm(`Delete ${selectedUserIds.length} selected volunteer account(s)? This cannot be undone.`);
+    const shouldDelete = window.confirm(`Delete ${selectedUserIds.length} selected ${activeTab} account(s)? This cannot be undone.`);
     if (!shouldDelete) return;
 
     setBulkActionLoading(true);
@@ -465,7 +463,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           </label>
         </div>
 
-                  {activeTab === "volunteer" && (
+                  {(activeTab === "volunteer" || activeTab === "staff" || activeTab === "device") && (
                     <div className="user-mgmt-screen__bulk-bar">
                       {tagFilterSet.size > 0 && (
                         <button
@@ -477,14 +475,16 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                           Select All with Tag
                         </button>
                       )}
-                      <button
-                        onClick={selectAllExpired}
-                        className="user-mgmt-screen__bulk-btn"
-                        disabled={expiredVolunteerIds.length === 0 || bulkActionLoading}
-                      >
-                        <Icons.check size={13} color="var(--clr-text-secondary)" />
-                        Select Expired ({expiredVolunteerIds.length})
-                      </button>
+                      {activeTab === "volunteer" && (
+                        <button
+                          onClick={selectAllExpired}
+                          className="user-mgmt-screen__bulk-btn"
+                          disabled={expiredVolunteerIds.length === 0 || bulkActionLoading}
+                        >
+                          <Icons.check size={13} color="var(--clr-text-secondary)" />
+                          Select Expired ({expiredVolunteerIds.length})
+                        </button>
+                      )}
                       <button
                         onClick={clearSelection}
                         className="user-mgmt-screen__bulk-btn"
@@ -508,20 +508,24 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                         <Icons.pencil size={13} color="var(--clr-text-secondary)" />
                         Rename Tag
                       </button>
-                      <input
-                        type="datetime-local"
-                        value={bulkExpiryDate}
-                        onChange={(e) => setBulkExpiryDate(e.target.value)}
-                        className="user-mgmt-screen__bulk-date-input"
-                        aria-label="Bulk expiry date and time"
-                      />
-                      <button
-                        onClick={handleBulkExpiryUpdate}
-                        className="user-mgmt-screen__bulk-update-btn"
-                        disabled={selectedUserIds.length === 0 || !bulkExpiryDate.trim() || bulkActionLoading}
-                      >
-                        Update Expiry Time
-                      </button>
+                      {activeTab === "volunteer" && (
+                        <>
+                          <input
+                            type="datetime-local"
+                            value={bulkExpiryDate}
+                            onChange={(e) => setBulkExpiryDate(e.target.value)}
+                            className="user-mgmt-screen__bulk-date-input"
+                            aria-label="Bulk expiry date and time"
+                          />
+                          <button
+                            onClick={handleBulkExpiryUpdate}
+                            className="user-mgmt-screen__bulk-update-btn"
+                            disabled={selectedUserIds.length === 0 || !bulkExpiryDate.trim() || bulkActionLoading}
+                          >
+                            Update Expiry Time
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -559,7 +563,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
               const expStatus = getExpiryStatus(u.expiresAt);
               return (
                 <div key={u.userId} className="user-mgmt-screen__user-card" style={{ flexWrap: isDesktop ? "nowrap" : "wrap" }}>
-                  {activeTab === "volunteer" && (
+                  {(activeTab === "volunteer" || activeTab === "staff" || activeTab === "device") && (
                     <input
                       type="checkbox"
                       checked={selectedUserIds.includes(u.userId)}

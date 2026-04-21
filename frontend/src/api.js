@@ -601,7 +601,7 @@ export const api = {
   },
 
   batchCreateUsers: async (token, csvText) => {
-    const res = await fetch("/api/users/batch", {
+    const res = await fetch("/api/users/import", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

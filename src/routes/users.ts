@@ -37,5 +37,11 @@ router.post(
   requireStaff,
   batchCreateUsersHandler,
 );
+router.post(
+  "/api/users/import",
+  authenticate,
+  requireStaff,
+  batchCreateUsersHandler,
+);
 
 export default router;
