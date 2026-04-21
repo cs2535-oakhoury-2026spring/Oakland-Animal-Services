@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcrypt";
 import {
   createUser,
+  getUserByUsername,
   getUserById,
   updateUser,
   deleteUser,
@@ -23,17 +24,24 @@ const CreateUserSchema = z.object({
   username: z.string().min(1).toLowerCase(),
   password: z.string().min(1),
   role: z.enum(["admin", "staff", "volunteer", "device"]),
+  tag: z.string().min(1).optional(),
   deviceName: z.string().optional(),
   expiresAt: validIsoDate.optional(),
 });
 
 const UpdateUserSchema = z.object({
   expiresAt: validIsoDate.optional(),
+  tag: z.string().min(1).optional(),
 });
 
 const ResetPasswordSchema = z.object({
   password: z.string().min(1),
 });
+
+function normalizeTag(tag?: string): string {
+  const trimmed = tag?.trim();
+  return trimmed ? trimmed : "No-tag";
+}
 
 export async function createUserHandler(
   req: Request,
@@ -47,7 +55,7 @@ export async function createUserHandler(
     return;
   }
 
-  const { username, password, role, deviceName, expiresAt } = parsed.data;
+  const { username, password, role, tag, deviceName, expiresAt } = parsed.data;
   const callerRole = req.user!.role;
 
   // Staff can only create volunteers with an expiry date
@@ -79,6 +87,7 @@ export async function createUserHandler(
       username,
       passwordHash,
       role,
+      tag: normalizeTag(tag),
       deviceName,
       expiresAt,
     });
@@ -227,6 +236,7 @@ const BatchRowSchema = z.object({
   password: z.string().min(1),
   role: z.enum(["staff", "volunteer", "device"]),
   expiresat: z.string().optional(),
+  tag: z.string().optional(),
 });
 
 function parseOptionalExpiryToIso(raw?: string): string | undefined {
@@ -268,6 +278,7 @@ export async function batchCreateUsersHandler(
   }
 
   const created: string[] = [];
+  const updated: string[] = [];
   const failed: Array<{ username: string; reason: string }> = [];
   const callerRole = req.user!.role;
 
@@ -282,8 +293,9 @@ export async function batchCreateUsersHandler(
       });
       continue;
     }
-    const { username, password, role, expiresat } = parsed.data;
+    const { username, password, role, expiresat, tag } = parsed.data;
     const expiresAtIso = parseOptionalExpiryToIso(expiresat);
+    const tagValue = normalizeTag(tag);
 
     if (callerRole === "staff" && role !== "volunteer") {
       failed.push({
@@ -320,6 +332,7 @@ export async function batchCreateUsersHandler(
         username,
         passwordHash,
         role,
+        tag: tagValue,
         expiresAt: expiresAtIso,
       });
       logActivity({
@@ -330,6 +343,35 @@ export async function batchCreateUsersHandler(
       });
       created.push(username);
     } catch (err: any) {
+      if (err.message === "USERNAME_TAKEN") {
+        const existing = await getUserByUsername(username);
+        const isExpiredVolunteer =
+          existing?.role === "volunteer" &&
+          !!existing.expiresAt &&
+          new Date(existing.expiresAt) < new Date();
+
+        if (role === "volunteer" && expiresAtIso && existing && isExpiredVolunteer) {
+          await updateUser(existing.userId, {
+            expiresAt: expiresAtIso,
+            tag: tagValue,
+          });
+          logActivity({
+            tag: "authEvent",
+            actor: req.user!.username,
+            action: "USER_UPDATED",
+            jsonData: {
+              targetUserId: existing.userId,
+              targetUsername: existing.username,
+              role: existing.role,
+              batch: true,
+              updatedField: "expiresAt,tag",
+            },
+          });
+          updated.push(username);
+          continue;
+        }
+      }
+
       failed.push({
         username,
         reason:
@@ -340,5 +382,5 @@ export async function batchCreateUsersHandler(
     }
   }
 
-  res.status(200).json({ success: true, created, failed });
+  res.status(200).json({ success: true, created, updated, failed });
 }

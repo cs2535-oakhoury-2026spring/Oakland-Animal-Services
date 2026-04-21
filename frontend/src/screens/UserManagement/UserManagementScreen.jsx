@@ -17,10 +17,27 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   const isDesktop = r.width >= 768;
   const isAdmin = user?.role === "admin";
 
+  const getTagStyle = (tag) => {
+    const text = String(tag || "No-tag").trim().toLowerCase();
+    let hash = 0;
+    for (let index = 0; index < text.length; index += 1) {
+      hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+    }
+
+    const hue = hash % 360;
+    return {
+      "--tag-bg": `hsl(${hue} 60% 93%)`,
+      "--tag-border": `hsl(${hue} 48% 80%)`,
+      "--tag-text": `hsl(${hue} 42% 28%)`,
+    };
+  };
+
   const [users, setUsers] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
   const [activeTab, setActiveTab] = useState("volunteer");
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -28,6 +45,12 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   const [showResetModal, setShowResetModal] = useState(null);
   const [showEditExpiryModal, setShowEditExpiryModal] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showTagModal, setShowTagModal] = useState(false);
+  const [tagModalScope, setTagModalScope] = useState("single");
+  const [tagModalUser, setTagModalUser] = useState(null);
+  const [tagModalValue, setTagModalValue] = useState("");
+  const [tagModalError, setTagModalError] = useState("");
+  const [tagModalLoading, setTagModalLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
@@ -56,11 +79,50 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
 
   useEffect(() => { fetchUsers(); }, []);
 
+  const parsedTagFilters = tagFilter
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  const tagFilterSet = new Set(parsedTagFilters);
+
+  const tagSuggestions = Array.from(new Set(
+    (users || [])
+      .filter((u) => u.role === activeTab)
+      .map((u) => String(u.tag || "No-tag").trim())
+      .filter(Boolean),
+  )).sort((a, b) => a.localeCompare(b));
+
+  const tagFilterSegments = tagFilter.split(",");
+  const activeTagSegmentRaw = tagFilterSegments[tagFilterSegments.length - 1] || "";
+  const activeTagSegment = activeTagSegmentRaw.trim().toLowerCase();
+  const committedTagFilters = new Set(
+    tagFilterSegments
+      .slice(0, -1)
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
+  const visibleTagSuggestions = tagSuggestions
+    .filter((tag) => {
+      const normalizedTag = tag.toLowerCase();
+      if (committedTagFilters.has(normalizedTag)) return false;
+      if (!activeTagSegment) return true;
+      return normalizedTag.includes(activeTagSegment);
+    })
+    .slice(0, 8);
+
   const filteredUsers = (users || []).filter((u) => {
     if (u.role !== activeTab) return false;
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return u.username?.toLowerCase().includes(q) || u.deviceName?.toLowerCase().includes(q);
+    const q = searchQuery.trim().toLowerCase();
+    const haystack = [u.username, u.deviceName, u.tag]
+      .filter(Boolean)
+      .map((value) => String(value).toLowerCase());
+    const normalizedUserTag = String(u.tag || "No-tag").trim().toLowerCase();
+
+    if (q && !haystack.some((value) => value.includes(q))) return false;
+    if (tagFilterSet.size > 0 && !tagFilterSet.has(normalizedUserTag)) return false;
+    return true;
   });
 
   const sortedFilteredUsers = [...filteredUsers].sort((a, b) => {
@@ -80,7 +142,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
 
   useEffect(() => {
     setSelectedUserIds([]);
-  }, [activeTab, searchQuery, users]);
+  }, [activeTab, searchQuery, tagFilter, users]);
 
   const getExpiryStatus = (expiryDate) => {
     if (!expiryDate) return null;
@@ -121,6 +183,8 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   );
 
   const expiredVolunteerIds = filteredUsers.filter(isExpiredVolunteer).map((u) => u.userId);
+  const tagMatchedIds = tagFilterSet.size > 0 ? filteredUsers.map((u) => u.userId) : [];
+  const selectedUsers = filteredUsers.filter((u) => selectedUserIds.includes(u.userId));
 
   const toggleUserSelection = (userId) => {
     setSelectedUserIds((prev) => (
@@ -132,6 +196,88 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
 
   const selectAllExpired = () => {
     setSelectedUserIds(expiredVolunteerIds);
+  };
+
+  const selectAllByTag = () => {
+    setSelectedUserIds(tagMatchedIds);
+  };
+
+  const applyTagSuggestion = (suggestedTag) => {
+    const committed = tagFilterSegments
+      .slice(0, -1)
+      .map((value) => value.trim())
+      .filter(Boolean);
+
+    setTagFilter(`${[...committed, suggestedTag].join(", ")}, `);
+    setShowTagSuggestions(false);
+  };
+
+  const closeTagModal = () => {
+    setShowTagModal(false);
+    setTagModalScope("single");
+    setTagModalUser(null);
+    setTagModalValue("");
+    setTagModalError("");
+  };
+
+  const handleBulkRenameTag = () => {
+    if (selectedUsers.length === 0) return;
+
+    const currentTags = new Set(selectedUsers.map((selectedUser) => selectedUser.tag || ""));
+    const defaultTag = currentTags.size === 1 ? selectedUsers[0].tag || "" : "";
+    setTagModalScope("bulk");
+    setTagModalUser(null);
+    setTagModalValue(defaultTag);
+    setTagModalError("");
+    setShowTagModal(true);
+  };
+
+  const handleEditTag = (targetUser) => {
+    if (!isAdmin && user?.role !== "staff") return;
+
+    setTagModalScope("single");
+    setTagModalUser(targetUser);
+    setTagModalValue(targetUser.tag || "");
+    setTagModalError("");
+    setShowTagModal(true);
+  };
+
+  const handleTagModalSubmit = async () => {
+    const trimmedTag = tagModalValue.trim() || "No-tag";
+
+    setTagModalLoading(true);
+    setTagModalError("");
+    setActionError("");
+
+    try {
+      if (tagModalScope === "bulk") {
+        if (selectedUsers.length === 0) {
+          closeTagModal();
+          return;
+        }
+
+        await Promise.all(
+          selectedUsers.map((selectedUser) =>
+            api.updateUser(token, selectedUser.userId, { tag: trimmedTag }),
+          ),
+        );
+        setSelectedUserIds([]);
+      } else {
+        if (!tagModalUser) {
+          closeTagModal();
+          return;
+        }
+
+        await api.updateUser(token, tagModalUser.userId, { tag: trimmedTag });
+      }
+
+      closeTagModal();
+      await fetchUsers();
+    } catch (err) {
+      setTagModalError(err.message);
+    } finally {
+      setTagModalLoading(false);
+    }
   };
 
   const clearSelection = () => {
@@ -251,6 +397,47 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                      />
         </div>
 
+        <div className="user-mgmt-screen__tag-row">
+          <label className="user-mgmt-screen__tag-label">
+            Tag filter
+            <div className="user-mgmt-screen__tag-input-wrap">
+              <input
+                type="text"
+                value={tagFilter}
+                onChange={(e) => {
+                  setTagFilter(e.target.value);
+                  setShowTagSuggestions(true);
+                }}
+                onFocus={() => setShowTagSuggestions(true)}
+                onBlur={() => {
+                  setTimeout(() => setShowTagSuggestions(false), 120);
+                }}
+                placeholder="Filter by tag (comma-separated)"
+                className="user-mgmt-screen__tag-input"
+                aria-label="Filter users by tag"
+                autoComplete="off"
+              />
+              {showTagSuggestions && visibleTagSuggestions.length > 0 && (
+                <div className="user-mgmt-screen__tag-suggestions" role="listbox" aria-label="Tag suggestions">
+                  {visibleTagSuggestions.map((tag) => (
+                    <button
+                      type="button"
+                      key={tag}
+                      className="user-mgmt-screen__tag-suggestion-item"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        applyTagSuggestion(tag);
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </label>
+        </div>
+
         <div className="user-mgmt-screen__sort-row">
           <label className="user-mgmt-screen__sort-label">
             Sort by
@@ -280,6 +467,16 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
 
                   {activeTab === "volunteer" && (
                     <div className="user-mgmt-screen__bulk-bar">
+                      {tagFilterSet.size > 0 && (
+                        <button
+                          onClick={selectAllByTag}
+                          className="user-mgmt-screen__bulk-btn"
+                          disabled={tagMatchedIds.length === 0 || bulkActionLoading}
+                        >
+                          <Icons.check size={13} color="var(--clr-text-secondary)" />
+                          Select All with Tag
+                        </button>
+                      )}
                       <button
                         onClick={selectAllExpired}
                         className="user-mgmt-screen__bulk-btn"
@@ -301,7 +498,15 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                         disabled={selectedUserIds.length === 0 || bulkActionLoading}
                       >
                         <Icons.trash size={13} color="#BE3A2B" />
-                        {bulkActionLoading ? "Working..." : `Delete Selected (${selectedUserIds.length})`}
+                        {bulkActionLoading ? "Working..." : `Delete (${selectedUserIds.length})`}
+                      </button>
+                      <button
+                        onClick={handleBulkRenameTag}
+                        className="user-mgmt-screen__bulk-btn"
+                        disabled={selectedUserIds.length === 0 || bulkActionLoading}
+                      >
+                        <Icons.pencil size={13} color="var(--clr-text-secondary)" />
+                        Rename Tag
                       </button>
                       <input
                         type="datetime-local"
@@ -369,7 +574,19 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                   </div>
                   {/* Info */}
                   <div className="user-mgmt-screen__user-info">
-                    <div className="user-mgmt-screen__user-name">{u.username}</div>
+                    <div className="user-mgmt-screen__user-name-row">
+                      <div className="user-mgmt-screen__user-name">{u.username}</div>
+                      <button
+                        type="button"
+                        className="user-mgmt-screen__user-tag"
+                        style={getTagStyle(u.tag || "No-tag")}
+                        onClick={() => handleEditTag(u)}
+                        title="Click to edit tag"
+                        aria-label={`Edit tag for ${u.username}`}
+                      >
+                        {u.tag || "No-tag"}
+                      </button>
+                    </div>
                     <div className="user-mgmt-screen__user-meta">
                       {u.deviceName && `Device: ${u.deviceName} · `}
                       Created {new Date(u.createdAt || Date.now()).toLocaleDateString()}
@@ -464,6 +681,39 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
               <button onClick={() => setShowDeleteConfirm(null)} className="user-mgmt-screen__cancel-btn">Cancel</button>
               <button onClick={handleDelete} disabled={deleteLoading} className="user-mgmt-screen__confirm-delete-btn">
                 {deleteLoading ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTagModal && (
+        <div className="user-mgmt-screen__delete-overlay" onClick={closeTagModal} role="dialog" aria-modal="true">
+          <div className="user-mgmt-screen__delete-box" onClick={(e) => e.stopPropagation()}>
+            <div className="user-mgmt-screen__delete-icon" style={{ backgroundColor: "var(--clr-input-bg)", borderColor: "var(--clr-input-border)" }}>
+              <Icons.pencil size={22} color="var(--clr-text-secondary)" />
+            </div>
+            <h2 className="user-mgmt-screen__delete-title">Rename Tag</h2>
+            <p className="user-mgmt-screen__delete-body">
+              {tagModalScope === "bulk"
+                ? `Set a tag for ${selectedUsers.length} selected user${selectedUsers.length === 1 ? "" : "s"}.`
+                : `Set a tag for ${tagModalUser?.username || "this user"}.`}
+            </p>
+            <input
+              type="text"
+              value={tagModalValue}
+              onChange={(e) => setTagModalValue(e.target.value)}
+              placeholder="e.g. shelter-team"
+              className="user-mgmt-screen__tag-modal-input"
+              autoFocus
+              aria-label="Tag name"
+            />
+            <p className="user-mgmt-screen__tag-modal-hint">Leave blank to save as No-tag.</p>
+            {tagModalError && <div className="user-mgmt-screen__delete-error">{tagModalError}</div>}
+            <div className="user-mgmt-screen__delete-footer">
+              <button onClick={closeTagModal} className="user-mgmt-screen__cancel-btn" disabled={tagModalLoading}>Cancel</button>
+              <button onClick={handleTagModalSubmit} disabled={tagModalLoading} className="user-mgmt-screen__confirm-tag-btn">
+                {tagModalLoading ? "Saving..." : "Save Tag"}
               </button>
             </div>
           </div>

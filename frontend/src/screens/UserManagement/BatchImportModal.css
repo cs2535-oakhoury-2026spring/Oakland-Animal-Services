@@ -88,6 +88,16 @@
   margin-bottom: 12px;
 }
 
+.batch-import-modal__rate-warning {
+  font-size: 13px;
+  color: #8a4b00;
+  background-color: #fff7e6;
+  border: 1px solid #ffd59a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+}
+
 /* Footer buttons */
 .batch-import-modal__footer {
   display: flex;

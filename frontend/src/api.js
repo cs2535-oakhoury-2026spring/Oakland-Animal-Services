@@ -610,7 +610,16 @@ export const api = {
       body: JSON.stringify({ csv: csvText }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Batch create failed");
+    if (!res.ok) {
+      const error = new Error(data.error || "Batch create failed");
+      error.status = res.status;
+      const retryAfterHeader = res.headers.get("retry-after");
+      const retryAfterSeconds = Number(retryAfterHeader);
+      if (Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0) {
+        error.retryAfterSeconds = retryAfterSeconds;
+      }
+      throw error;
+    }
     return data;
   },
 

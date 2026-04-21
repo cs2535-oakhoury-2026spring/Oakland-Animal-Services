@@ -27,6 +27,7 @@ const PORT = config.port;
 // needs Express to trust that proxy to read the client IP safely.
 app.set("trust proxy", 1);
 
+// Max of [max] per minute per IP or userId but still allowing bulk delete
 const generalRequestLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 300,

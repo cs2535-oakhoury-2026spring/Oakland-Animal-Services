@@ -9,6 +9,7 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState(defaultRole || "volunteer");
+  const [tag, setTag] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [deviceName, setDeviceName] = useState("");
@@ -32,6 +33,10 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
         password: role === "device" ? devicePassword : password,
         role,
       };
+
+      if (tag.trim()) {
+        payload.tag = tag.trim();
+      }
 
       if (role === "volunteer" && expiryDate) {
         payload.expiresAt = new Date(expiryDate).toISOString();
@@ -72,6 +77,11 @@ export default function CreateUserModal({ token, isAdmin, defaultRole, onClose, 
           <>
             <label className="create-user-modal__label">Username</label>
             <input type="text" value={username} onChange={(e) => { setUsername(e.target.value); setError(""); }} placeholder="Username" className="create-user-modal__field create-user-modal__field--spaced" autoFocus autoComplete="off" aria-label="Username" />
+          </>
+
+          <>
+            <label className="create-user-modal__label">Tag <span style={{ fontWeight: 400 }}>(optional)</span></label>
+            <input type="text" value={tag} onChange={(e) => { setTag(e.target.value); setError(""); }} placeholder="e.g. shelter-team" className="create-user-modal__field create-user-modal__field--spaced" autoComplete="off" aria-label="Tag" />
           </>
 
           {role === "device" && (

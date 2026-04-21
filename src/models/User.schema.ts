@@ -7,6 +7,7 @@ export const UserSchema = z.object({
     username: z.string().min(1),
     passwordHash: z.string(),
     role: UserRole,
+    tag: z.string().min(1).optional(),
     deviceName: z.string().optional(),       // device accounts only
     expiresAt: z.string().optional(),         // volunteer accounts only, ISO date string
     mustChangePassword: z.boolean(),

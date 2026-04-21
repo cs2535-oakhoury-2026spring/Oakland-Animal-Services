@@ -6,6 +6,11 @@ import type { User, SafeUser, UserRole } from "../../models/User.schema.js";
 
 const TABLE_NAME = "Users";
 
+function normalizeTag(tag?: string): string {
+    const trimmed = tag?.trim();
+    return trimmed ? trimmed : "No-tag";
+}
+
 function toSafeUser(user: User): SafeUser {
     const { passwordHash: _, ...safe } = user;
     return safe;
@@ -36,6 +41,7 @@ export async function createUser(params: {
     username: string;
     passwordHash: string;
     role: UserRole;
+    tag?: string;
     deviceName?: string;
     expiresAt?: string;
 }): Promise<SafeUser> {
@@ -44,6 +50,7 @@ export async function createUser(params: {
         username: params.username.toLowerCase(),
         passwordHash: params.passwordHash,
         role: params.role,
+        tag: normalizeTag(params.tag),
         deviceName: params.deviceName,
         expiresAt: params.expiresAt,
         mustChangePassword: params.role !== "device",
@@ -66,7 +73,7 @@ export async function createUser(params: {
     return toSafeUser(user);
 }
 
-export async function updateUser(userId: string, updates: Partial<Pick<User, "passwordHash" | "mustChangePassword" | "expiresAt">>): Promise<void> {
+export async function updateUser(userId: string, updates: Partial<Pick<User, "passwordHash" | "mustChangePassword" | "expiresAt" | "tag">>): Promise<void> {
     const existing = await getUserById(userId);
     if (!existing) throw new Error("User not found");
 
