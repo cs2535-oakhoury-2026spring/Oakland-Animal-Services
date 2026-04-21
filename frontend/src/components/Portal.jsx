@@ -78,6 +78,13 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     })();
   }, [petId]);
 
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+      if (behaviorSearchTimerRef.current) clearTimeout(behaviorSearchTimerRef.current);
+    };
+  }, []);
+
   const computeMedicalSearchResults = useCallback((query, notesList) => {
     if (!query.trim()) return null;
 

@@ -14,7 +14,7 @@ export function useFocusTrap(isOpen) {
     const lastElement = focusableElements[focusableElements.length - 1];
 
     // Focus first element when modal opens
-    setTimeout(() => firstElement?.focus(), 50);
+    const timeoutId = setTimeout(() => firstElement?.focus(), 50);
 
     const handleKeyDown = (e) => {
       if (e.key !== "Tab") return;
@@ -33,7 +33,10 @@ export function useFocusTrap(isOpen) {
     };
 
     container.addEventListener("keydown", handleKeyDown);
-    return () => container.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      clearTimeout(timeoutId);
+      container.removeEventListener("keydown", handleKeyDown);
+    };
   }, [isOpen]);
 
   return containerRef;
