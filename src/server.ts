@@ -1,5 +1,5 @@
 import express from "express";
-import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import config from "./config/index.js";
 import petRouter from "./routes/pet.js";
@@ -28,15 +28,13 @@ const PORT = config.port;
 app.set("trust proxy", 1);
 
 const generalRequestLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
+  windowMs: 1 * 60 * 1000,
   max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === "DELETE",
-  keyGenerator: (req) => {
-    const ipKey = ipKeyGenerator(String(req.ip ?? ""));
-    return String(req.user?.userId ?? ipKey ?? "anonymous");
-  },
+  keyGenerator: (req) =>
+    String(req.user?.userId ?? ipKeyGenerator(req.ip || "") ?? "anonymous"),
   message: { error: "Too many requests, please try again in a minute." },
 });
 

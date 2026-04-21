@@ -86,6 +86,9 @@ export const summarizeText = async (
     prompt || "Summarize the note data in 2-5 concise sentences";
 
   const normalizedPrompt = instruction.toLowerCase();
+
+  // This logic just checks if the user is explicitly asking to focus on one note type
+  // It is not perfect but should work for basic cases.
   const focusBehaviorOnly =
     /behavior/.test(normalizedPrompt) &&
     !/(observation|observer)/.test(normalizedPrompt);
