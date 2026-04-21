@@ -30,7 +30,6 @@
   "scripts": {
     "build": "tsc",
     "create-tables": "node --loader ts-node/esm src/db/scripts/createAllTables.ts",
-    "test": "tsc && node dist/test.js",
     "server": "tsc && node dist/server.js",
     "client": "npm start --prefix frontend",
     "dev": "concurrently \"npm run server\" \"npm run client\""

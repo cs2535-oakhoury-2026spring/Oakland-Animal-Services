@@ -98,7 +98,7 @@ docker --version  # 20+
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/<your-org>/Oakland-Animal-Services.git
+git clone https://github.com/cs2535-oakhoury-2026spring/Oakland-Animal-Services
 cd Oakland-Animal-Services
 ```
 
@@ -148,7 +148,9 @@ This concurrently starts:
 - **Backend** (Express) — compiles TypeScript and serves on port `3001`
 - **Frontend** (React dev server) — hot-reloading on `http://localhost:3000`, proxies API calls to backend
 
-Open `http://localhost:3000` in your browser and log in with the `ADMIN_USER` / `ADMIN_PASS` credentials from your `.env`.
+Open the link that the client created usually `http://localhost:3001` in your browser and log in with the `ADMIN_USER` / `ADMIN_PASS` credentials from your `.env`.
+
+To change the proxy go to `frontend/package.json` and modify the `proxy` field.
 
 ---
 
@@ -168,7 +170,7 @@ Open `http://localhost:3000` in your browser and log in with the `ADMIN_USER` / 
 | `AWS_ENDPOINT` | Local only | `http://localhost:8000` for DynamoDB Local |
 | `PET_LOCATION_CACHE_TTL` | No | Pet location cache duration in ms (default: `300000`) |
 | `NODE_ENV` | No | `development` or `production` |
-
+| `USE_AWS_NOTES` | No | `true` to use AWS DynamoDB for notes, `false` to use rescue groups journals (default: `false`) |
 ---
 
 ## Project Structure
@@ -186,6 +188,7 @@ Oakland-Animal-Services/
 │   ├── utils/                  # Helper utilities (activity logging, note deduplication)
 │   ├── db/
 │   │   ├── repositories/       # DynamoDB data access objects
+│   │   ├── rescueGroups/       # RescueGroups APIs
 │   │   └── scripts/            # Table initialization scripts
 │   └── server.ts               # Express application entry point
 ├── frontend/                   # React frontend
@@ -221,7 +224,6 @@ Run from the project root:
 | `npm run client` | Start the frontend React dev server only |
 | `npm run build` | Compile TypeScript to `dist/` |
 | `npm run create-tables` | Initialize DynamoDB tables (run once on first setup) |
-| `npm run test` | Compile and run backend tests |
 
 ---
 
@@ -242,7 +244,7 @@ Run from the project root:
 
 ### Notes
 
-- Notes are stored in DynamoDB under two tables: `ObserverNotes` and `BehaviorNotes`
+- Notes are stored in DynamoDB or using Rescue Group Journals under two tables: `ObserverNotes` and `BehaviorNotes`
 - Duplicate note detection uses client-side **Levenshtein distance** fuzzy matching — see [ADR-002](docs/adr/ADR-002.md)
 - Behavior notes can be summarized via the OpenAI API (staff/admin only)
 
