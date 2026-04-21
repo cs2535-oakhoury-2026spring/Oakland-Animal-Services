@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useResponsive } from "../hooks.js";
 import { api } from "../api.js";
 import Icons from "../Icons.jsx";
@@ -11,6 +11,14 @@ export default function LoginScreen({ darkMode, setDarkMode, onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const pendingUsername = sessionStorage.getItem("pending_login_username");
+    if (pendingUsername) {
+      setUsername(pendingUsername);
+      sessionStorage.removeItem("pending_login_username");
+    }
+  }, []);
   const r = useResponsive();
 
   const handleSubmit = async (e) => {

@@ -31,6 +31,7 @@ export default function ForcePasswordChangeScreen({ user, token, onPasswordChang
     try {
       await api.changePassword(token, tempPassword, newPassword);
       // Old token is now invalid — clear session and force fresh login
+      if (user?.username) sessionStorage.setItem("pending_login_username", user.username);
       clearToken();
       sessionStorage.removeItem("oas_token");
       setDone(true);

@@ -6,6 +6,8 @@ import {
   updateUserHandler,
   deleteUserHandler,
   batchCreateUsersHandler,
+  batchDeleteUsersHandler,
+  batchUpdateUsersHandler,
 } from "../controllers/userController.js";
 import { authenticate, requireStaff } from "../middleware/auth.js";
 
@@ -42,6 +44,24 @@ router.post(
   authenticate,
   requireStaff,
   batchCreateUsersHandler,
+);
+router.post(
+  "/api/users/batch-delete",
+  authenticate,
+  requireStaff,
+  batchDeleteUsersHandler,
+);
+router.post(
+  "/api/users/batch-update",
+  authenticate,
+  requireStaff,
+  batchUpdateUsersHandler,
+);
+router.post(
+  "/api/users/batch-rename-tag",
+  authenticate,
+  requireStaff,
+  batchUpdateUsersHandler,
 );
 
 export default router;

@@ -60,6 +60,8 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
   const [sortField, setSortField] = useState("createdAt");
   const [sortDirection, setSortDirection] = useState("desc");
 
+  const canBatchImport = isAdmin || user?.role === "staff";
+
   const tabs = isAdmin
     ? [{ key: "volunteer", label: "Volunteers" }, { key: "staff", label: "Staff" }, { key: "device", label: "Devices" }, { key: "admin", label: "Admin" }]
     : [{ key: "volunteer", label: "Volunteers" }];
@@ -254,11 +256,14 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
           return;
         }
 
-        await Promise.all(
-          selectedUsers.map((selectedUser) =>
-            api.updateUser(token, selectedUser.userId, { tag: trimmedTag }),
-          ),
+        const result = await api.batchRenameUsersTag(
+          token,
+          selectedUsers.map((selectedUser) => selectedUser.userId),
+          trimmedTag,
         );
+        if (result.failed.length > 0) {
+          setActionError(`Failed to rename tag for ${result.failed.length} user(s).`);
+        }
         setSelectedUserIds([]);
       } else {
         if (!tagModalUser) {
@@ -290,7 +295,10 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     setBulkActionLoading(true);
     setActionError("");
     try {
-      await Promise.all(selectedUserIds.map((userId) => api.deleteUser(token, userId)));
+      const result = await api.batchDeleteUsers(token, selectedUserIds);
+      if (result.failed.length > 0) {
+        setActionError(`Failed to delete ${result.failed.length} user(s).`);
+      }
       setSelectedUserIds([]);
       await fetchUsers();
     } catch (err) {
@@ -307,7 +315,12 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
     setActionError("");
     try {
       const isoExpiryDate = new Date(bulkExpiryDate).toISOString();
-      await Promise.all(selectedUserIds.map((userId) => api.updateUser(token, userId, { expiresAt: isoExpiryDate })));
+      const result = await api.batchUpdateUsers(token, selectedUserIds, {
+        expiresAt: isoExpiryDate,
+      });
+      if (result.failed.length > 0) {
+        setActionError(`Failed to update expiry for ${result.failed.length} user(s).`);
+      }
       setBulkExpiryDate("");
       setSelectedUserIds([]);
       await fetchUsers();
@@ -362,11 +375,11 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
             ))}
           </div>
           <div className="user-mgmt-screen__actions">
-              {isAdmin && activeTab !== "admin" && (
+              {canBatchImport && activeTab === "volunteer" && (
                 <button
                   onClick={() => setShowBatchModal(true)}
                   className="user-mgmt-screen__batch-btn"
-                                 >
+                >
                   <Icons.clipboardList size={15} color="var(--clr-text-secondary)" />
                   Batch Import
                 </button>
@@ -610,7 +623,7 @@ export default function UserManagementScreen({ user, token, onLogout, darkMode, 
                         title="Edit expiry date"
                         className="user-mgmt-screen__edit-btn"
                       >
-                        <Icons.pencil size={13} color="var(--clr-warm-gray)" />
+                        <Icons.pencil size={13} color="currentColor" />
                         {isDesktop && "Edit Expiry"}
                       </button>
                     )}

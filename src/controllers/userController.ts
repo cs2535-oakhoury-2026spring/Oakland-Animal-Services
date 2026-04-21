@@ -58,18 +58,12 @@ export async function createUserHandler(
   const { username, password, role, tag, deviceName, expiresAt } = parsed.data;
   const callerRole = req.user!.role;
 
-  // Staff can only create volunteers with an expiry date
+  // Staff can only create volunteers
   if (callerRole === "staff") {
     if (role !== "volunteer") {
       res
         .status(403)
         .json({ error: "Staff can only create volunteer accounts" });
-      return;
-    }
-    if (!expiresAt) {
-      res
-        .status(400)
-        .json({ error: "expiresAt is required when creating a volunteer" });
       return;
     }
   }
@@ -259,6 +253,133 @@ function parseCSV(text: string): Array<Record<string, string>> {
     });
 }
 
+const BatchDeleteSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1),
+});
+
+const BatchUpdateSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1),
+  updates: z
+    .object({
+      expiresAt: validIsoDate.optional(),
+      tag: z.string().min(1).optional(),
+    })
+    .refine((value) => value.expiresAt !== undefined || value.tag !== undefined, {
+      message: "At least one update field is required",
+    }),
+});
+
+export async function batchUpdateUsersHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const parsed = BatchUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { userIds, updates } = parsed.data;
+  const normalizedUpdates = {
+    ...updates,
+    ...(updates.tag ? { tag: normalizeTag(updates.tag) } : {}),
+  };
+
+  const updated: string[] = [];
+  const failed: Array<{ userId: string; reason: string }> = [];
+
+  for (const userId of userIds) {
+    try {
+      const target = await getUserById(userId);
+      if (!target) {
+        failed.push({ userId, reason: "User not found" });
+        continue;
+      }
+
+      if (req.user!.role === "staff" && target.role !== "volunteer") {
+        failed.push({
+          userId,
+          reason: "Staff can only update volunteer accounts",
+        });
+        continue;
+      }
+
+      await updateUser(userId, normalizedUpdates);
+      logActivity({
+        tag: "authEvent",
+        actor: req.user!.username,
+        action: "USER_UPDATED",
+        jsonData: {
+          targetUserId: userId,
+          targetUsername: target.username,
+          role: target.role,
+          batch: true,
+          updates: normalizedUpdates,
+        },
+      });
+      updated.push(target.username);
+    } catch (err: any) {
+      failed.push({ userId, reason: err?.message || "Unable to update user" });
+    }
+  }
+
+  res.status(200).json({ success: true, updated, failed });
+}
+
+export async function batchDeleteUsersHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const parsed = BatchDeleteSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+
+  const { userIds } = parsed.data;
+  const deleted: string[] = [];
+  const failed: Array<{ userId: string; reason: string }> = [];
+
+  for (const userId of userIds) {
+    try {
+      const target = await getUserById(userId);
+      if (!target) {
+        failed.push({ userId, reason: "User not found" });
+        continue;
+      }
+
+      if (req.user!.role === "staff" && target.role !== "volunteer") {
+        failed.push({
+          userId,
+          reason: "Staff can only delete volunteer accounts",
+        });
+        continue;
+      }
+
+      await deleteAllRefreshTokensForUser(userId);
+      await deleteUser(userId);
+
+      logActivity({
+        tag: "authEvent",
+        actor: req.user!.username,
+        action: "USER_DELETED",
+        jsonData: {
+          targetUserId: userId,
+          targetUsername: target.username,
+          role: target.role,
+          batch: true,
+        },
+      });
+
+      deleted.push(target.username);
+    } catch (err: any) {
+      failed.push({ userId, reason: err?.message || "Unable to delete user" });
+    }
+  }
+
+  res.status(200).json({ success: true, deleted, failed });
+}
+
 export async function batchCreateUsersHandler(
   req: Request,
   res: Response,
@@ -301,14 +422,6 @@ export async function batchCreateUsersHandler(
       failed.push({
         username,
         reason: "Staff can only create volunteer accounts",
-      });
-      continue;
-    }
-
-    if (callerRole === "staff" && !expiresAtIso) {
-      failed.push({
-        username,
-        reason: "expiresAt is required for volunteer accounts created by staff",
       });
       continue;
     }

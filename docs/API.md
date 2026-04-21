@@ -151,6 +151,57 @@ All endpoints require a valid access token (`Authorization: Bearer <accessToken>
 - Success: `200` with `{ success: true }`
 - Error: `403` if staff tries to delete non-volunteer, `404` if user not found
 
+### POST `/api/users/import`
+
+- Access: **Level 2** (staff, admin) — staff can only import `volunteer` rows
+- Description: Batch import users from CSV. This route is aliased to `/api/users/batch`.
+- Body JSON:
+  - `csv` (string, required) — CSV text with header row
+- CSV Columns:
+  - `username` (required)
+  - `password` (required)
+  - `role` (`staff` | `volunteer` | `device`, required)
+  - `expiresAt` (optional, ISO date string) — only allowed for `volunteer`
+  - `tag` (optional)
+- Behavior:
+  - creates new user accounts
+  - normalizes empty tags to `No-tag`
+  - if a `volunteer` row matches an expired volunteer username, updates `expiresAt` and `tag` instead of failing
+- Success: `200` with `{ success: true, created: string[], updated: string[], failed: { username, reason }[] }`
+- Error: `400` for invalid CSV or rows, `403` if staff imports non-volunteer rows
+
+### POST `/api/users/batch-delete`
+
+- Access: **Level 2** (staff, admin) — staff can only delete volunteers
+- Description: Delete multiple users in a single request.
+- Body JSON:
+  - `userIds` (string[], required)
+- Success: `200` with `{ success: true, deleted: string[], failed: { userId, reason }[] }`
+- Error: `400` for invalid request, `403` if staff tries to delete non-volunteer users
+
+### POST `/api/users/batch-update`
+
+- Access: **Level 2** (staff, admin) — staff can only update volunteers
+- Description: Apply the same user update to multiple accounts.
+- Body JSON:
+  - `userIds` (string[], required)
+  - `updates` (object, required)
+    - `expiresAt` (string, optional) — ISO date string
+    - `tag` (string, optional)
+- Success: `200` with `{ success: true, updated: string[], failed: { userId, reason }[] }`
+- Error: `400` for invalid request, `403` if staff tries to update non-volunteer users
+
+### POST `/api/users/batch-rename-tag`
+
+- Access: **Level 2** (staff, admin) — staff can only rename tags on volunteers
+- Description: Convenience alias for batch-updating the `tag` field on multiple users.
+- Body JSON:
+  - `userIds` (string[], required)
+  - `updates` (object, required)
+    - `tag` (string, required)
+- Success: `200` with `{ success: true, updated: string[], failed: { userId, reason }[] }`
+- Error: `400` for invalid request, `403` if staff tries to rename tags on non-volunteer users
+
 ---
 
 ## Pets

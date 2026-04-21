@@ -232,7 +232,7 @@ export default function App() {
     return (
       <>
         <ActivityLogScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />
-        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} />}
+        {showChangePassword && <ChangePasswordModal token={accessToken} username={currentUser?.username} onClose={() => setShowChangePassword(false)} />}
       </>
     );
   }
@@ -241,7 +241,7 @@ export default function App() {
     return (
       <>
         <UserManagementScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />
-        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} />}
+        {showChangePassword && <ChangePasswordModal token={accessToken} username={currentUser?.username} onClose={() => setShowChangePassword(false)} />}
       </>
     );
   }
@@ -250,7 +250,7 @@ export default function App() {
     return (
       <>
         <LocationsPage user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} onChangePassword={() => setShowChangePassword(true)} />
-        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} />}
+        {showChangePassword && <ChangePasswordModal token={accessToken} username={currentUser?.username} onClose={() => setShowChangePassword(false)} />}
       </>
     );
   }
@@ -259,7 +259,7 @@ export default function App() {
     return (
       <>
         <HomeScreen user={currentUser} token={accessToken} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} onChangePassword={() => setShowChangePassword(true)} />
-        {showChangePassword && <ChangePasswordModal token={accessToken} onClose={() => setShowChangePassword(false)} />}
+        {showChangePassword && <ChangePasswordModal token={accessToken} username={currentUser?.username} onClose={() => setShowChangePassword(false)} />}
       </>
     );
   }

@@ -5,7 +5,7 @@ import Icons from "../Icons.jsx";
 import "./ChangePasswordModal.css";
 
 // ─── Change Password Modal ────────────────────────────────────────────────────
-export default function ChangePasswordModal({ token, onClose }) {
+export default function ChangePasswordModal({ token, username, onClose }) {
   const [current, setCurrent] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -28,6 +28,7 @@ export default function ChangePasswordModal({ token, onClose }) {
     setError("");
     try {
       await api.changePassword(token, current, newPwd);
+      if (username) sessionStorage.setItem("pending_login_username", username);
       setSuccess(true);
     } catch (err) {
       setError(err.message || "Failed to change password");

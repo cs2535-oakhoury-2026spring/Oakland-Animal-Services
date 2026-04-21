@@ -586,6 +586,42 @@ export const api = {
     }
   },
 
+  batchDeleteUsers: async (token, userIds) => {
+    const res = await fetch("/api/users/batch-delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userIds }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Batch delete failed");
+    }
+    return data;
+  },
+
+  batchUpdateUsers: async (token, userIds, updates) => {
+    const res = await fetch("/api/users/batch-update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ userIds, updates }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Batch update failed");
+    }
+    return data;
+  },
+
+  batchRenameUsersTag: async (token, userIds, tag) => {
+    return api.batchUpdateUsers(token, userIds, { tag });
+  },
+
   resetUserPassword: async (token, userId, newPassword) => {
     const res = await fetch(`/api/users/${userId}/password`, {
       method: "PUT",
