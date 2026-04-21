@@ -168,7 +168,7 @@ To change the proxy go to `frontend/package.json` and modify the `proxy` field.
 | `AWS_ACCESS_KEY_ID` | Yes | Use `local` for local DynamoDB |
 | `AWS_SECRET_ACCESS_KEY` | Yes | Use `local` for local DynamoDB |
 | `AWS_ENDPOINT` | Local only | `http://localhost:8000` for DynamoDB Local |
-| `PET_LOCATION_CACHE_TTL` | No | Pet location cache duration in ms (default: `300000`) |
+| `PET_LOCATION_CACHE_TTL` | No | Pet location cache duration in ms (default: 1 hour) |
 | `NODE_ENV` | No | `development` or `production` |
 | `USE_AWS_NOTES` | No | `true` to use AWS DynamoDB for notes, `false` to use rescue groups journals (default: `false`) |
 ---
