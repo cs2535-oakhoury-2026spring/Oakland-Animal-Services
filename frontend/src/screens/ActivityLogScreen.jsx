@@ -35,6 +35,7 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
   const [petCache, setPetCache] = useState({});
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [exportLimit, setExportLimit] = useState("1000");
 
   const knownActionSuggestions = [
     "CREATED",
@@ -108,15 +109,22 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
       setExporting(true);
       setLoadError("");
 
-      const exportLimit = 200;
-      const firstPage = await api.getActivityLogs(token, buildFilters(1, exportLimit));
-      const total = firstPage.totalPages || 1;
+      const limit = exportLimit === "0" ? 10000 : parseInt(exportLimit, 10);
+      const pageSize = 200;
+      const maxPages = Math.ceil(limit / pageSize);
+
+      const firstPage = await api.getActivityLogs(token, buildFilters(1, pageSize));
+      const totalAvailable = firstPage.total || 0;
       const allLogs = [...(firstPage.logs || [])];
 
-      for (let p = 2; p <= total; p += 1) {
-        const data = await api.getActivityLogs(token, buildFilters(p, exportLimit));
+      for (let p = 2; p <= Math.min(maxPages, firstPage.totalPages || 1); p += 1) {
+        if (allLogs.length >= limit) break;
+        const data = await api.getActivityLogs(token, buildFilters(p, pageSize));
         allLogs.push(...(data.logs || []));
       }
+
+      const isLimited = allLogs.length >= limit && totalAvailable > limit;
+      const displayCount = Math.min(allLogs.length, limit);
 
       const headers = [
         "timestamp",
@@ -127,7 +135,8 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
         "jsonData",
       ];
 
-      const rows = allLogs.map((log) => {
+      const logsToExport = allLogs.slice(0, limit);
+      const rows = logsToExport.map((log) => {
         const petId = log?.jsonData?.petId ?? "";
         return [
           log.timestamp || "",
@@ -153,12 +162,16 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      if (isLimited) {
+        setLoadError(`Export limited to ${displayCount} of ${totalAvailable} available records. Adjust export limit to get more.`);
+      }
     } catch (err) {
       setLoadError(err.message || "Failed to export activity logs");
     } finally {
       setExporting(false);
     }
-  }, [buildFilters, token]);
+  }, [buildFilters, token, exportLimit]);
 
   useEffect(() => { fetchLogs(1); }, [fetchLogs]);
 
@@ -463,13 +476,31 @@ export default function ActivityLogScreen({ user, token, onLogout, darkMode, set
             <button onClick={() => { setFilterActor(""); setFilterAction(""); setFilterFrom(""); setFilterTo(""); setShowBehavior(true); setShowObserver(true); setShowAuth(true); }} className="activity-log-screen__clear-btn">
               Reset
             </button>
-            <button
-              onClick={exportFilteredLogsToCsv}
-              disabled={loading || exporting}
-              className="activity-log-screen__export-btn"
-            >
-              {exporting ? "Exporting…" : "Export CSV"}
-            </button>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+                <span>Export records:</span>
+                <select
+                  value={exportLimit}
+                  onChange={(e) => setExportLimit(e.target.value)}
+                  disabled={loading || exporting}
+                  className="activity-log-screen__filter-input"
+                  style={{ minWidth: 100 }}
+                >
+                  <option value="100">100</option>
+                  <option value="500">500</option>
+                  <option value="1000">1,000</option>
+                  <option value="5000">5,000</option>
+                  <option value="0">{isAdmin ? "All (Admin)" : "Up to 10k"}</option>
+                </select>
+              </label>
+              <button
+                onClick={exportFilteredLogsToCsv}
+                disabled={loading || exporting}
+                className="activity-log-screen__export-btn"
+              >
+                {exporting ? "Exporting…" : "Export CSV"}
+              </button>
+            </div>
           </div>
         </div>
 

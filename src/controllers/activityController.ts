@@ -34,12 +34,18 @@ export async function listActivityLogs(req: Request, res: Response) {
 
   const limitParam = req.query.limit;
   const pageParam = req.query.page;
-  const limit = typeof limitParam === "string" ? parseInt(limitParam, 10) : 20;
+  const maxExportLimit = isAdmin ? 1000000 : 10000;
+  let limit = typeof limitParam === "string" ? parseInt(limitParam, 10) : 20;
   const page = typeof pageParam === "string" ? parseInt(pageParam, 10) : 1;
 
   if (isNaN(limit) || limit <= 0) {
     return res.status(400).json({ error: "limit must be a positive integer" });
   }
+
+  if (limit > maxExportLimit) {
+    limit = maxExportLimit;
+  }
+
   if (isNaN(page) || page <= 0) {
     return res.status(400).json({ error: "page must be a positive integer" });
   }
