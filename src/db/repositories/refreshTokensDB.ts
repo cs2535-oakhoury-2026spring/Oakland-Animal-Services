@@ -6,19 +6,30 @@ const TABLE_NAME = "RefreshTokens";
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 const DYNAMO_BATCH_SIZE = 25; // DynamoDB max per BatchWrite
 
-export async function createRefreshToken(userId: string): Promise<string> {
+export async function createRefreshToken(
+    userId: string,
+    options?: { adminConfigVersion?: string },
+): Promise<string> {
     const tokenId = randomUUID();
     const expiresAt = new Date(Date.now() + THIRTY_DAYS_MS).toISOString();
 
     await docClient.send(new PutCommand({
         TableName: TABLE_NAME,
-        Item: { tokenId, userId, expiresAt, createdAt: new Date().toISOString() },
+        Item: {
+            tokenId,
+            userId,
+            expiresAt,
+            createdAt: new Date().toISOString(),
+            ...(options?.adminConfigVersion
+                ? { adminConfigVersion: options.adminConfigVersion }
+                : {}),
+        },
     }));
 
     return tokenId;
 }
 
-export async function getRefreshToken(tokenId: string): Promise<{ tokenId: string; userId: string; expiresAt: string } | null> {
+export async function getRefreshToken(tokenId: string): Promise<{ tokenId: string; userId: string; expiresAt: string; adminConfigVersion?: string } | null> {
     const result = await docClient.send(new QueryCommand({
         TableName: TABLE_NAME,
         KeyConditionExpression: "tokenId = :tokenId",

@@ -1,5 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyAccessToken, type JwtPayload } from "../services/auth.js";
+import {
+  verifyAccessToken,
+  isEnvManagedAdminSessionValid,
+  type JwtPayload,
+} from "../services/auth.js";
 import { getUserById } from "../db/repositories/usersDB.js";
 
 // Extend Express Request to include the authenticated user
@@ -26,6 +30,10 @@ export async function authenticate(
   let user: JwtPayload;
   try {
     user = verifyAccessToken(token);
+    if (!isEnvManagedAdminSessionValid(user)) {
+      res.status(401).json({ error: "Invalid or expired access token" });
+      return;
+    }
     req.user = user;
   } catch {
     res.status(401).json({ error: "Invalid or expired access token" });

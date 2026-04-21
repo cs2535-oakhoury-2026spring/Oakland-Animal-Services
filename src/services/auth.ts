@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { createHash } from "crypto";
 import {
   getUserByUsername,
   getUserById,
@@ -18,24 +19,34 @@ const ACCESS_TOKEN_EXPIRY = "15m";
 const ROTATED_REFRESH_GRACE_MS = 15_000;
 const recentlyRotatedRefreshTokens = new Map<
   string,
-  { userId: string; expiresAtMs: number }
+  { userId: string; expiresAtMs: number; adminConfigVersion?: string }
 >();
 
-function rememberRotatedRefreshToken(tokenId: string, userId: string): void {
+function rememberRotatedRefreshToken(
+  tokenId: string,
+  userId: string,
+  adminConfigVersion?: string,
+): void {
   recentlyRotatedRefreshTokens.set(tokenId, {
     userId,
     expiresAtMs: Date.now() + ROTATED_REFRESH_GRACE_MS,
+    adminConfigVersion,
   });
 }
 
-function consumeRecentlyRotatedRefreshToken(tokenId: string): string | null {
+function consumeRecentlyRotatedRefreshToken(
+  tokenId: string,
+): { userId: string; adminConfigVersion?: string } | null {
   const record = recentlyRotatedRefreshTokens.get(tokenId);
   if (!record) return null;
   if (record.expiresAtMs < Date.now()) {
     recentlyRotatedRefreshTokens.delete(tokenId);
     return null;
   }
-  return record.userId;
+  return {
+    userId: record.userId,
+    adminConfigVersion: record.adminConfigVersion,
+  };
 }
 
 type EnvAdminAccount = {
@@ -75,7 +86,31 @@ export type JwtPayload = {
   deviceName?: string;
   mustChangePassword: boolean;
   expiresAt?: string;
+  adminConfigVersion?: string;
 };
+
+function getEnvAdminConfigVersion(envAdmin: EnvAdminAccount): string {
+  return createHash("sha256")
+    .update(`${envAdmin.username}:${envAdmin.password}`)
+    .digest("hex");
+}
+
+export function isEnvManagedAdminSessionValid(payload: {
+  userId: string;
+  role: UserRole;
+  username: string;
+  adminConfigVersion?: string;
+}): boolean {
+  if (payload.role !== "admin" || payload.userId !== "admin") return true;
+  const envAdmin = getEnvAdminByUserId(payload.userId);
+  if (!envAdmin) return false;
+
+  const currentVersion = getEnvAdminConfigVersion(envAdmin);
+  return (
+    payload.username === envAdmin.username &&
+    payload.adminConfigVersion === currentVersion
+  );
+}
 
 export type LoginResult =
   | {
@@ -110,14 +145,19 @@ export async function login(
       return { ok: false, error: "INVALID_CREDENTIALS" };
     }
 
+    const adminConfigVersion = getEnvAdminConfigVersion(envAdmin);
+
     const payload: JwtPayload = {
       userId: envAdmin.userId,
       username: envAdmin.username,
       role: "admin",
       mustChangePassword: false,
+      adminConfigVersion,
     };
     const accessToken = signAccessToken(payload);
-    const refreshToken = await createRefreshToken(envAdmin.userId);
+    const refreshToken = await createRefreshToken(envAdmin.userId, {
+      adminConfigVersion,
+    });
 
     return {
       ok: true,
@@ -171,10 +211,12 @@ export async function refresh(oldRefreshToken: string): Promise<{
   const record = await getRefreshToken(oldRefreshToken);
 
   let refreshUserId: string;
+  let adminConfigVersionFromToken: string | undefined;
   if (!record) {
-    const graceUserId = consumeRecentlyRotatedRefreshToken(oldRefreshToken);
-    if (!graceUserId) return null;
-    refreshUserId = graceUserId;
+    const graceRecord = consumeRecentlyRotatedRefreshToken(oldRefreshToken);
+    if (!graceRecord) return null;
+    refreshUserId = graceRecord.userId;
+    adminConfigVersionFromToken = graceRecord.adminConfigVersion;
   } else {
     // Check refresh token expiry
     if (new Date(record.expiresAt) < new Date()) {
@@ -182,28 +224,46 @@ export async function refresh(oldRefreshToken: string): Promise<{
       return null;
     }
 
+    adminConfigVersionFromToken =
+      typeof record.adminConfigVersion === "string"
+        ? record.adminConfigVersion
+        : undefined;
+
     // Rotate: delete old token, issue new one
     await deleteRefreshToken(oldRefreshToken);
-    rememberRotatedRefreshToken(oldRefreshToken, record.userId);
+    rememberRotatedRefreshToken(
+      oldRefreshToken,
+      record.userId,
+      adminConfigVersionFromToken,
+    );
     refreshUserId = record.userId;
   }
-
-  const newRefreshToken = await createRefreshToken(refreshUserId);
 
   // .env admins are not in DB — rebuild payload directly
   const envAdmin = getEnvAdminByUserId(refreshUserId);
   if (envAdmin) {
+    const currentAdminConfigVersion = getEnvAdminConfigVersion(envAdmin);
+    if (adminConfigVersionFromToken !== currentAdminConfigVersion) {
+      return null;
+    }
+
+    const newRefreshToken = await createRefreshToken(refreshUserId, {
+      adminConfigVersion: currentAdminConfigVersion,
+    });
     const payload: JwtPayload = {
       userId: envAdmin.userId,
       username: envAdmin.username,
       role: "admin",
       mustChangePassword: false,
+      adminConfigVersion: currentAdminConfigVersion,
     };
     return {
       accessToken: signAccessToken(payload),
       refreshToken: newRefreshToken,
     };
   }
+
+  const newRefreshToken = await createRefreshToken(refreshUserId);
 
   const user = await getUserById(refreshUserId);
   if (!user) return null;
