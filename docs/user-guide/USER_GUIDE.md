@@ -110,6 +110,14 @@ Volunteers have time-limited accounts that expire on a date set by administrator
 - Access User Management
 - Create or manage other user accounts
 
+### Scanning QR Codes
+
+To look up an animal by scanning its kennel QR code:
+1. Open your phone's camera app and point it at the QR code on the kennel. Or use a QR code scanning app if your camera does not support scanning.
+2. Tap the notification that appears to open the portal in your browser.
+3. You will be taken directly to the animal(s) at that kennel. If multiple animals share the kennel, select the one you want to view.
+4. If an animal is missing from the location page try  hitting the refresh button on your browser. If the issue persists, contact staff to report a potential issue.
+
 ### Creating a Medical Observation
 
 1. Open an animal's profile and go to the Medical Observations tab.
@@ -178,7 +186,7 @@ Admins have full system access including all staff capabilities plus user and sy
 - **Edit expiration dates** -- Extend or shorten volunteer account expiration.
 - **Batch import** -- Upload a CSV file to create multiple volunteer accounts at once.
 - **Bulk actions** -- Select multiple volunteers to apply batch expiry updates or tag assignments.
-- **Tags** -- Assign organizational tags to users for grouping and filtering (e.g., training group, shift assignment). Tags can be applied individually or in bulk to multiple selected users.
+- **Tags** -- Assign organizational tags to users for grouping and filtering (e.g., training group, shift assignment). Tags can be applied individually or in bulk to multiple selected users. Can also be used to assign volunteers to events or specific roles within the shelter.
 
 **Full Activity Log** -- Admins see an additional "Auth Events" toggle that reveals authentication-related logs:
 - User logins and logouts
