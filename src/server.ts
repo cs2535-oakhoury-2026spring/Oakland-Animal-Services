@@ -11,8 +11,11 @@ import authRouter from "./routes/auth.js";
 import usersRouter from "./routes/users.js";
 import activityRouter from "./routes/activity.js";
 import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
 
+// Required environment variables for auth and bootstrap.
 if (!process.env.JWT_SECRET) throw new Error("JWT_SECRET must be set in .env");
 if (!process.env.ADMIN_USER) throw new Error("ADMIN_USER must be set in .env");
 if (!process.env.ADMIN_PASS) throw new Error("ADMIN_PASS must be set in .env");
@@ -27,7 +30,8 @@ const PORT = config.port;
 // needs Express to trust that proxy to read the client IP safely.
 app.set("trust proxy", 1);
 
-// Max of [max] per minute per IP or userId but still allowing bulk delete
+// Global request limiter for API usage, keyed by authenticated userId if available.
+// DELETE requests are intentionally skipped so bulk delete flows are not rejected by rate limiting.
 const generalRequestLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 300,
@@ -42,6 +46,8 @@ const generalRequestLimiter = rateLimit({
 app.use(express.json());
 app.use(cookieParser());
 app.use(generalRequestLimiter);
+
+// Mount application routes in a stable order.
 app.use(authRouter);
 app.use(usersRouter);
 app.use(activityRouter);
@@ -50,6 +56,18 @@ app.use(searchRouter);
 app.use(observerNotesRouter);
 app.use(behaviorNotesRouter);
 app.use(petRouter);
+
+// Serve frontend build assets when requested by environment.
+if (process.env.SERVE_FRONTEND === "true") {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const frontendPath = path.join(__dirname, "../frontend/build");
+
+  app.use(express.static(frontendPath));
+  app.get("*", (_, res) => {
+    res.sendFile(path.join(frontendPath, "index.html"));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

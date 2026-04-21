@@ -586,6 +586,7 @@ export const api = {
     }
   },
 
+  // Batch delete multiple user accounts in one request.
   batchDeleteUsers: async (token, userIds) => {
     const res = await fetch("/api/users/batch-delete", {
       method: "POST",
@@ -602,6 +603,7 @@ export const api = {
     return data;
   },
 
+  // Batch update fields like tag or expiry for many users at once.
   batchUpdateUsers: async (token, userIds, updates) => {
     const res = await fetch("/api/users/batch-update", {
       method: "POST",
@@ -618,6 +620,7 @@ export const api = {
     return data;
   },
 
+  // Convenience wrapper for renaming the tag of many users without a dedicated backend endpoint.
   batchRenameUsersTag: async (token, userIds, tag) => {
     return api.batchUpdateUsers(token, userIds, { tag });
   },
@@ -636,6 +639,7 @@ export const api = {
     return data;
   },
 
+  // Batch import or update users from a CSV payload.
   batchCreateUsers: async (token, csvText) => {
     const res = await fetch("/api/users/import", {
       method: "POST",

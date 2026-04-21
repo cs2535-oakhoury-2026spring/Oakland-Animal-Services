@@ -1,0 +1,48 @@
+# ADR: Validation Layer Using Zod
+
+## Context
+
+The backend receives user input (request bodies, query parameters) that must be validated before processing. Without validation, invalid data could corrupt the database, cause runtime errors, or enable security vulnerabilities (e.g., type confusion, injection attacks).
+
+The team must choose between:
+- Manual validation in controllers (verbose, error-prone)
+- Middleware validation (centralized but inflexible)
+- Schema validation library (Zod, Joi, AJV)
+
+Zod was selected as the validation library.
+
+## Decision
+
+Use **Zod** for schema validation at the request boundary (controllers). Each request must validate input against a Zod schema before processing.
+
+Example:
+```typescript
+const createNoteSchema = z.object({
+  petId: z.number(),
+  content: z.string().min(1).max(2000),
+  author: z.string(),
+});
+
+export const createNote = async (req: Request, res: Response) => {
+  const validated = createNoteSchema.parse(req.body);
+  // Now `validated` is type-safe and guaranteed valid
+};
+```
+
+Schemas are defined in `src/models/` and reused across controllers. Validation happens early, before any business logic.
+
+## Consequences
+
+### Benefits
+
+1. **Type safety** — Zod validates and narrows types simultaneously; TypeScript knows validated data matches schema
+2. **DRY** — Define schema once in `src/models/`, reuse in controllers and frontend validation
+3. **Clear error messages** — Zod provides detailed validation errors that can be returned to frontend
+4. **Security** — Catches type confusion, extra fields, and malformed input before reaching business logic
+
+### Drawbacks
+
+1. **Parsing overhead** — Every request parses schema; adds latency (small but measurable at scale)
+2. **Zod learning curve** — Team must understand Zod syntax; error handling can be unintuitive
+3. **Verbose** — Defining schemas for every request adds boilerplate; more code to maintain
+4. **Over-validation** — Sometimes simpler to skip validation for optional/internal endpoints; Zod discourages this

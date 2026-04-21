@@ -33,7 +33,6 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - AWS_ENDPOINT=http://dynamodb-local:8000
       - NODE_ENV=development
       - AWS_ENDPOINT=http://dynamodb-local:8000
       - AWS_REGION=us-east-1

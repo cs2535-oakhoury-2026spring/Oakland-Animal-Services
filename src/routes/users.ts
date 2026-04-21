@@ -33,6 +33,8 @@ router.delete(
   requireStaff,
   deleteUserHandler,
 );
+
+// Batch user creation/import endpoints. /api/users/import is an alias for compatibility.
 router.post(
   "/api/users/batch",
   authenticate,
@@ -45,6 +47,8 @@ router.post(
   requireStaff,
   batchCreateUsersHandler,
 );
+
+// Batch update and delete endpoints used by the user management UI.
 router.post(
   "/api/users/batch-delete",
   authenticate,

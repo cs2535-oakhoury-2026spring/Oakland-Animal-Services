@@ -14,12 +14,14 @@ import { logActivity } from "../utils/logActivity.js";
 
 const SALT_ROUNDS = 12;
 
+// Common schema helper for optional ISO timestamp validation used by volunteers only.
 const validIsoDate = z
   .string()
   .refine((val) => !isNaN(new Date(val).getTime()), {
     message: "Must be a valid ISO date string",
   });
 
+// Input schema for single user creation.
 const CreateUserSchema = z.object({
   username: z.string().min(1).toLowerCase(),
   password: z.string().min(1),
@@ -29,15 +31,18 @@ const CreateUserSchema = z.object({
   expiresAt: validIsoDate.optional(),
 });
 
+// Input schema for updating a user's expiration or tag.
 const UpdateUserSchema = z.object({
   expiresAt: validIsoDate.optional(),
   tag: z.string().min(1).optional(),
 });
 
+// Input schema for resetting a user's password.
 const ResetPasswordSchema = z.object({
   password: z.string().min(1),
 });
 
+// Normalize a tag value and fall back to a stable default when empty.
 function normalizeTag(tag?: string): string {
   const trimmed = tag?.trim();
   return trimmed ? trimmed : "No-tag";
@@ -58,7 +63,7 @@ export async function createUserHandler(
   const { username, password, role, tag, deviceName, expiresAt } = parsed.data;
   const callerRole = req.user!.role;
 
-  // Staff can only create volunteers
+  // Staff accounts are scoped to volunteer management only.
   if (callerRole === "staff") {
     if (role !== "volunteer") {
       res
@@ -68,6 +73,7 @@ export async function createUserHandler(
     }
   }
 
+  // Device accounts require a deviceName field.
   if (role === "device" && !deviceName) {
     res
       .status(400)
@@ -106,6 +112,8 @@ export async function listUsersHandler(
   res: Response,
 ): Promise<void> {
   const users = await listUsers();
+
+  // Staff only see volunteer accounts; admin sees all account types.
   if (req.user!.role === "staff") {
     const volunteerOnly = users.filter((u) => u.role === "volunteer");
     res.json({ success: true, users: volunteerOnly });
@@ -131,7 +139,7 @@ export async function resetPasswordHandler(
     return;
   }
 
-  // Staff can only reset volunteers
+  // Staff accounts cannot manage non-volunteer password resets.
   if (req.user!.role === "staff" && target.role !== "volunteer") {
     res.status(403).json({ error: "Staff can only reset volunteer passwords" });
     return;
@@ -172,7 +180,7 @@ export async function updateUserHandler(
     return;
   }
 
-  // Staff can only update volunteers
+  // Staff accounts can only update volunteer accounts.
   if (req.user!.role === "staff" && target.role !== "volunteer") {
     res.status(403).json({ error: "Staff can only update volunteer accounts" });
     return;
@@ -203,7 +211,7 @@ export async function deleteUserHandler(
     return;
   }
 
-  // Staff can only delete volunteers
+  // Staff accounts are restricted to removing volunteer accounts only.
   if (req.user!.role === "staff" && target.role !== "volunteer") {
     res.status(403).json({ error: "Staff can only delete volunteer accounts" });
     return;
@@ -240,6 +248,7 @@ function parseOptionalExpiryToIso(raw?: string): string | undefined {
   return parsed.toISOString();
 }
 
+// Minimal CSV parser to convert a batch import payload into rows keyed by header.
 function parseCSV(text: string): Array<Record<string, string>> {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return [];
@@ -253,10 +262,12 @@ function parseCSV(text: string): Array<Record<string, string>> {
     });
 }
 
+// Schema for batch deletion requests.
 const BatchDeleteSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
 });
 
+// Schema for batch update requests.
 const BatchUpdateSchema = z.object({
   userIds: z.array(z.string().min(1)).min(1),
   updates: z
@@ -264,9 +275,12 @@ const BatchUpdateSchema = z.object({
       expiresAt: validIsoDate.optional(),
       tag: z.string().min(1).optional(),
     })
-    .refine((value) => value.expiresAt !== undefined || value.tag !== undefined, {
-      message: "At least one update field is required",
-    }),
+    .refine(
+      (value) => value.expiresAt !== undefined || value.tag !== undefined,
+      {
+        message: "At least one update field is required",
+      },
+    ),
 });
 
 export async function batchUpdateUsersHandler(
@@ -275,7 +289,9 @@ export async function batchUpdateUsersHandler(
 ): Promise<void> {
   const parsed = BatchUpdateSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    res
+      .status(400)
+      .json({ error: "Invalid request", details: parsed.error.issues });
     return;
   }
 
@@ -288,6 +304,7 @@ export async function batchUpdateUsersHandler(
   const updated: string[] = [];
   const failed: Array<{ userId: string; reason: string }> = [];
 
+  // Iterate through each requested user update and preserve per-user success/failure.
   for (const userId of userIds) {
     try {
       const target = await getUserById(userId);
@@ -332,7 +349,9 @@ export async function batchDeleteUsersHandler(
 ): Promise<void> {
   const parsed = BatchDeleteSchema.safeParse(req.body);
   if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    res
+      .status(400)
+      .json({ error: "Invalid request", details: parsed.error.issues });
     return;
   }
 
@@ -340,6 +359,7 @@ export async function batchDeleteUsersHandler(
   const deleted: string[] = [];
   const failed: Array<{ userId: string; reason: string }> = [];
 
+  // Process deletes one at a time and record failures without aborting the entire batch.
   for (const userId of userIds) {
     try {
       const target = await getUserById(userId);
@@ -418,6 +438,7 @@ export async function batchCreateUsersHandler(
     const expiresAtIso = parseOptionalExpiryToIso(expiresat);
     const tagValue = normalizeTag(tag);
 
+    // Enforce staff batch imports to volunteer-only accounts.
     if (callerRole === "staff" && role !== "volunteer") {
       failed.push({
         username,
@@ -431,6 +452,7 @@ export async function batchCreateUsersHandler(
       continue;
     }
 
+    // Only volunteer accounts may carry an expiration date.
     if (expiresAtIso && role !== "volunteer") {
       failed.push({
         username,
@@ -463,6 +485,7 @@ export async function batchCreateUsersHandler(
           !!existing.expiresAt &&
           new Date(existing.expiresAt) < new Date();
 
+        // Reuse expired volunteer accounts when provided with a new expiration.
         if (
           role === "volunteer" &&
           expiresAtIso &&
