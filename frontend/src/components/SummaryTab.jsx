@@ -1,12 +1,14 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import './SummaryTab.css';
 
 // ─── Summary Tab (AI Chat Interface) ────────────────────────────────────────
 export default function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmit, aiLoading }) {
   const textareaRef = useRef(null);
+  const [includeBehaviorNotes, setIncludeBehaviorNotes] = useState(true);
+  const [includeObserverNotes, setIncludeObserverNotes] = useState(true);
 
   const handleSubmit = () => {
-    onSubmit();
+    onSubmit({ includeBehaviorNotes, includeObserverNotes });
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
@@ -19,6 +21,25 @@ export default function SummaryTab({ aiQuery, aiResponse, onQueryChange, onSubmi
         <p className="summary-tab__description">
           Ask questions about medical observations, behavior notes, or anything related to this animal.
         </p>
+
+        <div className="summary-tab__filters">
+          <label className="summary-tab__checkbox">
+            <input
+              type="checkbox"
+              checked={includeObserverNotes}
+              onChange={(e) => setIncludeObserverNotes(e.target.checked)}
+            />
+            <span>Medical/Observer Notes</span>
+          </label>
+          <label className="summary-tab__checkbox">
+            <input
+              type="checkbox"
+              checked={includeBehaviorNotes}
+              onChange={(e) => setIncludeBehaviorNotes(e.target.checked)}
+            />
+            <span>Behavior Notes</span>
+          </label>
+        </div>
 
         <div className="summary-tab__field">
           <label className="summary-tab__label">Your Question</label>

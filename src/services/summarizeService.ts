@@ -50,9 +50,15 @@ export const summarizeText = async (
   petId: number,
   prompt?: string,
   llm: LLMClient = defaultLlm,
+  filters?: { includeBehaviorNotes?: boolean; includeObserverNotes?: boolean },
 ): Promise<string> => {
-  const notes = await getBehaviorNotesByPetId(petId);
-  const obnotes = await getObserverNotesByPetId(petId);
+  const includeBehavior = filters?.includeBehaviorNotes !== false;
+  const includeObserver = filters?.includeObserverNotes !== false;
+
+  const [notes, obnotes] = await Promise.all([
+    includeBehavior ? getBehaviorNotesByPetId(petId) : Promise.resolve([]),
+    includeObserver ? getObserverNotesByPetId(petId) : Promise.resolve([]),
+  ]);
 
   if (notes.length === 0 && obnotes.length === 0) {
     return "No notes found for this pet.";
@@ -95,26 +101,15 @@ export const summarizeText = async (
   const instruction =
     prompt || "Summarize the note data in 2-5 concise sentences";
 
-  const normalizedPrompt = instruction.toLowerCase();
-
-  // This logic just checks if the user is explicitly asking to focus on one note type
-  // It is not perfect but should work for basic cases.
-  const focusBehaviorOnly =
-    /behavior/.test(normalizedPrompt) &&
-    !/(observation|observer)/.test(normalizedPrompt);
-  const focusObserverOnly =
-    /(observation|observer)/.test(normalizedPrompt) &&
-    !/behavior/.test(normalizedPrompt);
-
   const textSections: string[] = [];
 
-  if (!focusObserverOnly && notes.length > 0) {
+  if (includeBehavior && notes.length > 0) {
     textSections.push(
       "BEHAVIOR NOTES:\n" + notes.map(formatBehaviorNote).join("\n"),
     );
   }
 
-  if (!focusBehaviorOnly && obnotes.length > 0) {
+  if (includeObserver && obnotes.length > 0) {
     textSections.push(
       "OBSERVATION NOTES:\n" + obnotes.map(formatObserverNote).join("\n"),
     );

@@ -24,6 +24,31 @@
   line-height: 1.5;
 }
 
+.summary-tab__filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: var(--clr-input-bg);
+  border-radius: 10px;
+  border: 1px solid var(--clr-card-border);
+}
+
+.summary-tab__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--clr-text-primary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.summary-tab__checkbox input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--clr-header-green);
+}
+
 .summary-tab__field {
   margin-bottom: 16px;
 }

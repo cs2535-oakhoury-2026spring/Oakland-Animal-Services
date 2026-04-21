@@ -294,7 +294,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     setBehaviorDeleteDontShowAgainChecked(false);
   };
 
-  const handleAiQuery = async () => {
+  const handleAiQuery = async (filters = {}) => {
     if (!aiQuery.trim() || aiRequestPendingRef.current) return;
 
     aiRequestPendingRef.current = true;
@@ -302,7 +302,7 @@ export default function Portal({ user, token, petId, onLogout, onBack, darkMode,
     setAiResponse("Generating AI summary...");
 
     try {
-      const summary = await api.getSummary(petId, aiQuery.trim());
+      const summary = await api.getSummary(petId, aiQuery.trim(), filters);
       setAiResponse(summary);
     } catch (err) {
       console.error("AI query error:", err);

@@ -392,13 +392,15 @@ export const api = {
   },
 
   // REAL — connected to POST /api/pets/:petId/behavior-notes/summarize
-  getSummary: async (petId, prompt) => {
+  getSummary: async (petId, prompt, filters = {}) => {
     try {
       const res = await fetch(`/api/pets/${petId}/behavior-notes/summarize`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authH() },
         body: JSON.stringify({
           prompt: prompt || "Summarize the note data in 2-5 concise sentences",
+          includeBehaviorNotes: filters.includeBehaviorNotes !== false,
+          includeObserverNotes: filters.includeObserverNotes !== false,
         }),
       });
       if (!res.ok) throw new Error("AI summary failed");
