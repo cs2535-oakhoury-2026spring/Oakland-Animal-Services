@@ -9,7 +9,7 @@ export const HANDLER_LEVEL_COLORS = {
   blue: "#2196F3",
   pink: "#E91E63",
 };
-export const CURRENT_STATUSES = new Set(["available", "not available", "hold"]);
+export const CURRENT_STATUSES = new Set(["available", "not available", "hold", "intake"]);
 
 export const NOTES_PER_PAGE = 5;
 

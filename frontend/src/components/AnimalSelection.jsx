@@ -152,8 +152,30 @@ export default function AnimalSelection({ animals, onSelect, user, token, onLogo
               <div className="as-animal-info">
                 <div className="as-animal-name" style={{ fontSize: isDesktop ? 17 : 16 }}>{pet.name}</div>
                 <div className="as-animal-id">ID: {pet.petId}</div>
-                <div className="as-animal-species">
-                  {pet.species}
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4 }}>
+                  <div className="as-animal-species">
+                    {pet.species}
+                  </div>
+                  {pet.status && (() => {
+                    const statusValue = (pet.status || "").toLowerCase().trim();
+                    const isAvail = statusValue === "available";
+                    const color = isAvail ? "var(--clr-status-resolved)" : "var(--clr-brick-red)";
+                    return (
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color,
+                        backgroundColor: isAvail ? "var(--clr-status-resolved-bg)" : "var(--clr-status-raised-bg)",
+                        padding: "3px 10px",
+                        borderRadius: 12,
+                        border: `1px solid ${color}`,
+                        textTransform: "capitalize",
+                        opacity: 0.9,
+                      }}>
+                        {pet.status}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
               <Icons.arrowRight size={18} color="var(--clr-warm-gray)" />

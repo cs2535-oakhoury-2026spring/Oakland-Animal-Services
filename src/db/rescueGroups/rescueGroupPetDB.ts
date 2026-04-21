@@ -427,6 +427,11 @@ export class RescueGroupPetRepository implements PetRepository {
         operation: "contains",
         criteria: normalizedLocation,
       },
+      {
+        fieldName: "animalStatusID",
+        operation: "equals",
+        criteria: ["1", "2", "16"],
+      },
     ];
     if (status) {
       filters.push({
@@ -453,6 +458,7 @@ export class RescueGroupPetRepository implements PetRepository {
       const response = await rescueGroupsClient.post("", payload);
       const pets: Record<string, any> = response?.data?.data || {};
 
+
       const parsedPets: PetLocation[] = [];
       for (const key in pets) {
         const pet = pets[key];
@@ -466,7 +472,6 @@ export class RescueGroupPetRepository implements PetRepository {
         if (locationInSummary === normalizedLocation) {
           const parsed = parsePetLocation(pet);
           if (parsed) {
-            // If API didn't return animalStatus, stamp the status we searched for
             if (status && !parsed.status) parsed.status = status;
             parsedPets.push(parsed);
           }
@@ -490,6 +495,10 @@ export class RescueGroupPetRepository implements PetRepository {
     location: string,
     refresh: boolean = false,
   ): Promise<PetLocation[] | undefined> {
+    if (refresh) {
+      this.allAnimalsCache = null;
+    }
+
     if (!refresh) {
       const cachedResults = await this.searchByLocationCached(
         petType,
@@ -562,14 +571,24 @@ export class RescueGroupPetRepository implements PetRepository {
         resultOrder: "asc",
         filters: [
           {
-            fieldName: "animalStatus",
+            fieldName: "animalStatusID",
             operation: "equals",
-            criteria: "Available",
+            criteria: ["1", "2", "16"],
           },
           {
             fieldName: "animalSummary",
             operation: "contains",
             criteria: "Oakland Animal Services",
+          },
+          {
+            fieldName: "animalUpdatedDate",
+            operation: "greaterthanorequal",
+            criteria: "1/1/2026 1:00 AM",
+          },
+          {
+            fieldName: "animalUpdatedBy",
+            operation: "notequal",
+            criteria: ["PetPoint, OAS"],
           },
         ],
         fields: allFields,
@@ -609,7 +628,6 @@ export class RescueGroupPetRepository implements PetRepository {
   }
 
   private async fetchAllAnimals(): Promise<AllAnimalEntry[]> {
-    const statuses = ["Available"];
     const allFields = [
       "animalID",
       "animalName",
@@ -626,56 +644,64 @@ export class RescueGroupPetRepository implements PetRepository {
 
     const results: AllAnimalEntry[] = [];
 
-    for (const status of statuses) {
-      try {
-        const payload = {
-          objectType: "animals",
-          objectAction: "search",
-          search: {
-            resultStart: 0,
-            resultLimit: 400,
-            resultSort: "animalName",
-            resultOrder: "asc",
-            filters: [
-              {
-                fieldName: "animalStatus",
-                operation: "equals",
-                criteria: status,
-              },
-              {
-                fieldName: "animalSummary",
-                operation: "contains",
-                criteria: "Oakland Animal Services",
-              },
-            ],
-            fields: allFields,
-          },
-        };
+    try {
+      const payload = {
+        objectType: "animals",
+        objectAction: "search",
+        search: {
+          resultStart: 0,
+          resultLimit: 1000,
+          resultSort: "animalName",
+          resultOrder: "asc",
+          filters: [
+            {
+              fieldName: "animalStatusID",
+              operation: "equals",
+              criteria: ["1", "2", "16"],
+            },
+            {
+              fieldName: "animalSummary",
+              operation: "contains",
+              criteria: "Oakland Animal Services",
+            },
+            {
+              fieldName: "animalUpdatedDate",
+              operation: "greaterthanorequal",
+              criteria: "1/1/2026 1:00 AM",
+            },
+            {
+              fieldName: "animalUpdatedBy",
+              operation: "notequal",
+              criteria: ["PetPoint, OAS"],
+            },
+          ],
+          fields: allFields,
+        },
+      };
 
-        const response = await rescueGroupsClient.post("", payload);
-        const pets: Record<string, any> = response?.data?.data || {};
+      const response = await rescueGroupsClient.post("", payload);
+      const pets: Record<string, any> = response?.data?.data || {};
 
-        for (const key in pets) {
-          const record = pets[key];
-          const pictures = extractPictures(record);
-          results.push({
-            id: parseInt(record.animalID, 10),
-            name: record.animalName || `Animal #${record.animalID}`,
-            species: record.animalSpecies || "Unknown",
-            status: record.animalStatus || "Unknown",
-            location:
-              parseLocationFromSummary(record.animalSummary) || "Unknown",
-            image: record.animalThumbnailUrl || pictures?.[0] || undefined,
-            handlerLevel: (record.animalOthernames || "green").toLowerCase(),
-            breed: record.animalPrimaryBreed || undefined,
-            generalAge: record.animalGeneralAge || undefined,
-            rescueId: record.animalRescueID || undefined,
-            summary: record.animalSummary || record.animalDescription || "",
-          });
-        }
-      } catch (err) {
-        console.error(`getAllAnimals failed for status ${status}`, err);
+      for (const key in pets) {
+        const record = pets[key];
+        const pictures = extractPictures(record);
+        results.push({
+          id: parseInt(record.animalID, 10),
+          name: record.animalName || `Animal #${record.animalID}`,
+          species: record.animalSpecies || "Unknown",
+          status: record.animalStatus || "Unknown",
+          location:
+            parseLocationFromSummary(record.animalSummary) || "Unknown",
+          image: record.animalThumbnailUrl || pictures?.[0] || undefined,
+          handlerLevel: (record.animalOthernames || "green").toLowerCase(),
+          breed: record.animalPrimaryBreed || undefined,
+          generalAge: record.animalGeneralAge || undefined,
+          rescueId: record.animalRescueID || undefined,
+          summary: record.animalSummary || record.animalDescription || "",
+        });
       }
+    } catch (err) {
+      console.error("getAllAnimals failed", err);
     }
 
     return results.sort((a, b) => a.name.localeCompare(b.name));
