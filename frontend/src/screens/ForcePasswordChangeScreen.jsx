@@ -5,8 +5,9 @@ import Icons from "../Icons.jsx";
 import "./ForcePasswordChangeScreen.css";
 
 // ─── Forced Password Change Screen ───────────────────────────────────────────
-export default function ForcePasswordChangeScreen({ user, token, onPasswordChanged, onLogout, darkMode, setDarkMode }) {
-  const [tempPassword, setTempPassword] = useState("");
+export default function ForcePasswordChangeScreen({ user, token, onPasswordChanged, onLogout, darkMode, setDarkMode, initialTempPassword = "" }) {
+  const hasInitialTempPassword = !!initialTempPassword;
+  const [tempPassword, setTempPassword] = useState(initialTempPassword);
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showTemp, setShowTemp] = useState(false);
@@ -71,27 +72,31 @@ export default function ForcePasswordChangeScreen({ user, token, onPasswordChang
           </div>
           <h1 className="force-pw-screen__title">Set Your Password</h1>
           <p className="force-pw-screen__subtitle">
-            Hi <strong>{user?.username}</strong>! Enter the temporary password you were given, then choose a new one.
+            Hi <strong>{user?.username}</strong>! Choose a new password to finish your first sign-in.
           </p>
 
           <form onSubmit={handleSubmit} noValidate>
-            <label className="force-pw-screen__label">Temporary Password</label>
-            <div className="force-pw-screen__input-wrap">
-              <div className="force-pw-screen__input-icon">
-                <Icons.lock size={16} color="var(--clr-warm-gray)" />
-              </div>
-              <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={(e) => { setTempPassword(e.target.value); setError(""); }} placeholder="Your temporary password" autoFocus className="force-pw-screen__input" aria-label="Temporary password" autoComplete="current-password" />
-              <button type="button" onClick={() => setShowTemp(!showTemp)} className="force-pw-screen__toggle-btn" aria-label={showTemp ? "Hide" : "Show"}>
-                {showTemp ? <Icons.eyeOff size={16} color="var(--clr-warm-gray)" /> : <Icons.eye size={16} color="var(--clr-warm-gray)" />}
-              </button>
-            </div>
+            {!hasInitialTempPassword && (
+              <>
+                <label className="force-pw-screen__label">Temporary Password</label>
+                <div className="force-pw-screen__input-wrap">
+                  <div className="force-pw-screen__input-icon">
+                    <Icons.lock size={16} color="var(--clr-warm-gray)" />
+                  </div>
+                  <input type={showTemp ? "text" : "password"} value={tempPassword} onChange={(e) => { setTempPassword(e.target.value); setError(""); }} placeholder="Your temporary password" autoFocus className="force-pw-screen__input" aria-label="Temporary password" autoComplete="current-password" />
+                  <button type="button" onClick={() => setShowTemp(!showTemp)} className="force-pw-screen__toggle-btn" aria-label={showTemp ? "Hide" : "Show"}>
+                    {showTemp ? <Icons.eyeOff size={16} color="var(--clr-warm-gray)" /> : <Icons.eye size={16} color="var(--clr-warm-gray)" />}
+                  </button>
+                </div>
+              </>
+            )}
 
             <label className="force-pw-screen__label">New Password <span style={{ fontWeight: 400 }}>(min 8 characters)</span></label>
             <div className="force-pw-screen__input-wrap force-pw-screen__input-wrap--tight">
               <div className="force-pw-screen__input-icon">
                 <Icons.lock size={16} color="var(--clr-warm-gray)" />
               </div>
-              <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setError(""); }} placeholder="New password" className={`force-pw-screen__input${tooShort ? " force-pw-screen__input--error" : ""}`} aria-label="New password" autoComplete="new-password" />
+              <input type={showNew ? "text" : "password"} value={newPassword} onChange={(e) => { setNewPassword(e.target.value); setError(""); }} placeholder="New password" autoFocus={hasInitialTempPassword} className={`force-pw-screen__input${tooShort ? " force-pw-screen__input--error" : ""}`} aria-label="New password" autoComplete="new-password" />
               <button type="button" onClick={() => setShowNew(!showNew)} className="force-pw-screen__toggle-btn" aria-label={showNew ? "Hide" : "Show"}>
                 {showNew ? <Icons.eyeOff size={16} color="var(--clr-warm-gray)" /> : <Icons.eye size={16} color="var(--clr-warm-gray)" />}
               </button>

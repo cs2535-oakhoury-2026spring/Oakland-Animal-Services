@@ -23,6 +23,7 @@ export default function App() {
   const [accessToken, setAccessToken] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [pendingTempPassword, setPendingTempPassword] = useState("");
   const [accountExpired, setAccountExpired] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
@@ -50,7 +51,7 @@ export default function App() {
     return new Date(user.expiresAt) < new Date();
   }, []);
 
-  const applyToken = (token) => {
+  const applyToken = (token, loginPassword = "") => {
     const payload = decodeJwt(token);
     apiApplyToken(token);
     sessionStorage.setItem("oas_token", token);
@@ -66,9 +67,10 @@ export default function App() {
     });
     setAccountExpired(false);
     setMustChangePassword(!!payload?.mustChangePassword);
+    setPendingTempPassword(payload?.mustChangePassword ? loginPassword : "");
   };
 
-  const handleLogin = (token) => applyToken(token);
+  const handleLogin = (token, loginPassword) => applyToken(token, loginPassword);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("oas_token");
@@ -103,6 +105,7 @@ export default function App() {
     setCurrentUser(null);
     setAccountExpired(false);
     setMustChangePassword(false);
+    setPendingTempPassword("");
     setSelectedPetId(null);
     setAnimals([]);
     setLocationError(null);
@@ -173,7 +176,10 @@ export default function App() {
     return () => setOnAccountExpired(null);
   }, [accessToken, applyToken, currentUser, handleLogout, isVolunteerExpired]);
 
-  const handlePasswordChanged = () => setMustChangePassword(false);
+  const handlePasswordChanged = () => {
+    setMustChangePassword(false);
+    setPendingTempPassword("");
+  };
 
   const urlParams = new URLSearchParams(window.location.search);
   const urlPetId = urlParams.get("petId");
@@ -219,7 +225,7 @@ export default function App() {
   }
 
   if (mustChangePassword && currentUser?.role !== "device") {
-    return <ForcePasswordChangeScreen user={currentUser} token={accessToken} onPasswordChanged={handlePasswordChanged} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} />;
+    return <ForcePasswordChangeScreen user={currentUser} token={accessToken} onPasswordChanged={handlePasswordChanged} onLogout={handleLogout} darkMode={darkMode} setDarkMode={toggleDarkMode} initialTempPassword={pendingTempPassword} />;
   }
 
   if (view === "activity") {

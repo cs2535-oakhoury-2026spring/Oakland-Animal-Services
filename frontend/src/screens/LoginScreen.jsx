@@ -20,7 +20,7 @@ export default function LoginScreen({ darkMode, setDarkMode, onLogin }) {
     setError("");
     try {
       const data = await api.login(username.trim(), password);
-      onLogin(data.accessToken);
+      onLogin(data.accessToken, password);
     } catch (err) {
       setError(err.message || "Invalid username or password");
     } finally {
