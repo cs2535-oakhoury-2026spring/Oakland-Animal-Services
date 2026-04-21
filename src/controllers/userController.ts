@@ -350,7 +350,12 @@ export async function batchCreateUsersHandler(
           !!existing.expiresAt &&
           new Date(existing.expiresAt) < new Date();
 
-        if (role === "volunteer" && expiresAtIso && existing && isExpiredVolunteer) {
+        if (
+          role === "volunteer" &&
+          expiresAtIso &&
+          existing &&
+          isExpiredVolunteer
+        ) {
           await updateUser(existing.userId, {
             expiresAt: expiresAtIso,
             tag: tagValue,
