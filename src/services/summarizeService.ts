@@ -76,10 +76,20 @@ export const summarizeText = async (
     author: string;
     status?: string;
     title?: string;
+    staffComment?: {
+      text: string;
+      from: string;
+      at: string | Date;
+      editedBy?: string;
+      editedAt?: string | Date;
+    };
   }): string => {
     const status = note.status || "N/A";
     const titlePart = note.title ? `Title: ${note.title} | ` : "";
-    return `${titlePart}Observation: ${note.content} | Timestamp: ${formatTimestamp(note.timestamp)} | Author: ${note.author} | Status: ${status}`;
+    const staffComment = note.staffComment
+      ? ` | Staff comment: ${note.staffComment.text} | Comment by: ${note.staffComment.from} | Comment timestamp: ${formatTimestamp(note.staffComment.at)}`
+      : "";
+    return `${titlePart}Observation: ${note.content} | Timestamp: ${formatTimestamp(note.timestamp)} | Author: ${note.author} | Status: ${status}${staffComment}`;
   };
 
   const instruction =
