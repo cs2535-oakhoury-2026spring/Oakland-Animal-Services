@@ -207,7 +207,8 @@ Oakland-Animal-Services/
 │       ├── constants.js        # Shared constants
 │       └── App.jsx             # Root component and routing
 ├── docs/
-│   └── adr/                    # Architecture Decision Records
+│   ├── adr/                    # Architecture Decision Records
+│   └── user-guide/             # User documentation by role
 ├── docker/                     # Docker support files
 ├── docker-compose.yml          # Local infrastructure services
 ├── dockerfile                  # Production Docker image
@@ -480,12 +481,16 @@ Significant design decisions are documented in [`docs/adr/`](docs/adr/):
 - **ADR-005** — Refresh token storage strategy
 - **ADR-006** — Frontend state management approach
 - **ADR-007** — Note search architecture
+- **ADR-008** — Migrating from inline styles to CSS variables and external stylesheets
+- **ADR-009** — Migrating from single-file to multi-component architecture
+- **ADR-010** — Local state with prop drilling over global state management
 
 ---
 
 ## Developer Resources
 
 - **[Developer's Guide](docs/DEVELOPER_GUIDE.md)** — Codebase walkthrough, how to add features, common tasks, areas for improvement
+- **[User Guide](docs/user-guide/USER_GUIDE.md)** — End-user documentation organized by role (Volunteer, Staff, Admin)
 - **[Architecture Decision Records](docs/adr/)** — Design decisions and rationale
 
 ---
