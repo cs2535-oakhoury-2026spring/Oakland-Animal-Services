@@ -118,7 +118,7 @@ cd frontend && npm install && cd ..
 cp .env.example .env
 ```
 
-Open `.env` and fill in the required values (see [Environment Variables](#environment-variables) below). At minimum you need `JWT_SECRET`, `ADMIN_USER`, and `ADMIN_PASS` to run locally. `OPENAI_API_KEY` and `RESCUE_GROUPS_*` values are needed for full functionality.
+Open `.env` and fill in the required values (see [Environment Variables](#environment-variables) below). At minimum you need `JWT_SECRET`, `ADMIN_USER`, and `ADMIN_PASS` to run locally. `LLM_API_KEY` and `RESCUE_GROUPS_*` values are needed for full functionality.
 
 ### 4. Start infrastructure services
 
@@ -159,7 +159,7 @@ Open `http://localhost:3000` in your browser and log in with the `ADMIN_USER` / 
 | `JWT_SECRET` | Yes | Secret key for signing JWTs. Use a long random string in production. |
 | `ADMIN_USER` | Yes | Username for the built-in admin account |
 | `ADMIN_PASS` | Yes | Password for the built-in admin account |
-| `OPENAI_API_KEY` | For summarization | OpenAI API key for behavior note summarization |
+| `LLM_API_KEY` | For summarization | API key for note summarization |
 | `RESCUE_GROUPS_ENDPOINT` | For pet data | Base URL of the RescueGroups API proxy |
 | `RESCUE_GROUPS_BEARER` | For pet data | Bearer token for authenticating with RescueGroups |
 | `AWS_REGION` | Yes | AWS region (use `us-east-1` locally) |

@@ -16,7 +16,7 @@ function parseBooleanEnv(
 
 export default {
   port: Number(process.env.PORT) || 3000,
-  LLM_API_KEY: process.env.OPENAI_API_KEY ?? "",
+  LLM_API_KEY: process.env.LLM_API_KEY ?? "",
   PET_LOCATION_CACHE_TTL:
     Number(process.env.PET_LOCATION_CACHE_TTL) || 60 * 60 * 1000, // In milliseconds, default to 1 hour
 
