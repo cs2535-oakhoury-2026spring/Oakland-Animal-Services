@@ -343,6 +343,18 @@ RESCUE_GROUPS_BEARER=your-bearer-token
 
 ## Architecture Overview
 
+### System Context (C1)
+
+![C1 - System Context Diagram](docs/diagrams/C1.png)
+
+### Container Diagram (C2)
+
+![C2 - Container Diagram](docs/diagrams/C2.png)
+
+### Component Diagram (C3)
+
+![C3 - Component Diagram](docs/diagrams/C3.png)
+
 ### Authentication
 
 - Login issues a short-lived **JWT access token** (15 min) and a long-lived **refresh token** (30 days) stored in an httpOnly cookie
